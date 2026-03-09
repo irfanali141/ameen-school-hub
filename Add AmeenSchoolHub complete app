@@ -1,0 +1,745 @@
+bash
+
+head -450 /mnt/user-data/uploads/AmeenSchoolHub.jsx
+Output
+
+import { useState } from "react";
+
+const C = {
+  gold: "#b7860b", goldLight: "#f5e9c8", goldDark: "#7a5807",
+  navy: "#1e293b", navyDark: "#0f172a",
+  orange: "#ec5b13", bg: "#f8f7f5", white: "#ffffff",
+  red: "#dc2626", green: "#16a34a", amber: "#d97706", blue: "#1d4ed8",
+  abuBakr: "#1e40af", umar: "#166534", uthman: "#854d0e", ali: "#991b1b",
+};
+
+const Badge = ({ color, children }) => (
+  <span style={{ background: color + "22", color, padding: "2px 10px", borderRadius: 99, fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>{children}</span>
+);
+const Card = ({ children, style = {} }) => (
+  <div style={{ background: C.white, borderRadius: 16, border: `1px solid ${C.gold}22`, boxShadow: "0 2px 12px #b7860b0a", padding: 24, ...style }}>{children}</div>
+);
+const StatCard = ({ icon, label, value, sub, subColor }) => (
+  <Card style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+      <div>
+        <p style={{ fontSize: 12, color: "#64748b", fontWeight: 600, marginBottom: 4 }}>{label}</p>
+        <p style={{ fontSize: 32, fontWeight: 800, color: C.navy }}>{value}</p>
+      </div>
+      <div style={{ background: C.goldLight, borderRadius: 12, padding: 10, fontSize: 22 }}>{icon}</div>
+    </div>
+    <p style={{ fontSize: 12, color: subColor || C.gold, fontWeight: 600 }}>{sub}</p>
+  </Card>
+);
+
+const NAV = [
+  { id: "gateway",     icon: "🏛️", label: "Master Gateway",       group: "main" },
+  { id: "director",    icon: "👔", label: "Director's Hub",        group: "main" },
+  { id: "dashboard",   icon: "🏠", label: "Dashboard",             group: "main" },
+  { id: "ai-index",    icon: "🧮", label: "AI Index Calculator",   group: "academic" },
+  { id: "hifz",        icon: "🧠", label: "Hifz Remedial",         group: "academic" },
+  { id: "attendance",  icon: "✅", label: "Teacher Attendance",    group: "academic" },
+  { id: "behavior",    icon: "📊", label: "Behavior Logs (SBI)",   group: "academic" },
+  { id: "houses",      icon: "🏆", label: "Super House Dashboard", group: "houses" },
+  { id: "compliance",  icon: "🔍", label: "Compliance Audit Hub",  group: "houses" },
+  { id: "correction",  icon: "📋", label: "Correction Notice",     group: "houses" },
+  { id: "manual",      icon: "📖", label: "House Manual",          group: "houses" },
+  { id: "noticeboard", icon: "📢", label: "Notice Board",          group: "comms" },
+  { id: "hpri",        icon: "⚠️",  label: "HPRI Risk Report",     group: "comms" },
+  { id: "events",      icon: "📅", label: "Event Scheduler",       group: "comms" },
+  { id: "ptm",         icon: "🤝", label: "PTM Scheduler",         group: "comms" },
+  { id: "mastersuite", icon: "🏛️", label: "Master Suite",           group: "main"  },
+  { id: "ecosystem",   icon: "🌐", label: "Ecosystem Map",          group: "main"  },
+  { id: "settings",    icon: "⚙️",  label: "Settings",             group: "main" },
+];
+const NAV_GROUPS = [
+  { key: "main",     label: "General" },
+  { key: "academic", label: "Academic" },
+  { key: "houses",   label: "House System" },
+  { key: "comms",    label: "Communication" },
+];
+
+/* ───────────────────────── MASTER GATEWAY ─────────────────────────── */
+function MasterGateway({ setPage }) {
+  const portals = [
+    { id: "director",    icon: "🏢", title: "Director's Office",    desc: "Executive Administration, Faculty Management, Institutional Strategy.", color: C.navyDark },
+    { id: "attendance",  icon: "📚", title: "Faculty Lounge",        desc: "Marks Entry, Teacher Profiles, Mentoring Resources.",                  color: C.navy },
+    { id: "dashboard",   icon: "🎓", title: "Academic Portal",       desc: "Student Progress, Schedules, Attendance, Performance Analytics.",      color: C.goldDark },
+    { id: "houses",      icon: "🏆", title: "House Governance",      desc: "HVS Framework, Point Leaderboards, House Leadership.",                 color: C.umar },
+    { id: "compliance",  icon: "🔍", title: "Compliance Audit Hub",  desc: "Monthly Audits, Correction Notices, Non-Compliance Alerts.",          color: "#7c2d12" },
+    { id: "noticeboard", icon: "📢", title: "Notice Board",          desc: "School-wide announcements, holiday and substitute notices.",           color: C.blue },
+    { id: "hifz",        icon: "🧠", title: "Hifz Remedial Centre",  desc: "SB5 Cognitive Analytics and Quran revision strategies.",              color: "#4c1d95" },
+    { id: "hpri",        icon: "⚠️",  title: "HPRI Risk Reports",    desc: "High Performance Risk Index and back-on-track action plans.",         color: C.ali },
+    { id: "events",      icon: "📅", title: "Event Scheduler",       desc: "Institutional event calendar, logistics tracker & house point projections.", color: "#0e7490" },
+    { id: "ptm",         icon: "🤝", title: "PTM Scheduler",         desc: "Parent-Teacher Meeting booking, time slots, outcome logs & live status board.", color: "#7c3aed" },
+    { id: "mastersuite", icon: "🏛️", title: "Master Suite",           desc: "Institutional handover document: 5-pillar digital transformation executive summary.", color: "#0a192f" },
+    { id: "ecosystem",   icon: "🌐", title: "Ecosystem Map",          desc: "Six-pillar ecosystem with Unified Core — full institutional infrastructure overview.", color: "#1a3a5c" },
+  ];
+  const HOUSES = [
+    { name: "Abu Bakr House", motto: "Truth & Loyalty",       color: C.abuBakr },
+    { name: "Umar House",     motto: "Justice & Discipline",  color: C.umar },
+    { name: "Uthman House",   motto: "Modesty & Generosity",  color: C.uthman },
+    { name: "Ali House",      motto: "Bravery & Knowledge",   color: C.ali },
+  ];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
+      <div style={{ background: `linear-gradient(135deg,${C.navyDark},#1e3a5f,${C.goldDark})`, borderRadius: 20, padding: "48px 40px", textAlign: "center", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0, opacity: 0.04, background: "repeating-linear-gradient(45deg,#fff,#fff 2px,transparent 2px,transparent 20px)" }} />
+        <div style={{ position: "relative" }}>
+          <p style={{ color: C.gold, fontWeight: 700, fontSize: 11, letterSpacing: 4, textTransform: "uppercase", marginBottom: 12 }}>Ameen Islamic Institute</p>
+          <h1 style={{ fontSize: 36, fontWeight: 900, color: "#fff", margin: "0 0 12px", letterSpacing: -1 }}>Ameen School Hub Ecosystem</h1>
+          <div style={{ width: 80, height: 3, background: C.gold, margin: "0 auto 20px" }} />
+          <p style={{ color: "#94a3b8", fontSize: 14, fontStyle: "italic", maxWidth: 560, margin: "0 auto 20px" }}>"Nurturing Excellence, Grounded in Faith" — Access institutional management systems, academic records, and house leadership portals.</p>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#fff1", padding: "6px 16px", borderRadius: 99, border: "1px solid #ffffff22" }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
+            <span style={{ color: "#94a3b8", fontSize: 12, fontWeight: 600 }}>System Secure & Online</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h2 style={{ fontSize: 20, fontWeight: 800, color: C.navy, marginBottom: 20 }}>Access Portals</h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: 16 }}>
+          {portals.map(p => (
+            <button key={p.id} onClick={() => setPage(p.id)} style={{ background: C.white, border: `1px solid ${C.gold}22`, borderTop: `4px solid ${p.color}`, borderRadius: 16, padding: 24, textAlign: "center", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 2px 8px #0001" }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = `0 8px 24px ${p.color}33`; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 2px 8px #0001"; }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>{p.icon}</div>
+              <h3 style={{ fontSize: 14, fontWeight: 800, color: C.navy, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>{p.title}</h3>
+              <p style={{ fontSize: 12, color: "#64748b", lineHeight: 1.6, marginBottom: 16 }}>{p.desc}</p>
+              <span style={{ background: p.color, color: "#fff", fontSize: 11, fontWeight: 700, padding: "6px 16px", borderRadius: 8, letterSpacing: 1, textTransform: "uppercase" }}>Enter Portal</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 800, color: C.navy, margin: 0 }}>House Identities & Merit</h2>
+          <div style={{ flex: 1, height: 1, background: C.gold }} />
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16 }}>
+          {HOUSES.map(h => (
+            <div key={h.name} style={{ background: C.white, borderRadius: 14, padding: 20, textAlign: "center", border: `2px solid ${h.color}33` }}>
+              <div style={{ width: 56, height: 56, borderRadius: "50%", background: h.color, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 800, fontSize: 20, margin: "0 auto 12px" }}>{h.name[0]}</div>
+              <p style={{ fontWeight: 800, fontSize: 13, color: C.navy, marginBottom: 4 }}>{h.name}</p>
+              <p style={{ fontSize: 11, color: "#94a3b8", fontStyle: "italic" }}>{h.motto}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ───────────────────────── DIRECTOR'S HUB ─────────────────────────── */
+function DirectorsHub({ setPage }) {
+  const tasks = [
+    { title: "Approve Q3 Budget",          sub: "Finance Dept • Due in 2h",           color: C.red },
+    { title: "New Teacher Interviews",     sub: "HR Portal • 14:00 Today",            color: C.blue },
+    { title: "Review House Compliance",    sub: "Ali House Pending • Overdue",        color: C.red },
+    { title: "Hifz Term Assessment",       sub: "Academic Board • This Week",         color: C.gold },
+  ];
+  const sentinel = [
+    { pts: "+50",  label: "Emerald House: Quran Memorization Streak", rule: "High-Performance Auto Addition",   color: C.green, ago: "2m ago" },
+    { pts: "-15",  label: "Crimson House: Late Attendance Deduction", rule: "Punctuality Sentinel Rule #12",    color: C.red,   ago: "15m ago" },
+    { pts: "+100", label: "Royal Blue House: Charity Drive Success",  rule: "Manual Entry by Head of Houses",  color: C.blue,  ago: "1h ago" },
+  ];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+        <div>
+          <h2 style={{ fontSize: 26, fontWeight: 900, color: C.navy, margin: 0 }}>Director's Strategic Hub</h2>
+          <p style={{ color: "#64748b", marginTop: 4, fontSize: 13 }}>Executive overview & priority management</p>
+        </div>
+        <Badge color={C.green}>● Live Feed</Badge>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 16 }}>
+        <div style={{ background: `linear-gradient(135deg,${C.navyDark},${C.navy})`, borderRadius: 16, padding: 24, color: "#fff", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", right: -10, top: -10, fontSize: 80, opacity: 0.07 }}>🏦</div>
+          <p style={{ fontSize: 10, color: "#94a3b8", fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>Strategic Liquidity (ERP)</p>
+          <p style={{ fontSize: 32, fontWeight: 900, margin: "0 0 8px" }}>AED 4.2M</p>
+          <p style={{ fontSize: 12, color: "#4ade80", fontWeight: 700 }}>↑ +12.4% vs last month</p>
+        </div>
+        <StatCard icon="📖" label="Avg Hifz Speed" value="0.85" sub="Pg/Day — ↑ trending" />
+        <StatCard icon="🏆" label="House Leader" value="Falcon" sub="Points: 12,840" subColor={C.amber} />
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+        <Card>
+          <h3 style={{ fontSize: 15, fontWeight: 800, color: C.navy, margin: "0 0 16px" }}>⚡ Priority Tasks</h3>
+          {tasks.map((t, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 0", borderBottom: i < tasks.length - 1 ? `1px solid ${C.gold}18` : "none" }}>
+              <div style={{ width: 4, height: 40, borderRadius: 4, background: t.color, flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <p style={{ fontWeight: 700, fontSize: 13, margin: 0 }}>{t.title}</p>
+                <p style={{ fontSize: 11, color: "#64748b", margin: "2px 0 0" }}>{t.sub}</p>
+              </div>
+              <span style={{ fontSize: 18, color: "#94a3b8" }}>›</span>
+            </div>
+          ))}
+        </Card>
+        <Card>
+          <h3 style={{ fontSize: 15, fontWeight: 800, color: C.navy, margin: "0 0 16px" }}>🛡️ Automated Sentinel Feed</h3>
+          {sentinel.map((s, i) => (
+            <div key={i} style={{ display: "flex", gap: 12, padding: "12px 0", borderBottom: i < sentinel.length - 1 ? `1px solid ${C.gold}18` : "none" }}>
+              <div style={{ width: 32, height: 32, borderRadius: "50%", background: s.color, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 14, flexShrink: 0 }}>{s.pts.startsWith("+") ? "+" : "−"}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: s.color }}>{s.pts} Points</span>
+                  <span style={{ fontSize: 10, color: "#94a3b8" }}>{s.ago}</span>
+                </div>
+                <p style={{ fontSize: 12, margin: "2px 0", fontWeight: 600 }}>{s.label}</p>
+                <p style={{ fontSize: 10, color: "#94a3b8", margin: 0 }}>{s.rule}</p>
+              </div>
+            </div>
+          ))}
+        </Card>
+      </div>
+      <Card>
+        <h3 style={{ fontSize: 15, fontWeight: 800, color: C.navy, margin: "0 0 16px" }}>🚀 Quick Navigation</h3>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+          {[["AI Index","ai-index",C.gold],["House Dashboard","houses",C.umar],["Compliance Hub","compliance",C.red],["Notice Board","noticeboard",C.blue],["HPRI Reports","hpri",C.ali],["Hifz Remedial","hifz",C.orange]].map(([l,p,c]) => (
+            <button key={l} onClick={() => setPage(p)} style={{ background: c, color: "#fff", border: "none", borderRadius: 10, padding: "10px 18px", fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>{l}</button>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+/* ───────────────────────── DASHBOARD ─────────────────────────── */
+function Dashboard({ setPage }) {
+  const recent = [
+    { id: "AMN-2023-089", grade: "Grade 11-A", score: 88.2, zone: "Success",     date: "Oct 24, 2023" },
+    { id: "AMN-2023-104", grade: "Grade 11-C", score: 64.5, zone: "Development", date: "Oct 23, 2023" },
+    { id: "AMN-2023-067", grade: "Grade 10-B", score: 38.1, zone: "Improvement", date: "Oct 22, 2023" },
+  ];
+  const zc = z => z === "Success" ? C.green : z === "Development" ? C.amber : C.red;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+      <div style={{ background: `linear-gradient(135deg,${C.navyDark},${C.navy},${C.goldDark})`, borderRadius: 20, padding: "36px 40px", color: "#fff", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", right: -20, top: -20, fontSize: 120, opacity: 0.07 }}>🎓</div>
+        <p style={{ fontSize: 12, color: C.gold, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>Welcome back</p>
+        <h2 style={{ fontSize: 30, fontWeight: 900, margin: "0 0 6px" }}>Ameen School Hub</h2>
+        <p style={{ fontSize: 14, color: "#94a3b8" }}>Multi-dimensional academic management platform</p>
+        <div style={{ display: "flex", gap: 12, marginTop: 24, flexWrap: "wrap" }}>
+          {[["AI Index","ai-index"],["Teacher Attendance","attendance"],["Hifz Remedial","hifz"]].map(([l,p]) => (
+            <button key={l} onClick={() => setPage(p)} style={{ background: C.gold, color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>{l} →</button>
+          ))}
+        </div>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 16 }}>
+        <StatCard icon="👩‍🏫" label="Total Teachers"   value="47"   sub="↑ 2 new this month"  subColor={C.green} />
+        <StatCard icon="🎓"  label="Students Enrolled" value="384"  sub="Active academic year" />
+        <StatCard icon="📈"  label="Avg AI Index"       value="76.4" sub="↑ 3.2 pts this week"  subColor={C.green} />
+        <StatCard icon="⚠️"   label="Pending Alerts"    value="05"   sub="Correction notices"   subColor={C.red} />
+      </div>
+      <Card>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <h3 style={{ fontSize: 17, fontWeight: 800, color: C.navy, margin: 0 }}>Recent AI Evaluations</h3>
+          <button onClick={() => setPage("ai-index")} style={{ background: C.goldLight, color: C.goldDark, border: "none", borderRadius: 8, padding: "6px 14px", fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>View All →</button>
+        </div>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+          <thead><tr style={{ background: C.goldLight }}>{["Student ID","Grade","AI Index","Zone","Date"].map(h => <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontWeight: 700, color: C.navy, fontSize: 11, textTransform: "uppercase", letterSpacing: 1 }}>{h}</th>)}</tr></thead>
+          <tbody>{recent.map((r,i) => <tr key={r.id} style={{ borderBottom: `1px solid ${C.gold}18`, background: i%2?"#fafaf8":"#fff" }}><td style={{ padding:"12px 16px",fontWeight:700 }}>{r.id}</td><td style={{ padding:"12px 16px",color:"#64748b" }}>{r.grade}</td><td style={{ padding:"12px 16px",fontWeight:800,color:C.gold }}>{r.score}</td><td style={{ padding:"12px 16px" }}><Badge color={zc(r.zone)}>{r.zone}</Badge></td><td style={{ padding:"12px 16px",color:"#94a3b8" }}>{r.date}</td></tr>)}</tbody>
+        </table>
+      </Card>
+    </div>
+  );
+}
+
+/* ───────────────────────── AI INDEX ─────────────────────────── */
+function AIIndexCalculator() {
+  const [scores, setScores] = useState({ P:"", B:"", E:"", T:"" });
+  const [result, setResult] = useState(null);
+  const [notes, setNotes] = useState("");
+  const compute = () => {
+    const p=parseFloat(scores.P),b=parseFloat(scores.B),e=parseFloat(scores.E),t=parseFloat(scores.T);
+    if([p,b,e,t].some(isNaN)) return alert("براہ کرم تمام فیلڈز بھریں");
+    setResult(parseFloat((p*0.4+b*0.2+e*0.2+t*0.2).toFixed(1)));
+  };
+  const zone = r => r>=76?{label:"Success",color:C.green}:r>=41?{label:"Development",color:C.amber}:{label:"Improvement",color:C.red};
+  const FIELDS=[{key:"P",label:"P — Participation & Punctuality",pct:"40%"},{key:"B",label:"B — Behavior & Conduct",pct:"20%"},{key:"E",label:"E — Exam Excellence",pct:"20%"},{key:"T",label:"T — Tarbiyah & Traditions",pct:"20%"}];
+  return (
+    <div style={{ display:"flex",flexDirection:"column",gap:24 }}>
+      <div>
+        <h2 style={{ fontSize:26,fontWeight:900,color:C.navy,margin:0
+bash
+
+sed -n '451,920p' /mnt/user-data/uploads/AmeenSchoolHub.jsx
+Output
+
+        <Card style={{ padding:0 }}>
+          <div style={{ background:C.navyDark,padding:"16px 20px",borderRadius:"16px 16px 0 0" }}><h3 style={{ margin:0,fontSize:14,fontWeight:800,color:"#fff" }}>📝 Notice Generator</h3></div>
+          <div style={{ padding:20,display:"flex",flexDirection:"column",gap:16 }}>
+            {[{label:"House Selection",val:sel,setVal:setSel,opts:houses.map(h=>({v:h.key,l:h.label}))},{label:"Violation Type",val:vtype,setVal:setVtype,opts:[{v:"missing-minutes",l:"Missing Meeting Minutes"},{v:"incomplete-checklist",l:"Incomplete Checklist"},{v:"late-submission",l:"Late Submission"},{v:"safety-breach",l:"Safety Protocol Breach"}]}].map(f=><div key={f.label}><label style={{ fontSize:11,fontWeight:700,color:"#64748b",textTransform:"uppercase",display:"block",marginBottom:6 }}>{f.label}</label><select value={f.val} onChange={e=>f.setVal(e.target.value)} style={{ width:"100%",padding:"10px 12px",borderRadius:10,border:`1.5px solid ${C.gold}44`,fontSize:13,fontFamily:"inherit",background:C.bg }}>{f.opts.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}</select></div>)}
+            <div><label style={{ fontSize:11,fontWeight:700,color:"#64748b",textTransform:"uppercase",display:"block",marginBottom:6 }}>Auto-generated Message</label><div style={{ background:"#f8fafc",border:`1px solid #e2e8f0`,borderRadius:10,padding:12,fontSize:12,color:"#475569",minHeight:100,lineHeight:1.6 }}>Dear House Master of {houses.find(h=>h.key===sel)?.label},<br/><br/>This is a formal correction notice. Staff Meeting Minutes for the current month are missing. Please upload within 24 hours.</div></div>
+            <button onClick={()=>setSent(true)} style={{ background:sent?C.green:C.gold,color:"#fff",border:"none",borderRadius:12,padding:12,fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"inherit" }}>{sent?"✅ Notice Sent!":"📨 Send to House Master"}</button>
+          </div>
+        </Card>
+      </div>
+      <Card>
+        <h3 style={{ fontSize:16,fontWeight:800,color:C.navy,margin:"0 0 20px" }}>📜 Audit History</h3>
+        <table style={{ width:"100%",borderCollapse:"collapse",fontSize:13 }}>
+          <thead><tr style={{ background:"#f8fafc" }}>{["Date","House","Auditor","Status","Compliance"].map(h=><th key={h} style={{ padding:"10px 16px",textAlign:"left",fontSize:11,fontWeight:700,color:"#64748b",textTransform:"uppercase" }}>{h}</th>)}</tr></thead>
+          <tbody>{history.map((r,i)=><tr key={i} style={{ borderBottom:`1px solid #f1f5f9` }}><td style={{ padding:"12px 16px",color:"#64748b" }}>{r.date}</td><td style={{ padding:"12px 16px",fontWeight:700 }}>{r.house}</td><td style={{ padding:"12px 16px" }}>{r.auditor}</td><td style={{ padding:"12px 16px" }}><Badge color={r.pass?C.green:C.red}>{r.pass?"PASSED":"FAILED"}</Badge></td><td style={{ padding:"12px 16px" }}><div style={{ display:"flex",alignItems:"center",gap:10 }}><div style={{ width:80,height:8,background:"#e2e8f0",borderRadius:99,overflow:"hidden" }}><div style={{ height:"100%",width:`${r.pct}%`,background:r.pass?C.green:C.red,borderRadius:99 }}/></div><span style={{ fontWeight:800,color:r.pass?C.green:C.red }}>{r.pct}%</span></div></td></tr>)}</tbody>
+        </table>
+      </Card>
+    </div>
+  );
+}
+
+/* ───────────────────────── CORRECTION NOTICE ─────────────────────────── */
+function CorrectionNotice() {
+  const [submitted,setSubmitted]=useState(false);
+  return (
+    <div style={{ maxWidth:820,margin:"0 auto" }}>
+      <div style={{ background:C.navyDark,borderRadius:"16px 16px 0 0",padding:"32px 40px",borderBottom:`4px solid ${C.gold}` }}>
+        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+          <div><h1 style={{ margin:0,fontSize:22,fontWeight:900,color:"#fff",letterSpacing:1 }}>AMEEN ISLAMIC INSTITUTE</h1><p style={{ margin:"4px 0 0",fontSize:11,color:C.gold,fontWeight:700,letterSpacing:3,textTransform:"uppercase" }}>Office of the System Auditor</p></div>
+          <div style={{ textAlign:"right" }}><p style={{ margin:0,fontSize:10,color:"#94a3b8",textTransform:"uppercase",letterSpacing:2 }}>Formal Internal Communication</p><p style={{ margin:"4px 0 0",color:"#fff",fontWeight:700,fontSize:13,fontFamily:"monospace" }}>REF: AUD-2023-ALI-004</p></div>
+        </div>
+      </div>
+      <div style={{ background:"#fff",border:`1px solid ${C.gold}22`,borderTop:"none",padding:"36px 40px",display:"flex",flexDirection:"column",gap:24 }}>
+        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-end",paddingBottom:20,borderBottom:`1px solid #e2e8f0` }}>
+          <div><h2 style={{ margin:0,fontSize:28,fontWeight:900,color:C.orange,textTransform:"uppercase" }}>Correction Notice</h2><p style={{ margin:"4px 0 0",color:"#64748b",fontWeight:700,fontSize:12 }}>(NON-COMPLIANCE STATUS)</p></div>
+          <div style={{ textAlign:"right" }}><p style={{ margin:0,fontSize:11,color:"#94a3b8",textTransform:"uppercase" }}>Date of Issue</p><p style={{ margin:"2px 0 0",fontWeight:800,fontSize:16 }}>October 25, 2023</p></div>
+        </div>
+        <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:20 }}>
+          <div style={{ display:"flex",gap:14 }}><div style={{ background:"#fff3e0",borderRadius:10,padding:10,fontSize:20,height:"fit-content" }}>👤</div><div><p style={{ margin:0,fontSize:10,fontWeight:700,color:"#94a3b8",letterSpacing:2,textTransform:"uppercase" }}>Recipient</p><p style={{ margin:"4px 0 0",fontWeight:800,fontSize:15 }}>House Master of Ali House</p><p style={{ margin:0,fontSize:12,color:"#64748b" }}>Student Affairs Division</p></div></div>
+          <div style={{ background:"#fef2f2",borderRadius:14,padding:20,border:"1.5px solid #fecaca" }}><p style={{ margin:"0 0 4px",fontSize:10,fontWeight:900,color:C.red,textTransform:"uppercase",letterSpacing:2 }}>⚠️ Action Required</p><p style={{ margin:"4px 0 2px",fontWeight:800,fontSize:17,color:C.navy }}>Critical Warning</p><p style={{ margin:0,fontSize:12,color:"#64748b" }}>Impact: 50 Point Deduction</p></div>
+        </div>
+        <div style={{ background:"#fef2f2",borderLeft:`4px solid ${C.red}`,borderRadius:"0 12px 12px 0",padding:20 }}>
+          <h3 style={{ margin:"0 0 8px",color:C.red,fontSize:15,fontWeight:800 }}>⚠️ Specific Issue Identified:</h3>
+          <p style={{ margin:0,color:"#7f1d1d",fontSize:14,fontWeight:600 }}>Missing Staff Meeting Minutes for October 2023. No digital or physical record found during the scheduled review of the administration logs.</p>
+        </div>
+        <div>
+          <h3 style={{ margin:"0 0 16px",fontSize:15,fontWeight:800,color:C.navy }}>✅ Corrective Action Required:</h3>
+          {["Conduct or document the missing staff meeting retrospectively if minutes were taken but not archived.","Upload the digital minutes to the Compliance Audit Hub under the 'Urgent Correction' tab.","Perform a verification of all house checklists for the current month."].map((step,i)=><div key={i} style={{ display:"flex",gap:14,alignItems:"flex-start",marginBottom:12 }}><span style={{ background:C.orange,color:"#fff",width:24,height:24,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,flexShrink:0 }}>{i+1}</span><p style={{ margin:0,fontSize:13,color:"#475569",lineHeight:1.6 }}>{step}</p></div>)}
+        </div>
+        <div style={{ background:C.navyDark,borderRadius:14,padding:20,display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+          <div style={{ display:"flex",alignItems:"center",gap:16 }}><span style={{ fontSize:36 }}>⏰</span><div><p style={{ margin:0,fontSize:10,color:C.gold,fontWeight:700,letterSpacing:2,textTransform:"uppercase" }}>Final Deadline</p><p style={{ margin:"4px 0 0",color:"#fff",fontWeight:900,fontSize:18 }}>Oct 26, 2023, 10:00 AM</p></div></div>
+          <div style={{ borderLeft:"1px solid #334155",paddingLeft:20 }}><p style={{ margin:0,color:"#94a3b8",fontSize:13 }}>Remaining:</p><p style={{ margin:0,color:C.gold,fontWeight:800,fontSize:14 }}>Within 24 Hours</p></div>
+        </div>
+        <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:32,paddingTop:20,borderTop:"1px solid #e2e8f0" }}>
+          {[{name:"A. Farooq",title:"System Auditor",dept:"Compliance & Internal Audit"},{name:"M. Ibrahim",title:"Director of Administration",dept:"Academic Excellence Board"}].map(s=><div key={s.name}><p style={{ fontSize:22,color:"#94a3b8",fontStyle:"italic",fontWeight:300,marginBottom:12 }}>{s.name}</p><div style={{ borderTop:"1px solid #cbd5e1",paddingTop:8 }}><p style={{ margin:0,fontWeight:800,fontSize:14 }}>{s.title}</p><p style={{ margin:0,fontSize:11,color:"#94a3b8",textTransform:"uppercase",letterSpacing:1 }}>{s.dept}</p></div></div>)}
+        </div>
+        <div style={{ display:"flex",gap:12 }}>
+          <button onClick={()=>window.print()} style={{ background:C.navyDark,color:"#fff",border:"none",borderRadius:10,padding:"12px 24px",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit" }}>🖨️ Print Memo</button>
+          <button onClick={()=>setSubmitted(true)} style={{ background:submitted?C.green:C.orange,color:"#fff",border:"none",borderRadius:10,padding:"12px 24px",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit" }}>{submitted?"✅ Marked Resolved":"📨 Mark as Resolved"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ───────────────────────── NOTICE BOARD ─────────────────────────── */
+function NoticeBoard() {
+  const [notices,setNotices]=useState([
+    {id:1,type:"holiday",  title:"Eid-ul-Fitr Break Announcement",body:"The school will remain closed from Monday, May 20th to Thursday, May 23rd. Classes resume Sunday, May 26th.",date:"May 12, 2024",target:"May 20, 2024"},
+    {id:2,type:"substitute",title:"Grade 10 Physics - Room 4B",      body:"Mr. Ahmed is on leave today. Grade 10 Physics (Period 3) will be covered by Ms. Sarah in the Science Lab.",date:"2 hours ago",target:"Today"},
+    {id:3,type:"general",  title:"Parent-Teacher Meeting Schedule", body:"The end-of-term PTM is scheduled for next Saturday. Detailed time slots sent via email to all parents.",date:"May 10, 2024",target:"May 18, 2024"},
+    {id:4,type:"holiday",  title:"Summer Vacation Update",           body:"Please note the revised start date. The school will close on June 15th instead of June 10th.",date:"May 05, 2024",target:"June 15, 2024"},
+  ]);
+  const [form,setForm]=useState({type:"general",title:"",date:"",body:""});
+  const tc=t=>t==="holiday"?C.green:t==="substitute"?C.blue:C.navy;
+  const tl=t=>t==="holiday"?"Holiday Notice":t==="substitute"?"Substitute Teacher":"General Notice";
+  const publish=()=>{
+    if(!form.title||!form.body)return;
+    setNotices(n=>[{id:Date.now(),...form,date:"Just now",target:form.date||"TBD"},...n]);
+    setForm({type:"general",title:"",date:"",body:""});
+  };
+  return (
+    <div style={{ display:"flex",flexDirection:"column",gap:28 }}>
+      <div style={{ background:C.navyDark,borderRadius:20,padding:"28px 36px",borderBottom:`4px solid ${C.gold}` }}>
+        <h1 style={{ margin:0,fontSize:28,fontWeight:900,color:"#fff" }}>Amin School Hub</h1>
+        <p style={{ margin:"4px 0 0",color:C.gold,fontStyle:"italic",fontSize:16 }}>Notice Board & Communication Hub</p>
+      </div>
+      <div style={{ display:"grid",gridTemplateColumns:"1fr 1.6fr",gap:24,alignItems:"start" }}>
+        <Card>
+          <h3 style={{ fontSize:16,fontWeight:800,color:C.navy,margin:"0 0 6px" }}>Post New Notice</h3>
+          <p style={{ fontSize:12,color:"#64748b",margin:"0 0 20px" }}>Share important updates with the school community.</p>
+          <div style={{ display:"flex",flexDirection:"column",gap:14 }}>
+            <div><label style={{ fontSize:11,fontWeight:700,color:"#64748b",textTransform:"uppercase",display:"block",marginBottom:8 }}>Notice Type</label><div style={{ display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8 }}>{["general","holiday","substitute"].map(t=><button key={t} onClick={()=>setForm(f=>({...f,type:t}))} style={{ padding:"8px 4px",borderRadius:10,border:`2px solid ${form.type===t?tc(t):"#e2e8f0"}`,background:form.type===t?tc(t)+"18":"#fff",fontWeight:700,fontSize:11,color:tc(t),cursor:"pointer",fontFamily:"inherit",textTransform:"capitalize" }}>{t==="substitute"?"Substitute":t.charAt(0).toUpperCase()+t.slice(1)}</button>)}</div></div>
+            {[{label:"Notice Title",key:"title",ph:"e.g. Annual Sports Day 2024",type:"text"},{label:"Relevant Date",key:"date",ph:"",type:"date"}].map(f=><div key={f.key}><label style={{ fontSize:11,fontWeight:700,color:"#64748b",textTransform:"uppercase",display:"block",marginBottom:6 }}>{f.label}</label><input type={f.type} value={form[f.key]} onChange={e=>setForm(v=>({...v,[f.key]:e.target.value}))} placeholder={f.ph} style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:`1.5px solid ${C.gold}44`,fontSize:13,fontFamily:"inherit",boxSizing:"border-box",background:C.bg }}/></div>)}
+            <div><label style={{ fontSize:11,fontWeight:700,color:"#64748b",textTransform:"uppercase",display:"block",marginBottom:6 }}>Details</label><textarea rows={5} value={form.body} onChange={e=>setForm(f=>({...f,body:e.target.value}))} placeholder="Write the full content here..." style={{ width:"100%",padding:"10px 14px",borderRadius:10,border:`1.5px solid ${C.gold}44`,fontSize:13,fontFamily:"inherit",resize:"vertical",boxSizing:"border-box",background:C.bg }}/></div>
+            <button onClick={publish} style={{ background:C.navy,color:"#fff",border:"none",borderRadius:12,padding:14,fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"inherit" }}>📢 Publish Notice</button>
+          </div>
+        </Card>
+        <div>
+          <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20 }}><h3 style={{ fontSize:18,fontWeight:800,color:C.navy,margin:0 }}>Recent Communications</h3><Badge color={C.gold}>Live Updates</Badge></div>
+          <div style={{ display:"flex",flexDirection:"column",gap:16 }}>
+            {notices.map(n=><div key={n.id} style={{ background:C.white,borderRadius:14,padding:24,borderLeft:`6px solid ${tc(n.type)}`,boxShadow:"0 2px 8px #0001" }}>
+              <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10 }}>
+                <div><Badge color={tc(n.type)}>{tl(n.type)}</Badge><h4 style={{ margin:"8px 0 0",fontSize:17,fontWeight:800,color:C.navy }}>{n.title}</h4></div>
+                <span style={{ fontSize:12,color:"#94a3b8",fontStyle:"italic",flexShrink:0 }}>Posted: {n.date}</span>
+              </div>
+              <p style={{ fontSize:13,color:"#475569",lineHeight:1.7,margin:"0 0 12px" }}>{n.body}</p>
+              <div style={{ fontSize:12,color:"#94a3b8",borderTop:`1px solid #f1f5f9`,paddingTop:12 }}><span style={{ fontWeight:800,color:C.navy }}>Target Date:</span> {n.target}</div>
+            </div>)}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ───────────────────────── HPRI REPORT ─────────────────────────── */
+function HPRIReport() {
+  const students=[
+    {id:"88291-B",name:"Ahmed Hassan", house:"Abu Bakr House",tier:"Tier 1 - Red Alert",risk:38,impact:{hvs:"-14.2",rank:"#3",dev:"Moderate High"}},
+    {id:"88305-C",name:"Omar Khalid",  house:"Umar House",    tier:"Tier 2 - Orange",  risk:52,impact:{hvs:"-8.5", rank:"#1",dev:"Low"}},
+    {id:"88419-A",name:"Zaid Raheem",  house:"Ali House",     tier:"Tier 1 - Red Alert",risk:31,impact:{hvs:"-18.0",rank:"#4",dev:"High"}},
+  ];
+  const [sel,setSel]=useState(0);
+  const s=students[sel];
+  const rc=r=>r<40?C.red:r<60?C.amber:C.green;
+  return (
+    <div style={{ display:"flex",flexDirection:"column",gap:24 }}>
+      <div><h2 style={{ fontSize:26,fontWeight:900,color:C.navy,margin:0 }}>HPRI Risk Notification</h2><p style={{ color:"#64748b",marginTop:4,fontSize:13 }}>High Performance Risk Index • Academic Division</p></div>
+      <div style={{ display:"flex",gap:12 }}>
+        {students.map((st,i)=><button key={st.id} onClick={()=>setSel(i)} style={{ flex:1,padding:"12px 16px",borderRadius:12,border:`2px solid ${sel===i?C.red:C.gold+"44"}`,background:sel===i?"#fef2f2":C.white,cursor:"pointer",fontFamily:"inherit",textAlign:"left" }}>
+          <p style={{ margin:0,fontWeight:800,fontSize:13,color:sel===i?C.red:C.navy }}>{st.name}</p>
+          <p style={{ margin:"2px 0 4px",fontSize:11,color:"#64748b" }}>{st.house}</p>
+          <Badge color={rc(st.risk)}>{st.risk}% Safe</Badge>
+        </button>)}
+      </div>
+      <div style={{ background:C.white,borderRadius:16,border:`1px solid ${C.gold}22`,overflow:"hidden" }}>
+        <div style={{ background:C.navyDark,padding:"28px 36px",display:"flex",justifyContent:"space-between",alignItems:"flex-start",borderBottom:`4px solid ${C.navyDark}` }}>
+          <div><h3 style={{ margin:0,fontSize:20,fontWeight:900,color:"#fff",textTransform:"uppercase",letterSpacing:1 }}>Official HPRI Risk Notification</h3><p style={{ margin:"4px 0 0",fontSize:11,color:"#94a3b8",textTransform:"uppercase",letterSpacing:2 }}>High Performance Risk Index • Academic Division</p></div>
+          <div style={{ textAlign:"right" }}><div style={{ background:"#fff1",padding:"6px 12px",borderRadius:6,fontSize:11,fontWeight:700,color:"#fff",textTransform:"uppercase" }}>Strictly Confidential</div><p style={{ margin:"8px 0 0",fontSize:11,color:"#94a3b8" }}>REF: HPRI/2025/{s.id}</p></div>
+        </div>
+        <div style={{ padding:36 }}>
+          <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:24,marginBottom:24 }}>
+            <div>
+              <h4 style={{ fontSize:11,fontWeight:700,color:C.gold,textTransform:"uppercase",letterSpacing:2,marginTop:0,marginBottom:16,borderBottom:`1px solid ${C.gold}44`,paddingBottom:6 }}>1. Student Information</h4>
+              <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:12 }}>
+                {[["Student Name",s.name],["Student ID",s.id],["House",s.house],["Status",s.tier]].map(([k,v])=><div key={k}><p style={{ margin:0,fontSize:10,color:"#94a3b8",fontWeight:700,textTransform:"uppercase",letterSpacing:1 }}>{k}</p>{k==="Status"?<Badge color={C.red}>{v}</Badge>:<p style={{ margin:"4px 0 0",fontWeight:800,fontSize:15 }}>{v}</p>}</div>)}
+              </div>
+            </div>
+            <div style={{ background:"#f8fafc",borderRadius:14,padding:20,border:"1px solid #e2e8f0" }}>
+              <h4 style={{ fontSize:11,fontWeight:700,color:C.gold,textTransform:"uppercase",letterSpacing:2,marginTop:0,marginBottom:16,borderBottom:`1px solid ${C.gold}44`,paddingBottom:6 }}>2. Risk Level Analysis</h4>
+              <div style={{ textAlign:"center" }}>
+                <div style={{ fontSize:48,fontWeight:900,color:rc(s.risk),lineHeight:1 }}>{s.risk}%</div>
+                <p style={{ fontSize:11,fontWeight:700,textTransform:"uppercase",color:"#94a3b8",marginBottom:12 }}>Critical Threshold</p>
+                <div style={{ height:12,background:"#e2e8f0",borderRadius:99,overflow:"hidden" }}><div style={{ height:"100%",width:`${s.risk}%`,background:rc(s.risk),borderRadius:99,transition:"width 0.5s" }}/></div>
+                <p style={{ fontSize:11,color:"#64748b",marginTop:12,lineHeight:1.6 }}>The student has exceeded the primary risk baseline. Immediate intervention required.</p>
+              </div>
+            </div>
+          </div>
+          <div style={{ marginBottom:24 }}>
+            <h4 style={{ fontSize:11,fontWeight:700,color:C.gold,textTransform:"uppercase",letterSpacing:2,marginTop:0,marginBottom:16,borderBottom:`1px solid ${C.gold}44`,paddingBottom:6 }}>3. Institutional Impact Summary</h4>
+            <div style={{ display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16 }}>
+              {[{label:"HVS Performance Loss",value:`${s.impact.hvs} pts`,color:C.red},{label:"House Standing Impact",value:`New Rank: ${s.impact.rank}`,color:C.navy},{label:"Institutional Deviation",value:s.impact.dev,color:C.amber}].map(m=><div key={m.label} style={{ borderLeft:`4px solid ${m.color}`,paddingLeft:16,paddingTop:4,paddingBottom:4,background:m.color+"11",borderRadius:"0 8px 8px 0" }}><p style={{ margin:0,fontSize:10,color:"#94a3b8",fontWeight:700,textTransform:"uppercase",letterSpacing:1 }}>{m.label}</p><p style={{ margin:"4px 0 0",fontWeight:900,fontSize:18,color:m.color }}>{m.value}</p></div>)}
+            </div>
+          </div>
+          <div>
+            <h4 style={{ fontSize:11,fontWeight:700,color:C.gold,textTransform:"uppercase",letterSpacing:2,marginTop:0,marginBottom:16,borderBottom:`1px solid ${C.gold}44`,paddingBottom:6 }}>4. Back On Track Action Plan</h4>
+            <table style={{ width:"100%",borderCollapse:"collapse",fontSize:13 }}>
+              <thead><tr style={{ background:"#f1f5f9" }}>{["Required Task","Target Date","Mandatory"].map(h=><th key={h} style={{ padding:"10px 14px",textAlign:"left",fontSize:11,fontWeight:700,color:"#64748b",textTransform:"uppercase",borderBottom:"1px solid #e2e8f0" }}>{h}</th>)}</tr></thead>
+              <tbody>{[["Mandatory Mentorship Sessions","Effective Immediately"],["Parent-Teacher Counseling","Within 72 Hours"],["Academic Support Lab (ASL) Enrollment","Next Cycle Start"]].map(([task,date])=><tr key={task} style={{ borderBottom:"1px solid #f1f5f9" }}><td style={{ padding:"12px 14px",fontWeight:600 }}>{task}</td><td style={{ padding:"12px 14px",color:"#64748b",fontStyle:"italic" }}>{date}</td><td style={{ padding:"12px 14px",textAlign:"center" }}><Badge color={C.green}>YES</Badge></td></tr>)}</tbody>
+            </table>
+          </div>
+          <div style={{ marginTop:32,paddingTop:20,borderTop:"1px solid #e2e8f0",display:"flex",justifyContent:"space-between" }}>
+            <div><p style={{ fontSize:22,color:"#94a3b8",fontStyle:"italic",margin:"0 0 8px" }}>Sarah Ahmed</p><p style={{ margin:0,fontWeight:800,fontSize:14,color:C.navy }}>Lead Academic Performance Analyst</p><p style={{ margin:0,fontSize:11,color:"#94a3b8",textTransform:"uppercase" }}>Date: October 24, 2025</p></div>
+            <div style={{ display:"flex",gap:12,alignItems:"center" }}>{["Verified\nReport","Official\nSeal"].map(l=><div key={l} style={{ width:56,height:56,borderRadius:"50%",border:`2px solid ${C.gold}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:800,color:C.gold,textTransform:"uppercase",textAlign:"center",lineHeight:1.3 }}>{l}</div>)}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ───────────────────────── HOUSE MANUAL ─────────────────────────── */
+function HouseManual() {
+  const [tab,setTab]=useState("conduct");
+  const tabs=[{key:"conduct",label:"📜 Code of Conduct"},{key:"academic",label:"🎓 Academic & Leadership"},{key:"sports",label:"⚽ Sports & Athletics"},{key:"events",label:"📅 Annual Events"}];
+  return (
+    <div style={{ display:"flex",flexDirection:"column",gap:24 }}>
+      <div style={{ background:`linear-gradient(135deg,${C.navyDark},#1e3a5f)`,borderRadius:20,padding:"28px 36px",display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+        <div><p style={{ color:C.gold,fontWeight:700,fontSize:11,letterSpacing:3,textTransform:"uppercase",margin:"0 0 6px" }}>Ameen Islamic Institute</p><h2 style={{ fontSize:26,fontWeight:900,color:"#fff",margin:0 }}>House System Manual 2026-27</h2></div>
+        <div style={{ background:"#ffffff18",borderRadius:12,padding:"10px 20px",textAlign:"center" }}><p style={{ margin:0,color:"#94a3b8",fontSize:9,textTransform:"uppercase",letterSpacing:2 }}>Document Ref</p><p style={{ margin:"2px 0 0",color:C.gold,fontWeight:800,fontFamily:"monospace" }}>AII-HS-2026-001</p></div>
+      </div>
+      <div style={{ display:"flex",gap:8,flexWrap:"wrap" }}>
+        {tabs.map(t=><button key={t.key} onClick={()=>setTab(t.key)} style={{ padding:"10px 18px",borderRadius:10,border:`2px solid ${tab===t.key?C.gold:C.gold+"44"}`,background:tab===t.key?C.goldLight:C.white,color:tab===t.key?C.goldDark:"#64748b",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit" }}>{t.label}</button>)}
+      </div>
+      {tab==="conduct"&&<div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:20 }}>
+        {[{title:"Disciplinary Standards",items:["Punctuality is mandatory for all Salah sessions, academic lectures, and house assemblies.","The Institute uniform must be worn with dignity — clean, modest, and pressed.","Digital devices are permitted only in designated learning zones under faculty supervision."],quote:'"Adab (Etiquette) precedes knowledge."'},
+          {title:"Interpersonal Ethics",items:["Zero tolerance for bullying or exclusionary behavior.","Constructive speech (Hifz al-Lisan) at all times.","Respect for the diversity of thought within the Ummah."],quote:'"Uphold Prophetic character (Akhlaq) in all interactions."'},
+          {title:"Academic Integrity",items:["Academic pursuit is a form of 'Ibadah. Honesty in examinations is non-negotiable.","All work must be original and attributed correctly.","Seek knowledge with Ikhlas (sincerity) at all times."],quote:'"Seek knowledge even unto China."'},
+          {title:"House Responsibilities",items:["Active participation in House competitions and community service projects.","Mentorship of younger house members through the buddy system.","Each student is an ambassador of their House (Bait)."],quote:'"Every one of you is a shepherd and is responsible for his flock."'}
+        ].map(s=><Card key={s.title}><div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:14 }}><div style={{ width:4,height:24,background:C.gold,borderRadius:4 }}/><h3 style={{ margin:0,fontSize:15,fontWeight:800,color:C.navy,textTransform:"uppercase",letterSpacing:1 }}>{s.title}</h3></div><p style={{ fontSize:12,fontStyle:"italic",color:"#64748b",marginBottom:12 }}>{s.quote}</p>{s.items.map((item,i)=><div key={i} style={{ display:"flex",gap:10,marginBottom:8 }}><span style={{ color:C.gold,fontWeight:700,fontSize:12,flexShrink:0 }}>{["I.","II.","III."][i]}</span><p style={{ margin:0,fontSize:12,color:"#475569",lineHeight:1.6 }}>{item}</p></div>)}</Card>)}
+        <div style={{ gridColumn:"1 / -1",background:C.navyDark,borderRadius:16,padding:36,textAlign:"center" }}>
+          <h3 style={{ margin:"0 0 16px",fontSize:22,fontStyle:"italic",color:C.gold }}>Pledge of Excellence</h3>
+          <p style={{ color:"#94a3b8",fontStyle:"italic",fontSize:14,lineHeight:1.8,maxWidth:600,margin:"0 auto 32px" }}>"I solemnly pledge to uphold the values of Ameen Islamic Institute, to seek knowledge for the sake of the Almighty, to respect my teachers and peers, and to strive for excellence in character and intellect."</p>
+          <div style={{ display:"flex",justifyContent:"center",gap:48 }}>{["Student Signature","Date of Commitment"].map(l=><div key={l} style={{ borderBottom:`1px solid ${C.gold}88`,paddingBottom:8,width:160,textAlign:"center" }}><p style={{ margin:"8px 0 0",fontSize:10,color:C.gold,fontWeight:700,textTransform:"uppercase",letterSpacing:2 }}>{l}</p></div>)}</div>
+        </div>
+      </div>}
+      {tab==="academic"&&<div style={{ display:"flex",flexDirection:"column",gap:20 }}>
+        <div style={{ display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16 }}>
+          {[{title:"Top Academic Grades",desc:"Students achieving Grade A* or A in terminal examinations contribute significantly to their house standing.",pts:"+50"},{title:"Improved Performance",desc:"Recognizing students who show a 15% improvement in cumulative average compared to previous terms.",pts:"+30"},{title:"Public Speaking Awards",desc:"Wins in Inter-House debates, elocution, and Model UN conferences earn tiered excellence points.",pts:"+40"}].map(c=><Card key={c.title} style={{ borderLeft:`4px solid ${C.gold}` }}><h3 style={{ margin:"0 0 10px",fontSize:15,fontWeight:800,color:C.navy }}>{c.title}</h3><p style={{ fontSize:12,color:"#64748b",lineHeight:1.6,marginBottom:16 }}>{c.desc}</p><p style={{ margin:0,fontSize:26,fontWeight:900,color:C.gold }}>{c.pts} <span style={{ fontSize:12,fontWeight:700,color:C.navy }}>Points</span></p></Card>)}
+        </div>
+        <Card><h3 style={{ margin:"0 0 20px",fontSize:15,fontWeight:800,color:C.navy }}>🏛️ House Leadership Structure</h3><div style={{ display:"flex",flexDirection:"column",alignItems:"center",gap:0 }}><div style={{ width:260,marginBottom:0 }}><div style={{ background:C.navy,color:"#fff",padding:"10px 0",textAlign:"center",fontWeight:800,fontSize:12,letterSpacing:2,borderRadius:4,boxShadow:`0 4px 12px ${C.navy}44` }}>HOUSE CAPTAIN</div><div style={{ height:20,width:2,background:C.gold,margin:"0 auto" }}/></div><div style={{ width:220,marginBottom:0 }}><div style={{ background:"#fff",border:`2px solid ${C.navy}`,color:C.navy,padding:"10px 0",textAlign:"center",fontWeight:800,fontSize:12,letterSpacing:2,borderRadius:4 }}>VICE CAPTAIN</div><div style={{ height:20,width:2,background:C.gold,margin:"0 auto" }}/></div><div style={{ display:"flex",gap:12,width:"100%",justifyContent:"center" }}>{["Academic Prefect","Sports Prefect","Discipline Prefect","Cultural Prefect"].map(p=><div key={p} style={{ flex:1,maxWidth:140,background:"#f8fafc",border:"1px solid #e2e8f0",padding:"8px 6px",textAlign:"center",fontSize:10,fontWeight:700,color:C.navy,textTransform:"uppercase",borderRadius:4 }}>{p}</div>)}</div></div></Card>
+      </div>}
+      {tab==="sports"&&<div style={{ display:"flex",flexDirection:"column",gap:20 }}>
+        <div style={{ background:C.navy,borderRadius:14,padding:24,color:"#fff" }}><p style={{ fontSize:18,fontStyle:"italic",color:C.gold,margin:"0 0 8px" }}>"Empowering physical strength and teamwork through competition."</p><p style={{ fontSize:13,color:"#94a3b8",margin:0,lineHeight:1.7 }}>The Sports & Athletics program cultivates discipline, resilience, and fraternal bonds while honoring the prophetic tradition of physical well-being.</p></div>
+        <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:16 }}>{[{icon:"⚡",title:"Annual Athletics Meet",desc:"Track and field events including sprints, relays, and long jump."},{icon:"🏏",title:"Inter-House Cricket League",desc:"The premier T20 format tournament for house supremacy."},{icon:"⚽",title:"Football Championship",desc:"High-intensity knockout tournament held in the winter term."},{icon:"🏹",title:"Sunnah Sports Showcase",desc:"Traditional mastery in Archery and Competitive Swimming."}].map(e=><div key={e.title} style={{ background:C.bg,borderRadius:12,padding:16,border:`1px solid ${C.gold}33`,display:"flex",gap:14,alignItems:"flex-start" }}><div style={{ fontSize:28,flexShrink:0 }}>{e.icon}</div><div><p style={{ margin:0,fontWeight:800,fontSize:14,color:C.navy }}>{e.title}</p><p style={{ margin:"4px 0 0",fontSize:12,color:"#64748b" }}>{e.desc}</p></div></div>)}</div>
+        <Card><h3 style={{ margin:"0 0 16px",fontSize:15,fontWeight:800,color:C.navy }}>🏅 House Scoring Matrix</h3><table style={{ width:"100%",borderCollapse:"collapse",fontSize:13 }}><thead><tr style={{ background:C.navyDark,color:"#fff" }}>{["Category","1st Place (Gold)","2nd Place (Silver)","3rd Place (Bronze)"].map(h=><th key={h} style={{ padding:"12px 16px",textAlign:h==="Category"?"left":"center",fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:1 }}>{h}</th>)}</tr></thead><tbody>{[["Major Team Sports","500 Pts","300 Pts","150 Pts"],["Sunnah Sports Showcase","400 Pts","250 Pts","100 Pts"],["Individual Athletics","100 Pts","75 Pts","50 Pts"]].map((r,i)=><tr key={r[0]} style={{ borderBottom:`1px solid ${C.gold}18`,background:i%2?C.bg:"#fff" }}><td style={{ padding:"12px 16px",fontWeight:700 }}>{r[0]}</td><td style={{ padding:"12px 16px",textAlign:"center",fontWeight:700,color:C.amber }}>{r[1]}</td><td style={{ padding:"12px 16px",textAlign:"center",color:"#64748b",fontWeight:600 }}>{r[2]}</td><td style={{ padding:"12px 16px",textAlign:"center",color:"#b45309",fontWeight:600 }}>{r[3]}</td></tr>)}</tbody></table></Card>
+      </div>}
+      {tab==="events"&&<div style={{ display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:20 }}>
+        {[{term:"Term 1: Foundation",color:C.navy,events:[{name:"The Investiture Ceremony",desc:"Induction of House Captains and Prefects. The formal passing of the House banners."},{name:"Inter-House Athletics Meet",desc:"A week of track and field events culminating in the sprint finals and relay championships."},{name:"House Spirit Week",desc:"Daily themes and lunchtime challenges to build camaraderie and identity."}]},
+          {term:"Term 2: Intellectual",color:C.gold,events:[{name:"Grand Quran Recitation League",desc:"The premier spiritual event where points are awarded for Tajweed, Hifz, and Eloquence."},{name:"Science & Innovation Expo",desc:"Collaborative STEM projects judged by external industry professionals."},{name:"Debating Championship",desc:"A rigorous knockout tournament focusing on ethics, logic, and public speaking."}]},
+          {term:"Term 3: Achievement",color:C.navy,events:[{name:"Charity Drive Gala",desc:"Houses compete to raise funds and awareness for local community social projects."},{name:"Creative Arts Showcase",desc:"Exhibition of visual arts, calligraphy, and architectural design from all houses."},{name:"Year-End Grand Finale",desc:"The crowning of the House Champions and presentation of the Academic Shield."}]}
+        ].map(t=><Card key={t.term} style={{ borderLeft:`4px solid ${t.color}` }}><h3 style={{ margin:"0 0 20px",fontSize:14,fontWeight:800,color:t.color,textTransform:"uppercase",letterSpacing:1,borderBottom:`2px solid ${C.gold}`,paddingBottom:8 }}>{t.term}</h3>{t.events.map(ev=><div key={ev.name} style={{ marginBottom:16,paddingLeft:8 }}><p style={{ margin:0,fontWeight:800,fontSize:13,color:C.navy }}>{ev.name}</p><p style={{ margin:"4px 0 0",fontSize:11,color:"#64748b",lineHeight:1.6 }}>{ev.desc}</p></div>)}</Card>)}
+      </div>}
+    </div>
+  );
+}
+
+/* ───────────────────────── COMING SOON ─────────────────────────── */
+/* ─────────────────────── EVENT SCHEDULER ─────────────────────── */
+function EventScheduler() {
+  const [calView, setCalView] = useState("month");
+  const [points, setPoints] = useState({ first: 100, second: 75, participation: 10 });
+  const [selectedEvent, setSelectedEvent] = useState("quran");
+
+  const EVENTS_ON_DAYS = {
+    2:  { label: "Business Gala Prep",   color: "#1d4ed8", bg: "#dbeafe" },
+    6:  { label: "Quran League: Rnd 1",  color: "#166534", bg: "#dcfce7" },
+    14: { label: "Annual Sports Meet",   color: "#92400e", bg: "#fef3c7" },
+    20: { label: "House Captain Vote",   color: "#7c3aed", bg: "#ede9fe" },
+  };
+
+  const days = [28,29,30,...Array.from({length:18},(_,i)=>i+1)];
+  const dayNames = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+
+  const HOUSES_PROJECTION = [
+    { name:"ABU BAKR (Siddiq)", pts:1450, pct:85, color:C.abuBakr, proj:"+50 pts after Quran League",  projColor:"#16a34a" },
+    { name:"UMAR (Farooq)",     pts:1210, pct:72, color:C.umar,    proj:"+100 pts after Sports Meet",  projColor:"#d97706" },
+    { name:"UTHMAN (Ghani)",    pts:980,  pct:58, color:C.uthman,  proj:"Stable projection",           projColor:"#94a3b8" },
+    { name:"ALI (Murtaza)",     pts:870,  pct:50, color:C.ali,     proj:"+30 pts pending",             projColor:"#94a3b8" },
+  ];
+
+  const LOGISTICS = [
+    { event:"quran", label:"Quran League", badge:"Action Required", badgeColor:"#92400e", badgeBg:"#fef3c7", venue:"Main Auditorium (Phase 1)", lead:"MA", leadName:"Ustadh Mohammad Ali", progress:65 },
+    { event:"sports", label:"Annual Sports Meet", badge:"Confirmed", badgeColor:"#166534", badgeBg:"#dcfce7", venue:"Sports Grounds", lead:"JZ", leadName:"Coach Zakaria", progress:40 },
+    { event:"gala", label:"Business Gala", badge:"Planning", badgeColor:"#1e40af", badgeBg:"#dbeafe", venue:"Conference Hall B", lead:"SK", leadName:"Ms. Sarah Khan", progress:20 },
+  ];
+
+  const sel = LOGISTICS.find(l=>l.event===selectedEvent)||LOGISTICS[0];
+
+  return (
+    <div style={{ maxWidth:1200, margin:"0 auto" }}>
+      {/* Hero Banner */}
+      <div style={{ background:`linear-gradient(135deg, ${C.navyDark} 0%, #1e3a5f 100%)`, borderRadius:16, padding:"28px 32px", marginBottom:28, display:"flex", justifyContent:"space-between", alignItems:"center", position:"relative", overflow:"hidden" }}>
+        <div style={{ position:"absolute", right:-40, top:-40, width:200, height:200, borderRadius:"50%", background:C.gold, opacity:0.06 }}/>
+        <div>
+          <p style={{ margin:"0 0 4px", fontSize:11, fontWeight:700, color:C.gold, textTransform:"uppercase", letterSpacing:2 }}>Ameen School Hub</p>
+          <h2 style={{ margin:"0 0 6px", fontSize:26, fontWeight:900, color:"#fff" }}>📅 Event & Competition Scheduler</h2>
+          <p style={{ margin:0, fontSize:13, color:"#94a3b8" }}>Manage institutional events, logistics, and house point projections.</p>
+        </div>
+        <div style={{ display:"flex", gap:12 }}>
+          <div style={{ background:"rgba(255,255,255,0.08)", borderRadius:12, padding:"14px 22px", textAlign:"center" }}>
+            <p style={{ margin:0, fontSize:11, color:"#94a3b8", fontWeight:700, textTransform:"uppercase", letterSpacing:1 }}>Events This Term</p>
+            <p style={{ margin:"4px 0 0", fontSize:28, fontWeight:900, color:C.gold }}>12</p>
+          </div>
+          <div style={{ background:"rgba(255,255,255,0.08)", borderRadius:12, padding:"14px 22px", textAlign:"center" }}>
+            <p style={{ margin:0, fontSize:11, color:"#94a3b8", fontWeight:700, textTransform:"uppercase", letterSpacing:1 }}>Pending Logistics</p>
+            <p style={{ margin:"4px 0 0", fontSize:28, fontWeight:900, color:"#f87171" }}>3</p>
+          </div>
+          <div style={{ background:"rgba(255,255,255,0.08)", borderRadius:12, padding:"14px 22px", textAlign:"center" }}>
+            <p style={{ margin:0, fontSize:11, color:"#94a3b8", fontWeight:700, textTransform:"uppercase", letterSpacing:1 }}>Points Awarded</p>
+            <p style={{ margin:"4px 0 0", fontSize:28, fontWeight:900, color:"#4ade80" }}>4,510</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Grid */}
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 380px", gap:24 }}>
+        {/* LEFT COLUMN */}
+        <div style={{ display:"flex", flexDirection:"column", gap:24 }}>
+
+          {/* Calendar */}
+          <div style={{ background:C.white, borderRadius:16, border:`1px solid ${C.gold}22`, boxShadow:"0 2px 12px #b7860b0a", overflow:"hidden" }}>
+            <div style={{ background:C.navyDark, padding:"16px 24px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <h3 style={{ margin:0, fontSize:15, fontWeight:800, color:"#fff", display:"flex", alignItems:"center", gap:8 }}>📆 Institutional Event Calendar</h3>
+              <div style={{ display:"flex", gap:8 }}>
+                {["month","term"].map(v=>(
+                  <button key={v} onClick={()=>setCalView(v)} style={{ padding:"5px 14px", borderRadius:8, border:`1px solid ${C.gold}`, background:calView===v?C.gold:"transparent", color:calView===v?C.navyDark:"#fff", fontSize:11, fontWeight:700, cursor:"pointer", textTransform:"uppercase", letterSpacing:1 }}>
+                    {v}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Day header */}
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", padding:"12px 16px 8px", background:"#f8fafc", borderBottom:`1px solid ${C.gold}11` }}>
+              {dayNames.map(d=><div key={d} style={{ textAlign:"center", fontSize:10, fontWeight:800, color:"#94a3b8", textTransform:"uppercase", letterSpacing:1 }}>{d}</div>)}
+            </div>
+            {/* Calendar cells */}
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:4, padding:16 }}>
+              {days.map((d,i)=>{
+                const ev = EVENTS_ON_DAYS[d];
+                const isPrev = d > 20;
+                const isFirst = d===1;
+                return (
+                  <div key={i} style={{ height:90, border:`${isFirst?"2px":"1px"} solid ${isFirst?C.gold:"#e2e8f0"}`, borderRadius:10, padding:8, background:ev?"#fafafa":isPrev?"#f9f9f9":"#fff", cursor:ev?"pointer":"default", position:"relative", transition:"box-shadow 0.15s" }}>
+                    <span style={{ fontSize:11, fontWeight:isFirst?800:500, color:isPrev?"#d1d5db":isFirst?C.gold:C.navy }}>{d}{isFirst&&<span style={{ display:"block", fontSize:10, color:C.gold, fontWeight:700 }}>OCT</span>}</span>
+                    {ev&&<div style={{ marginTop:4, background:ev.bg, borderLeft:`3px solid ${ev.color}`, borderRadius:4, padding:"3px 5px" }}>
+                      <span style={{ fontSize:9, color:ev.color, fontWeight:700, lineHeight:1.3, display:"block" }}>{ev.label}</span>
+                    </div>}
+                  </div>
+                );
+              })}
+            </div>
+            {/* Legend */}
+            <div style={{ padding:"12px 20px", borderTop:`1px solid ${C.gold}11`, display:"flex", gap:16, flexWrap:"wrap" }}>
+              {[["Business Gala","#1d4ed8","#dbeafe"],["Quran League","#166534","#dcfce7"],["Sports Meet","#92400e","#fef3c7"],["Other","#7c3aed","#ede9fe"]].map(([l,c,b])=>(
+                <div key={l} style={{ display:"flex", alignItems:"center", gap:6 }}>
+                  <div style={{ width:10, height:10, borderRadius:2, background:b, border:`2px solid ${c}` }}/>
+                  <span style={{ fontSize:10, color:"#64748b", fontWeight:600 }}>{l}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Logistics Tracker */}
+          <div style={{ background:C.white, borderRadius:16, border:`1px solid ${C.gold}22`, boxShadow:"0 2px 12px #b7860b0a" }}>
+            <div style={{ padding:"16px 24px", borderBottom:`1px solid ${C.gold}11`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <h3 style={{ margin:0, fontSize:14, fontWeight:800, color:C.navy, textTransform:"uppercase", letterSpacing:1, display:"flex", alignItems:"center", gap:8 }}>🗂️ Logistic Tracker</h3>
+              <span style={{ background:"#fef3c7", color:"#92400e", fontSize:10, fontWeight:700, padding:"4px 10px", borderRadius:99, textTransform:"uppercase", letterSpacing:1 }}>Action Required</span>
+            </div>
+            {/* Event tabs */}
+            <div style={{ display:"flex", gap:0, borderBottom:`1px solid ${C.gold}11` }}>
+              {LOGISTICS.map(l=>(
+                <button key={l.event} onClick={()=>setSelectedEvent(l.event)} style={{ flex:1, padding:"12px 16px", border:"none", borderBottom:`3px solid ${selectedEvent===l.event?C.gold:"transparent"}`, background:"transparent", color:selectedEvent===l.event?C.gold:C.navy, fontWeight:selectedEvent===l.event?800:600, fontSize:12, cursor:"pointer", transition:"all 0.15s" }}>
+                  {l.label}
+                </button>
+              ))}
+            </div>
+            <div style={{ padding:24 }}>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:20 }}>
+                <div>
+                  <p style={{ margin:"0 0 6px", fontSize:10, fontWeight:700, color:"#94a3b8", textTransform:"uppercase", letterSpacing:1 }}>Venue Assignment</p>
+                  <select style={{ width:"100%", padding:"8px 12px", border:`1px solid ${C.gold}44`, borderRadius:8, fontSize:13, color:C.navy, background:"#f8fafc" }}>
+                    <option>{sel.venue}</option>
+                    <option>Conference Hall B</option>
+                    <option>Open Courtyard</option>
+                  </select>
+                </div>
+                <div>
+                  <p style={{ margin:"0 0 6px", fontSize:10, fontWeight:700, color:"#94a3b8", textTransform:"uppercase", letterSpacing:1 }}>Staff Lead</p>
+                  <div style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 12px", border:`1px solid ${C.gold}44`, borderRadius:8, background:"#f8fafc" }}>
+                    <div style={{ width:28, height:28, borderRadius:"50%", background:C.navyDark, display:"flex", alignItems:"center", justifyContent:"center", color:C.gold, fontSize:10, fontWeight:800, flexShrink:0 }}>{sel.lead}</div>
+                    <span style={{ fontSize:12, color:C.navy, fontWeight:600 }}>{sel.leadName}</span>
+                  </div>
+                </div>
+                <div>
+                  <p style={{ margin:"0 0 6px", fontSize:10, fontWeight:700, color:"#94a3b8", textTransform:"uppercase", letterSpacing:1 }}>Completion Status</p>
+                  <div style={{ display:"flex", alignItems:"center", gap:10, marginTop:10 }}>
+                    <div style={{ flex:1, height:8, background:"#e2e8f0", borderRadius:99, overflow:"hidden" }}>
+                      <div style={{ width:`${sel.progress}%`, height:"100%", background:`linear-gradient(90deg, ${C.gold}, ${C.goldDark})`, borderRadius:99 }}/>
+                    </div>
+                    <span style={{ fontSize:12, fontWeight:800, color:C.navy, minWidth:36 }}>{sel.progress}%</span>
+                  </div>
+                </div>
+              </div>
+              <div style={{ marginTop:20, paddingTop:16, borderTop:`1px solid ${C.gold}11`, display:"flex", justifyContent:"flex-end", gap:12 }}>
+                <button style={{ padding:"9px 20px", border:`1.5px solid ${C.navy}`, borderRadius:9, background:"transparent", color:C.navy, fontSize:12, fontWeight:700, cursor:"pointer" }}>📥 Download Brief</button>
+                <button style={{ padding:"9px 20px", border:"none", borderRadius:9, background:C.navyDark, color:"#fff", fontSize:12, fontWeight:700, cursor:"pointer" }}>➕ Assign New Task</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN */}
+        <div style={{ display:"flex", flexDirection:"column", gap:24 }}>
+
+          {/* Point Allocation */}
+          <div style={{ background:C.white, borderRadius:16, border:`1px solid ${C.gold}22`, boxShadow:"0 2px 12px #b7860b0a", overflow:"hidden" }}>
+            <div style={{ background:C.navyDark, padding:"16px 24px" }}>
+              <h3 style={{ margin:0, fontSize:14, fontWeight:800, color:"#fff", textTransform:"uppercase", letterSpacing:1 }}>🏅 Point Allocation Map</h3>
+              <p style={{ margin:"4px 0 0", fontSize:11, color:"#94a3b8" }}>Define how event results translate to House Points.</p>
+            </div>
+            <div style={{ padding:24 }}>
+              {[
+                { label:"1st Place", sub:"Main Event Winner",  key:"first" },
+                { label:"2nd Place", sub:"Runner Up",          key:"second" },
+                { label:"Participation", sub:"Per Participant",key:"participation" },
+              ].map(row=>(
+                <div key={row.key} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"12px 16px", background:"#f8fafc", borderRadius:10, border:`1px solid ${C.gold}11`, marginBottom:10 }}>
+                  <div>
+                    <p style={{ margin:0, fontSize:13, fontWeight:800, color:C.navy }}>{row.label}</p>
+                    <p style={{ margin:0, fontSize:11, color:"#94a3b8" }}>{row.sub}</p>
+                  </div>
+                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                    <input
+                      type="number"
+                      value={points[row.key]}
+                      onChange={e=>setPoints(p=>({...p,[row.key]:+e.target.value}))}
+                      style={{ width:60, padding:"6px 10px", border:`1.5px solid ${C.gold}`, borderRadius:8, fontSize:15, fontWeight:800, color:C.gold, textAlign:"center", background:"#fff" }}
+                    />
+                    <span style={{ fontSize:11, color:"#94a3b8", fontWeight:600 }}>pts</span>
+                  </div>
+                </div>
+              ))}
+              <button style={{ width:"100%", marginTop:8, padding:"12px", border:`2px dashed ${C.gold}`, borderRadius:12, background:"transparent", color:C.gold, fontSize:12, fontWeight:700, cursor:"pointer" }}>
+                ➕ Add Custom Rule
+              </button>
+              <button style={{ width:"100%", marginTop:10, padding:"12px", border:"none", borderRadius:12, background:C.gold, color:C.navyDark, fontSize:13, fontWeight:800, cursor:"pointer" }}>
+                💾 Save Allocation Rules
+              </button>
+            </div>
+          </div>
+
+          {/* Super House Projection */}
+          <div style={{ background:C.white, borderRadius:16, border:`2px solid ${C.gold}`, boxShadow:"0 4px 20px #b7860b18", overflow:"hidden", position:"relative" }}>
+            <div style={{ position:"absolute", right:-30, bottom:-30, width:120, height:120, borderRadius:"50%", background:C.gold, opacity:0.08 }}/>
+            <div style={{ padding:"16px 24px", borderBottom:`1px solid ${C.gold}22`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <h3 style={{ margin:0, fontSize:14, fontWeight:900, color:C.navy, textTransform:"uppercase", letterSpacing:1 }}>🔮 Super House Projection</h3>
+              <span style={{ background:C.gold, color:C.navyDark, fontSize:9, fontWeight:800, padding:"3px 8px", borderRadius:99, textTransform:"uppercase", letterSpacing:1 }}>Live Impact</span>
+            </div>
+            <div style={{ padding:24 }}>
+              {HOUSES_PROJECTION.map((h,i)=>(
+                <div key={h.name} style={{ marginBottom:i<HOUSES_PROJECTION.length-1?20:0 }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+                    <span style={{ fontSize:11, fontWeight:800, color:h.color }}>{h.name}</span>
+                    <span style={{ fontSize:13, fontWeight:900, color:C.gold }}>{h.pts.toLocaleString()} pts</span>
+                  </div>
+                  <div style={{ height:10, background:"#f1f5f9", borderRadius:99, overflow:"hidden", marginBottom:4 }}>
+                    <div style={{ width:`${h.pct}%`, height:"100%", background:`linear-gradient(90deg, ${h.color}, ${h.color}99)`, borderRadius:99, transition:"width 0.5s" }}/>
+                  </div>
+                  <p style={{ margin:0, fontSize:10, fontWeight:700, color:h.projColor }}>↗ {h.proj}</p>
+                </div>
+              ))}
+              <div style={{ marginTop:20, paddingTop:16, borderTop:`1px solid ${C.gold}11`, textAlign:"center" }}>
+                <p style={{ margin:"0 0 4px", fontSize:10, color:"#94a3b8", fontWeight:700, textTransform:"uppercase", letterSpacing:1 }}>Projected Winner — Michaelmas Term</p>
+                <p style={{ margin:0, fontSize:20, fontWeight:900, color:C.abuBakr, fontStyle:"italic" }}>ABU BAKR HOUSE 🏆</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────── PTM SCHEDULER ─────────────────────── */
+/* ─────────────────────── MASTER SUITE ─────────────────────── */
+function MasterSuite() {
+  const pillars = [
+    { icon:"🛡️", title:"Strategic Governance", items:["Master Director Portal — Central institutional command center","Faculty Management — Staff performance & attendance tracking","Strategic CEO ERP — Financial & operational executive suite"] },
+    { icon:"📖", title:"Academic & Hifz",        items:["Multi-section Timetables — Dynamic academic & Hifz scheduling","Smart Assessment — Rapid entry for exams & Hifz progress","SB5 Cognitive Hub — Data-driven student intellectual mapping"] },
+    { icon:"🏠", title:"Automated House",         items:["Sentinel Mode — Automated scoring via behavioral triggers","Digital Hallway — Live leaderboards across campus","2026-27 Manual — Digitized house rules, history & merit system"] },
+    { icon:"🤲", title:"Community & Values",      items:["Parent Portals — Real-time transparency for student dev & fees","Fakhar ka Paigham — Success stories & pride messages portal","Event Scheduler — Calendar for Islamic events & competitions"] },
+    { icon:"⚙️",  title:"Technical Readiness",    items:["API Schemas — Comprehensive third-party integration docs","Database ERDs — Scalable entity-relationship diagrams","Architecture Roadmap — Multi-year AI & system upgrade plan"] },
+  ];
+
+  return (
+    <div style={{ maxWidth:1200, margin:"0 auto" }}>
+      {/* Dark Header */}
+      <div style={{ background:"linear-gradient(135deg, #0a192f 0%, #112240 100%)", borderRadius:20, padding:"36px 40px", marginBottom:32, position:"relative", overflow:"hidden", boxShadow:"0 8px 48px #0a192f88" }}>
+Done
+
+
+
+
+
