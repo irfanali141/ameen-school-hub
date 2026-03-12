@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { initializeApp } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "firebase/auth";
-import { getFirestore, collection, getDocs, addDoc as fbAddDoc, doc, setDoc, updateDoc, onSnapshot, serverTimestamp, query, orderBy, limit, where, deleteDoc } from "firebase/firestore";
+import { getFirestore, collection, getDocs, addDoc as fbAddDoc, doc, setDoc, updateDoc, onSnapshot, serverTimestamp, query, orderBy, limit } from "firebase/firestore";
 
 const firebaseConfig = { apiKey: "AIzaSyAfGiUY0NlV1t2O99aaSvnqESrGBzr9PnE", authDomain: "ameen-school-hub.firebaseapp.com", projectId: "ameen-school-hub", storageBucket: "ameen-school-hub.firebasestorage.app", messagingSenderId: "793128969005", appId: "1:793128969005:web:12483cc66233eb7cdbe9a4" };
 const app = initializeApp(firebaseConfig);
@@ -293,7 +293,6 @@ function HVSEntry({students,houses,addData,updateHousePoints}){
   const [scores,setScores]=useState({});
   const [logs,setLogs]=useState([]);
   const [saving,setSaving]=useState(false);
-  const [selLog,setSelLog]=useState(null);
 
   useEffect(()=>{
     const q2=query(collection(db,"hvs_logs"),orderBy("createdAt","desc"),limit(50));
@@ -301,7 +300,6 @@ function HVSEntry({students,houses,addData,updateHousePoints}){
   },[]);
 
   const setScore=(cat,val)=>setScores({...scores,[cat]:val});
-  const getMax=(cat)=>HVS_CATS.find(c=>c.id===cat)?.max||10;
   const calcScore=(r,max)=>Math.round((r/4)*max);
   const total=HVS_CATS.reduce((sum,cat)=>sum+(calcScore(scores[cat.id]||0,cat.max)),0);
   const hInfo=HOUSES.find(h=>h.id===houseId)||{};
@@ -363,7 +361,6 @@ function HVSEntry({students,houses,addData,updateHousePoints}){
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px",marginBottom:"20px"}}>
         {HVS_CATS.map(cat=>{
           const rating=scores[cat.id]||0;
-          const ri=rInfo(rating);
           const earned=calcScore(rating,cat.max);
           return <div key={cat.id} style={{background:C.white,borderRadius:"14px",padding:"16px",border:`1px solid ${C.goldLight}`}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"8px"}}>
@@ -616,9 +613,8 @@ function Houses({houses,hvsLogs,students}){
   return <div style={S.page}>
     <div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy,marginBottom:"24px"}}>🏠 ہاؤس سسٹم</div>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:"20px",marginBottom:"28px"}}>
-      {sorted.map((h,i)=>{ const info=HOUSES.find(x=>x.id===h.id)||{}; const totals=catTotals(h.id); const studs=hStudents(h.id);
-        return <div key={h.id} style={{background:info.gradient,borderRadius:"22px",padding:"24px",color:C.white,position:"relative",overflow:"hidden",boxShadow:`0 8px 32px ${info.color||C.navy}40`}}>
-          {i===0&&<div style={{position:"absolute",top:"12px",left:"14px",fontSize:"1.6rem"}}>👑</div>}
+      {sorted.map((h,i)=>{ const info=HOUSES.find(x=>x.id===h.id)||{}; const studs=hStudents(h.id);
+        return <div key={h.id} style={{background:info.gradient,borderRadius:"22px",padding:"24px",color:C.white,position:"relative",overflow:"hidden",boxShadow:`0 8px 32px ${info.color||C.navy}40`}}>          {i===0&&<div style={{position:"absolute",top:"12px",left:"14px",fontSize:"1.6rem"}}>👑</div>}
           <div style={{position:"absolute",top:"12px",right:"14px",fontSize:"0.65rem",background:"rgba(255,255,255,0.2)",padding:"4px 10px",borderRadius:"20px",fontWeight:"700"}}>#{i+1}</div>
           <div style={{fontSize:"2.2rem",marginBottom:"8px"}}>{info.emoji}</div>
           <div style={{fontSize:"1rem",fontWeight:"800",marginBottom:"2px"}}>{info.nameEn} House</div>
@@ -758,7 +754,6 @@ function FeeManagement({students,addData}){
   const add=async()=>{ if(!f.studentId)return; await addData("fees",{...f,amount:Number(f.amount)}); setShow(false); setF({studentId:"",amount:3000,month:"",type:"monthly",status:"pending",notes:""}); };
   const markPaid=async(feeId)=>{ await updateDoc(doc(db,"fees",feeId),{status:"paid",paidAt:serverTimestamp()}); };
 
-  const currentMonth=new Date().toISOString().slice(0,7);
   const filtered=fees.filter(fee=>{
     const st=students.find(s=>s.id===fee.studentId);
     const matchQ=!q||st?.name?.includes(q)||fee.month?.includes(q);
