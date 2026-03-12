@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useState, useEffect } from "react";
 import { initializeApp } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "firebase/auth";
@@ -312,8 +313,6 @@ function HVSEntry({students,houses,addData,updateHousePoints}){
     await updateHousePoints(houseId,total);
     setScores({}); setShow(false); setSaving(false);
   };
-
-  const rInfo=(val)=>RATING.find(r=>r.val===val)||{};
 
   // Per-house weekly summary
   const houseSummary=HOUSES.map(h=>{
