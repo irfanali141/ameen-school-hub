@@ -108,88 +108,44 @@ function pBar(val,max,color){ const pct=Math.min(100,Math.round((val/max)*100));
 
 // ===================== LOGIN =====================
 function AIILogo({size=120}){
-  return <svg width={size} height={size} viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" direction="ltr">
-    <circle cx="100" cy="100" r="99" fill="#1a3a6b"/>
-    <circle cx="100" cy="100" r="93" fill="none" stroke="#f5a623" strokeWidth="3.5"/>
-    <circle cx="100" cy="100" r="86" fill="none" stroke="#f5a623" strokeWidth="1"/>
-    <text x="100" y="30" fontFamily="Arial,sans-serif" fontSize="11" fontWeight="900" fill="white" textAnchor="middle" letterSpacing="2.5">AMEEN ISLAMIC</text>
-    <text x="100" y="44" fontFamily="Arial,sans-serif" fontSize="11" fontWeight="900" fill="white" textAnchor="middle" letterSpacing="2.5">INSTITUTE</text>
-    <circle cx="100" cy="100" r="52" fill="#1a3a6b" stroke="white" strokeWidth="2.5"/>
-    <text x="62" y="97" fontFamily="Arial,sans-serif" fontSize="36" fontWeight="900" fill="#f5a623">A</text>
-    <text x="98" y="97" fontFamily="Arial,sans-serif" fontSize="36" fontWeight="900" fill="white">II</text>
-    <circle cx="119" cy="116" r="6" fill="#f5a623"/>
-    <text x="100" y="158" fontFamily="Arial,sans-serif" fontSize="11" fontWeight="700" fill="white" textAnchor="middle" letterSpacing="3">ESTD. 2025</text>
-  </svg>;
+  const s=size;
+  return <div style={{width:s,height:s,borderRadius:"50%",background:"linear-gradient(135deg,#0f2a5e,#1a3a8a)",border:"4px solid #f5a623",boxShadow:`0 0 0 2px #f5a62360, 0 0 30px rgba(245,166,35,0.3)`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",position:"relative",flexShrink:0}}>
+    <div style={{position:"absolute",top:"6px",left:0,right:0,textAlign:"center",fontSize:s*0.075+"px",fontWeight:"900",fontFamily:"Arial,sans-serif",color:"white",letterSpacing:"1px",lineHeight:1.2}}>AMEEN ISLAMIC</div>
+    <div style={{position:"absolute",top:"6px",left:0,right:0,textAlign:"center",fontSize:s*0.075+"px",fontWeight:"900",fontFamily:"Arial,sans-serif",color:"white",letterSpacing:"1px",marginTop:s*0.09+"px"}}>INSTITUTE</div>
+    <div style={{width:s*0.56,height:s*0.56,borderRadius:"50%",background:"#0f2a5e",border:"3px solid white",display:"flex",alignItems:"center",justifyContent:"center",marginTop:s*0.04+"px"}}>
+      <span style={{fontFamily:"Arial,sans-serif",fontSize:s*0.2+"px",fontWeight:"900",color:"#f5a623",direction:"ltr"}}>A</span>
+      <span style={{fontFamily:"Arial,sans-serif",fontSize:s*0.2+"px",fontWeight:"900",color:"white",direction:"ltr"}}>II</span>
+    </div>
+    <div style={{position:"absolute",bottom:"8px",fontSize:s*0.075+"px",fontWeight:"700",color:"white",letterSpacing:"2px",fontFamily:"Arial,sans-serif"}}>ESTD. 2025</div>
+  </div>;
 }
 
 function HouseBadge({house,size=165}){
   const configs={
-    abuBakr:{c1:"#1e3a8a",c2:"#2563eb",line1:"ABU BAKR",line2:"HOUSE",badge:"TRUTH & LOYALTY",
-      icon:<g>
-        <line x1="88" y1="77" x2="112" y2="77" stroke="white" strokeWidth="3" strokeLinecap="round"/>
-        <line x1="100" y1="77" x2="100" y2="90" stroke="white" strokeWidth="3" strokeLinecap="round"/>
-        <path d="M84 84 Q90 78 96 84" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-        <path d="M104 84 Q110 78 116 84" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-        <rect x="84" y="84" width="12" height="9" rx="1" fill="none" stroke="white" strokeWidth="2"/>
-        <rect x="104" y="84" width="12" height="9" rx="1" fill="none" stroke="white" strokeWidth="2"/>
-        <path d="M110 99 Q117 94 124 99 L121 108 Q117 103 113 108 Z" fill="white"/>
-        <path d="M76 99 Q83 94 90 99" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-      </g>
-    },
-    umar:{c1:"#14532d",c2:"#16a34a",line1:"UMAR",line2:"HOUSE",badge:"JUSTICE & DISCIPLINE",
-      icon:<g>
-        <rect x="90" y="79" width="8" height="24" rx="2" fill="white"/>
-        <rect x="84" y="101" width="20" height="5" rx="2" fill="white"/>
-        <circle cx="94" cy="75" r="6" fill="white"/>
-        <path d="M108 80 L120 77 L118 91 L106 94 Z" fill="none" stroke="white" strokeWidth="2.5" strokeLinejoin="round"/>
-        <circle cx="119" cy="84" r="9" fill="none" stroke="white" strokeWidth="2.5"/>
-        <line x1="113" y1="78" x2="125" y2="90" stroke="white" strokeWidth="2"/>
-        <line x1="113" y1="90" x2="125" y2="78" stroke="white" strokeWidth="2"/>
-      </g>
-    },
-    uthman:{c1:"#78350f",c2:"#b45309",line1:"UTHMAN",line2:"HOUSE",badge:"MODESTY & GENEROSITY",
-      icon:<g>
-        <path d="M91 73 Q83 68 79 76 Q74 85 83 90 Q90 93 94 86 Q98 94 101 88 Q106 80 99 74 Q95 68 91 73Z" fill="white"/>
-        <path d="M109 90 L117 84 L121 89 L126 82 L130 87" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M107 99 Q115 93 123 99 L120 111 Q115 105 110 111 Z" fill="white"/>
-      </g>
-    },
-    ali:{c1:"#7f1d1d",c2:"#dc2626",line1:"ALI",line2:"HOUSE",badge:"BRAVERY & KNOWLEDGE",
-      icon:<g>
-        <path d="M84 108 L92 73 L96 82 L101 69 L106 82 L110 73 L118 108 Z" fill="none" stroke="white" strokeWidth="2.5" strokeLinejoin="round"/>
-        <line x1="87" y1="99" x2="115" y2="99" stroke="white" strokeWidth="2.5"/>
-        <rect x="111" y="77" width="15" height="22" rx="2" fill="none" stroke="white" strokeWidth="2.5"/>
-        <line x1="114" y1="83" x2="123" y2="83" stroke="white" strokeWidth="1.5"/>
-        <line x1="114" y1="89" x2="123" y2="89" stroke="white" strokeWidth="1.5"/>
-        <line x1="114" y1="95" x2="123" y2="95" stroke="white" strokeWidth="1.5"/>
-      </g>
-    }
+    abuBakr:{bg:"linear-gradient(135deg,#1e3a8a,#2563eb)",name1:"ABU BAKR",name2:"HOUSE",badge:"TRUTH & LOYALTY",emoji:"⚖️🤝"},
+    umar:{bg:"linear-gradient(135deg,#14532d,#16a34a)",name1:"UMAR",name2:"HOUSE",badge:"JUSTICE & DISCIPLINE",emoji:"⚖️🛡️"},
+    uthman:{bg:"linear-gradient(135deg,#78350f,#b45309)",name1:"UTHMAN",name2:"HOUSE",badge:"MODESTY & GENEROSITY",emoji:"🌙🤲"},
+    ali:{bg:"linear-gradient(135deg,#7f1d1d,#dc2626)",name1:"ALI",name2:"HOUSE",badge:"BRAVERY & KNOWLEDGE",emoji:"⚔️📖"}
   };
   const c=configs[house]; if(!c) return null;
-  return <svg width={size} height={size} viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" direction="ltr">
-    <defs>
-      <linearGradient id={"hg5"+house} x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor={c.c1}/>
-        <stop offset="60%" stopColor={c.c2}/>
-        <stop offset="100%" stopColor={c.c1}/>
-      </linearGradient>
-    </defs>
-    <circle cx="100" cy="100" r="99" fill={`url(#hg5${house})`}/>
-    <circle cx="100" cy="100" r="93" fill="none" stroke="white" strokeWidth="3"/>
-    <circle cx="100" cy="100" r="86" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1.5"/>
+  return <div style={{width:size,height:size,borderRadius:"50%",background:c.bg,border:"4px solid white",boxShadow:"0 0 0 2px rgba(255,255,255,0.2), 0 8px 30px rgba(0,0,0,0.4)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",position:"relative",flexShrink:0,direction:"ltr"}}>
+    {/* Inner ring */}
+    <div style={{position:"absolute",inset:"10px",borderRadius:"50%",border:"1.5px solid rgba(255,255,255,0.3)"}}/>
     {/* Top text */}
-    <text x="100" y="26" fontFamily="Arial,sans-serif" fontSize="12" fontWeight="900" fill="white" textAnchor="middle" letterSpacing="2">AMEEN ISLAMIC</text>
-    <text x="100" y="41" fontFamily="Arial,sans-serif" fontSize="12" fontWeight="900" fill="white" textAnchor="middle" letterSpacing="2">INSTITUTE</text>
-    {/* Bottom house name */}
-    <text x="100" y="168" fontFamily="Arial,sans-serif" fontSize="13" fontWeight="900" fill="white" textAnchor="middle" letterSpacing="2">{c.line1}</text>
-    <text x="100" y="184" fontFamily="Arial,sans-serif" fontSize="13" fontWeight="900" fill="white" textAnchor="middle" letterSpacing="2">{c.line2}</text>
+    <div style={{position:"absolute",top:"14px",left:0,right:0,textAlign:"center",fontSize:"10px",fontWeight:"900",fontFamily:"Arial,sans-serif",color:"white",letterSpacing:"1.5px"}}>AMEEN ISLAMIC INSTITU...</div>
     {/* Center circle */}
-    <circle cx="100" cy="97" r="50" fill="rgba(0,0,0,0.2)" stroke="white" strokeWidth="2.5"/>
-    {c.icon}
-    {/* Badge */}
-    <rect x="62" y="133" width="76" height="16" rx="4" fill="white"/>
-    <text x="100" y="144" fontFamily="Arial,sans-serif" fontSize="8" fontWeight="900" fill={c.c1} textAnchor="middle">{c.badge}</text>
-  </svg>;
+    <div style={{width:size*0.52,height:size*0.52,borderRadius:"50%",background:"rgba(0,0,0,0.2)",border:"3px solid white",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",marginTop:"8px"}}>
+      <div style={{fontSize:size*0.18+"px",lineHeight:1}}>{c.emoji}</div>
+      <div style={{background:"white",borderRadius:"4px",padding:"2px 6px",marginTop:"4px"}}>
+        <span style={{fontSize:"7px",fontWeight:"900",color:configs[house]?.bg?.includes("1e3a8a")?"#1e3a8a":configs[house]?.bg?.includes("14532d")?"#14532d":configs[house]?.bg?.includes("78350f")?"#78350f":"#7f1d1d",letterSpacing:"0.5px",fontFamily:"Arial,sans-serif"}}>{c.badge}</span>
+      </div>
+    </div>
+    {/* Bottom house name */}
+    <div style={{position:"absolute",bottom:"22px",textAlign:"center"}}>
+      <div style={{fontSize:"13px",fontWeight:"900",fontFamily:"Arial,sans-serif",color:"white",letterSpacing:"2px"}}>{c.name1}</div>
+      <div style={{fontSize:"13px",fontWeight:"900",fontFamily:"Arial,sans-serif",color:"white",letterSpacing:"2px"}}>{c.name2}</div>
+    </div>
+  </div>;
 }
 
 function Login({onLogin,err,loading}){
@@ -231,12 +187,11 @@ function Login({onLogin,err,loading}){
         <div style={{fontSize:"0.78rem",color:"rgba(255,255,255,0.5)",fontFamily:"'Amiri',serif"}}>ہاؤس سسٹم — سیشن 2026-27</div>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px",marginBottom:"28px",padding:"0 10px"}}>
-        {["abuBakr","umar","uthman","ali"].map(h=><div key={h} style={{display:"flex",justifyContent:"center",filter:"drop-shadow(0 8px 24px rgba(0,0,0,0.5))"}}>
+        {["abuBakr","umar","uthman","ali"].map(h=><div key={h} style={{display:"flex",justifyContent:"center"}}>
           <HouseBadge house={h} size={165}/>
         </div>)}
       </div>
       <div style={{borderRadius:"18px",background:"linear-gradient(135deg,rgba(183,134,11,0.1),rgba(183,134,11,0.03))",border:"2px solid rgba(183,134,11,0.2)",padding:"18px",textAlign:"center",marginBottom:"20px"}}>
-        <div style={{fontSize:"0.58rem",fontFamily:"'Cinzel',serif",color:"rgba(255,255,255,0.35)",letterSpacing:"0.18em",marginBottom:"6px"}}>SESSION THEME 2026-27</div>
         <div style={{fontSize:"1.1rem",fontFamily:"'Cinzel',serif",fontWeight:"900",color:"#e8b84b",letterSpacing:"0.08em"}}>FAITH • DISCIPLINE • EXCELLENCE</div>
         <div style={{fontSize:"0.82rem",fontFamily:"'Amiri',serif",color:"rgba(255,255,255,0.5)",marginTop:"5px"}}>ایمان • نظم • برتری</div>
       </div>
@@ -254,266 +209,6 @@ function Login({onLogin,err,loading}){
     </div>
   </div>;
 }
-      <input style={{...S.inpSm,maxWidth:"200px"}} placeholder="🔍 نام..." value={q} onChange={e=>setQ(e.target.value)}/>
-      {["all","pending","paid"].map(s=><button key={s} onClick={()=>setFilterStatus(s)} style={{padding:"8px 14px",borderRadius:"10px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:filterStatus===s?"700":"400",background:filterStatus===s?`linear-gradient(135deg,${C.gold},${C.goldDark})`:C.white,color:filterStatus===s?C.white:"#888",fontFamily:"inherit"}}>{s==="all"?"سب":s==="pending"?"باقی":"ادا"}</button>)}
-    </div>
-    <div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
-      <thead><tr><th style={S.th}>طالب علم</th><th style={S.th}>قسم</th><th style={S.th}>مہینہ</th><th style={S.th}>رقم</th><th style={S.th}>حال</th><th style={S.th}>عمل</th></tr></thead>
-      <tbody>{filtered.map(fee=>{ const st=students.find(s=>s.id===fee.studentId); return <tr key={fee.id}>
-        <td style={{...S.td,fontWeight:"700"}}>{st?.name||"—"}</td><td style={S.td}>{feeTypes[fee.type]||fee.type}</td>
-        <td style={{...S.td,fontFamily:"monospace",direction:"ltr",fontSize:"0.6rem"}}>{fee.month||"—"}</td>
-        <td style={{...S.td,fontWeight:"700"}}>Rs. {(fee.amount||0).toLocaleString()}</td>
-        <td style={S.td}><span style={{padding:"4px 10px",borderRadius:"20px",fontSize:"0.58rem",fontWeight:"700",background:fee.status==="paid"?"#dcfce7":"#fef3c7",color:fee.status==="paid"?C.green:C.amber}}>{fee.status==="paid"?"✅ ادا":"⏳ باقی"}</span></td>
-        <td style={S.td}>{fee.status==="pending"&&<button onClick={()=>markPaid(fee.id)} style={{...S.saveBtn,padding:"5px 12px",fontSize:"0.58rem"}}>ادا ✓</button>}</td>
-      </tr>; })}{filtered.length===0&&<tr><td colSpan={6} style={{...S.td,textAlign:"center",color:"#bbb",padding:"40px"}}>کوئی ریکارڈ نہیں</td></tr>}</tbody>
-    </table></div></div>
-  </div>;
-}
-
-// ===================== RESULTS =====================
-function Results({students,addData}){
-  const [results,setResults]=useState([]); const [show,setShow]=useState(false);
-  const [f,setF]=useState({studentId:"",subject:"",examType:"monthly",totalMarks:100,obtainedMarks:0,examDate:""});
-  const [q,setQ]=useState("");
-  useEffect(()=>{ return onSnapshot(query(collection(db,"results"),orderBy("createdAt","desc"),limit(100)),s=>setResults(s.docs.map(d=>({id:d.id,...d.data()})))); },[]);
-  const calcGrade=(ob,tot)=>{ const p=Math.round((ob/tot)*100); return p>=90?"A+":p>=80?"A":p>=70?"B":p>=60?"C":p>=50?"D":"F"; };
-  const add=async()=>{ if(!f.studentId||!f.subject)return; const pct=Math.round((Number(f.obtainedMarks)/Number(f.totalMarks))*100); const grade=calcGrade(Number(f.obtainedMarks),Number(f.totalMarks)); await addData("results",{...f,obtainedMarks:Number(f.obtainedMarks),totalMarks:Number(f.totalMarks),percentage:pct,grade}); setShow(false); setF({studentId:"",subject:"",examType:"monthly",totalMarks:100,obtainedMarks:0,examDate:""}); };
-  const filtered=results.filter(r=>{ const st=students.find(s=>s.id===r.studentId); return !q||st?.name?.includes(q)||r.subject?.includes(q); });
-  const gradeColor={"A+":C.green,A:C.green,B:C.abuBakr,C:C.amber,D:C.amber,F:C.red};
-  const gradeBg={"A+":"#dcfce7",A:"#dcfce7",B:"#dbeafe",C:"#fef3c7",D:"#fef3c7",F:"#fee2e2"};
-  return <div style={S.page}>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
-      <div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>📊 نتائج و مارکس</div>
-      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نیا نتیجہ</button>
-    </div>
-    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`}}>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
-        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>طالب علم *</label><select style={S.inpSm} value={f.studentId} onChange={e=>setF({...f,studentId:e.target.value})}><option value="">-- منتخب کریں --</option>{students.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
-        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>مضمون *</label><input style={S.inpSm} value={f.subject} onChange={e=>setF({...f,subject:e.target.value})} placeholder="ریاضی، انگریزی..."/></div>
-        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>کل مارکس</label><input style={{...S.inpSm,direction:"ltr"}} type="number" value={f.totalMarks} onChange={e=>setF({...f,totalMarks:e.target.value})}/></div>
-        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>حاصل مارکس</label><input style={{...S.inpSm,direction:"ltr"}} type="number" value={f.obtainedMarks} onChange={e=>setF({...f,obtainedMarks:e.target.value})}/></div>
-      </div>
-      <button style={S.saveBtn} onClick={add}>✅ محفوظ کریں</button>
-    </div>}
-    <div style={{marginBottom:"16px"}}><input style={{...S.inpSm,direction:"rtl"}} placeholder="🔍 نام یا مضمون..." value={q} onChange={e=>setQ(e.target.value)}/></div>
-    <div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
-      <thead><tr><th style={S.th}>طالب علم</th><th style={S.th}>مضمون</th><th style={S.th}>مارکس</th><th style={S.th}>فیصد</th><th style={S.th}>گریڈ</th></tr></thead>
-      <tbody>{filtered.map(r=>{ const st=students.find(s=>s.id===r.studentId); const gc=gradeColor[r.grade]||C.gold; return <tr key={r.id}>
-        <td style={{...S.td,fontWeight:"700"}}>{st?.name||"—"}</td><td style={S.td}>{r.subject}</td>
-        <td style={{...S.td,fontFamily:"monospace",direction:"ltr"}}>{r.obtainedMarks}/{r.totalMarks}</td>
-        <td style={S.td}><span style={{fontSize:"0.62rem",fontWeight:"700",color:gc}}>{r.percentage}%</span></td>
-        <td style={S.td}><span style={{padding:"4px 10px",borderRadius:"20px",fontSize:"0.65rem",fontWeight:"800",background:gradeBg[r.grade]||"#eee",color:gc}}>{r.grade}</span></td>
-      </tr>; })}{filtered.length===0&&<tr><td colSpan={5} style={{...S.td,textAlign:"center",color:"#bbb",padding:"40px"}}>کوئی نتیجہ نہیں</td></tr>}</tbody>
-    </table></div></div>
-  </div>;
-}
-
-// ===================== TIMETABLE =====================
-function Timetable(){
-  const [tab,setTab]=useState("friday");
-  const [season,setSeason]=useState("summer");
-  const [editMode,setEditMode]=useState(false);
-  const [saving,setSaving]=useState(false);
-  const [toast,setToast]=useState("");
-
-  const defaultData={
-    timings:{
-      summer:["08:30–09:05","09:05–09:40","09:40–10:10","10:10–10:40","11:30–12:00","12:00–12:30","12:30–01:00"],
-      winter:["09:00–09:35","09:35–10:10","10:10–10:40","10:40–11:10","12:00–12:30","12:30–01:00","01:00–01:30"]
-    },
-    breakTime:{summer:"10:40–11:30",winter:"11:10–12:00"},
-    preTimes:{
-      summer:["08:30–09:20","09:20–10:10","10:10–11:00","11:50–12:25","12:25–01:00"],
-      winter:["09:00–09:50","09:50–10:35","10:35–11:10","12:00–12:45","12:45–01:30"]
-    },
-    preBreak:{summer:"11:00–11:50",winter:"11:10–12:00"},
-    senior:[
-      {n:"7ویں — آرکڈ",s:["سائنس","اردو","تاریخ","ریاضی","اسلامیات","انگریزی","جنرل نالج"]},
-      {n:"6ویں — للی",s:["اردو","انگریزی","ریاضی","فونکس","جنرل نالج","اسلامیات","تاریخ"]},
-      {n:"5ویں — آئرس",s:["اردو","انگریزی","ریاضی","فونکس","اردو رائٹنگ","انگریزی رائٹنگ","سائنس"]},
-      {n:"4تھی — جیسمین",s:["اردو","ریاضی","انگریزی","فونکس","اردو رائٹنگ","انگریزی رائٹنگ","اسلامیات"]}
-    ],
-    primary:[
-      {n:"3سری — وائلٹ",s:["ریاضی","جنرل نالج","انگریزی","اردو","قرآن","فونکس","اسلامیات"]},
-      {n:"2سری — ٹیولپ",s:["اردو","ریاضی","اسلامیات","فونکس","انگریزی","جنرل نالج","قرآن"]},
-      {n:"1لی — سن فلاور",s:["انگریزی","اردو","ریاضی","قرآن","فونکس","اسلامیات","جنرل نالج"]}
-    ],
-    pre:[
-      {n:"کے جی — کلور",s:["فونکس","ریاضی","قرآن","اردو","کے جی فونکس"]},
-      {n:"نرسری — لیونڈر",s:["اردو","قرآن","فونکس","انگریزی","ریاضی"]},
-      {n:"پلے گروپ — ڈیزی",s:["قرآن","اردو","انگریزی","ریاضی","فونکس"]}
-    ],
-    friday:[
-      {n:"Orchid (7th)",a:"اسلامی کردار سازی اور کیریئر گائیڈنس"},
-      {n:"Lily (6th)",a:"تاریخ اسلام اور عظیم شخصیات"},
-      {n:"Iris (5th)",a:"فقہ کی بنیادی باتیں اور نماز پریکٹیکل"},
-      {n:"Jasmine (4th)",a:"دعائیں اور روزانہ کے اذکار"},
-      {n:"Violet (3rd)",a:"قرآنی کہانیاں اور اخلاقی سبق"},
-      {n:"Tulip (2nd)",a:"سیرت النبی صلی اللہ علیہ وسلم کی کہانیاں"},
-      {n:"Sunflower (1st)",a:"انبیاء کی کہانیاں اور نشید"},
-      {n:"Clover (K.G)",a:"سنت سیکھنا اور وضو پریکٹیکل"},
-      {n:"Lavender (Nur)",a:"بنیادی اخلاقیات اور آداب"},
-      {n:"Daisy (P.G)",a:"اسلامی نظمیں اور تفریحی سرگرمی"}
-    ]
-  };
-
-  const [ttData,setTtData]=useState(defaultData);
-
-  useEffect(()=>{
-    const ref=doc(db,"settings","timetable");
-    return onSnapshot(ref,snap=>{
-      if(snap.exists()) setTtData({...defaultData,...snap.data()});
-    });
-  },[]);
-
-  const showToast=(msg)=>{ setToast(msg); setTimeout(()=>setToast(""),2500); };
-
-  const saveAll=async()=>{
-    setSaving(true);
-    try{
-      await setDoc(doc(db,"settings","timetable"),ttData);
-      showToast("✅ محفوظ ہو گیا!");
-      setEditMode(false);
-    }catch(e){ showToast("❌ error: "+e.message); }
-    setSaving(false);
-  };
-
-  const updSubject=(key,ci,pi,val)=>{
-    const newData={...ttData};
-    newData[key]=[...ttData[key]];
-    newData[key][ci]={...ttData[key][ci],s:[...ttData[key][ci].s]};
-    newData[key][ci].s[pi]=val;
-    setTtData(newData);
-  };
-
-  const updTime=(key,season2,idx,val)=>{
-    const newData={...ttData};
-    newData[key]={...ttData[key]};
-    newData[key][season2]=[...ttData[key][season2]];
-    newData[key][season2][idx]=val;
-    setTtData(newData);
-  };
-
-  const updBreak=(key,season2,val)=>{
-    const newData={...ttData};
-    newData[key]={...ttData[key],[season2]:val};
-    setTtData(newData);
-  };
-
-  const updFriday=(ci,field,val)=>{
-    const newData={...ttData,friday:[...ttData.friday]};
-    newData.friday[ci]={...newData.friday[ci],[field]:val};
-    setTtData(newData);
-  };
-
-  const tabs=[["friday","🕌","جمعہ"],["senior","📚","سینئر"],["primary","✏️","پرائمری"],["pre","🎨","پری"]];
-  const getSections=()=>ttData[tab==="senior"?"senior":tab==="primary"?"primary":"pre"];
-  const getTimes=()=>tab==="pre"?ttData.preTimes[season]:ttData.timings[season];
-  const getBreak=()=>tab==="pre"?ttData.preBreak[season]:ttData.breakTime[season];
-  const getBrkIdx=()=>tab==="pre"?2:3;
-  const getTimeKey=()=>tab==="pre"?"preTimes":"timings";
-  const getBreakKey=()=>tab==="pre"?"preBreak":"breakTime";
-  const periodColors=["#dbeafe","#dcfce7","#fef3c7","#f3e8ff","#fee2e2","#ccfbf1","#fce7f3"];
-  const periodBorder=[C.abuBakr,C.green,C.amber,C.purple,C.red,C.teal,"#ec4899"];
-  const inpStyle={background:"rgba(255,255,255,0.9)",border:"1.5px solid "+C.gold,borderRadius:"6px",padding:"3px 6px",fontSize:"0.6rem",textAlign:"center",width:"100%",fontFamily:"inherit",outline:"none"};
-
-  return <div style={S.page}>
-    {toast&&<div style={{position:"fixed",top:"80px",left:"50%",transform:"translateX(-50%)",background:C.navy,color:C.white,padding:"8px 20px",borderRadius:"20px",fontSize:"0.7rem",zIndex:999,fontWeight:"700",boxShadow:"0 4px 20px rgba(0,0,0,0.3)"}}>{toast}</div>}
-    <div style={{marginBottom:"16px"}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"12px"}}>
-        <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>🗓️ ٹائم ٹیبل</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>امین اسلامک انسٹیٹیوٹ — سوات</div></div>
-        <div style={{display:"flex",gap:"6px"}}>
-          <button onClick={()=>setSeason("summer")} style={{padding:"6px 12px",borderRadius:"8px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:season==="summer"?"700":"400",background:season==="summer"?C.gold:C.white,color:season==="summer"?C.white:"#888",fontFamily:"inherit"}}>☀️ گرما</button>
-          <button onClick={()=>setSeason("winter")} style={{padding:"6px 12px",borderRadius:"8px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:season==="winter"?"700":"400",background:season==="winter"?C.abuBakr:C.white,color:season==="winter"?C.white:"#888",fontFamily:"inherit"}}>❄️ سرما</button>
-        </div>
-      </div>
-      {editMode
-        ?<div style={{display:"flex",gap:"8px"}}><button onClick={saveAll} disabled={saving} style={{...S.saveBtn,flex:1,fontSize:"0.7rem"}}>{saving?"محفوظ...":"💾 محفوظ کریں"}</button><button onClick={()=>setEditMode(false)} style={{...S.dangerBtn,flex:1,fontSize:"0.7rem"}}>❌ منسوخ</button></div>
-        :<button onClick={()=>setEditMode(true)} style={{...S.addBtn,width:"100%",textAlign:"center",fontSize:"0.7rem",padding:"10px"}}>✏️ ترمیم کریں — Subject اور Waqt tabdeel karen</button>
-      }
-    </div>
-    <div style={{display:"flex",gap:"8px",marginBottom:"20px",flexWrap:"wrap"}}>
-      {tabs.map(([t,emoji,label])=><button key={t} onClick={()=>setTab(t)} style={{padding:"8px 16px",borderRadius:"12px",border:"none",cursor:"pointer",fontSize:"0.65rem",fontWeight:tab===t?"700":"400",background:tab===t?C.gold:C.white,color:tab===t?C.white:"#888",fontFamily:"inherit"}}>{emoji} {label}</button>)}
-    </div>
-
-    {editMode&&tab!=="friday"&&<div style={{...S.card,marginBottom:"16px",background:"linear-gradient(135deg,"+C.goldLight+",#fdf8ee)",border:"2px solid "+C.gold+"30"}}>
-      <div style={{fontSize:"0.75rem",fontWeight:"700",color:C.navy,marginBottom:"12px"}}>⏰ اوقات تبدیل کریں — {season==="summer"?"☀️ گرما":"❄️ سرما"}</div>
-      <div style={{display:"flex",gap:"8px",flexWrap:"wrap",marginBottom:"10px"}}>
-        {getTimes().map((t,i)=><div key={i} style={{textAlign:"center"}}>
-          <div style={{fontSize:"0.5rem",color:"#888",marginBottom:"2px"}}>P{i+1}</div>
-          <input style={{...inpStyle,width:"90px",direction:"ltr"}} value={t} onChange={e=>updTime(getTimeKey(),season,i,e.target.value)}/>
-        </div>)}
-      </div>
-      <div style={{display:"flex",gap:"8px",alignItems:"center"}}>
-        <span style={{fontSize:"0.62rem",color:C.green,fontWeight:"700"}}>☕ وقفہ:</span>
-        <input style={{...inpStyle,width:"110px",direction:"ltr"}} value={getBreak()} onChange={e=>updBreak(getBreakKey(),season,e.target.value)}/>
-      </div>
-    </div>}
-
-    {tab==="friday"&&<div style={{...S.card,border:"2px solid rgba(26,100,46,0.15)"}}>
-      <div style={{textAlign:"center",paddingBottom:"16px",marginBottom:"16px",borderBottom:"2px solid rgba(26,100,46,0.12)"}}>
-        <div style={{fontSize:"1.1rem",fontWeight:"800",color:C.green}}>✦ جمعہ تربیہ سیشن ✦</div>
-        <div style={{fontSize:"0.6rem",color:"#888",marginTop:"4px"}}>11:00 AM - 12:00 PM</div>
-      </div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px"}}>
-        {ttData.friday.map((item,i)=><div key={i} style={{background:"rgba(26,74,46,0.06)",borderRadius:"12px",padding:"12px",border:"1px solid rgba(26,100,46,0.15)"}}>
-          <div style={{fontSize:"0.58rem",fontWeight:"700",color:C.green,marginBottom:"4px"}}>{item.n}</div>
-          {editMode
-            ?<input style={inpStyle} value={item.a} onChange={e=>updFriday(i,"a",e.target.value)}/>
-            :<div style={{fontSize:"0.7rem",fontWeight:"600",color:C.navy,lineHeight:"1.5"}}>{item.a}</div>}
-        </div>)}
-      </div>
-      <div style={{textAlign:"center",marginTop:"14px",fontSize:"0.62rem",color:"#888"}}>📌 جمعہ کے دن 12:00 بجے چھٹی</div>
-    </div>}
-
-    {tab!=="friday"&&getSections().map((cls,ci)=><div key={ci} style={{...S.card,marginBottom:"14px"}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px",paddingBottom:"10px",borderBottom:"2px solid "+C.goldLight}}>
-        <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy}}>{cls.n}</div>
-        <span style={hBadge(C.gold,C.goldLight)}>{season==="summer"?"☀️ گرما":"❄️ سرما"}</span>
-      </div>
-      <div style={{overflowX:"auto"}}>
-        <div style={{display:"flex",minWidth:"max-content"}}>
-          {cls.s.map((subj,i)=>{
-            const items=[];
-            if(i===getBrkIdx()+1){
-              items.push(<div key={"brk"+i} style={{width:"64px",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"rgba(26,74,46,0.08)",padding:"8px 4px",minHeight:"90px",borderLeft:"1px solid rgba(26,100,46,0.2)",borderRight:"1px solid rgba(26,100,46,0.2)"}}>
-                <div style={{fontSize:"1rem"}}>☕</div>
-                <div style={{fontSize:"0.55rem",fontWeight:"700",color:C.green}}>وقفہ</div>
-                <div style={{fontSize:"0.45rem",color:"#aaa",marginTop:"2px"}}>{getBreak()}</div>
-              </div>);
-            }
-            items.push(<div key={i} style={{width:"90px",flexShrink:0,padding:"10px 6px",textAlign:"center",borderLeft:"1px solid "+C.goldLight,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"90px",background:periodColors[i%periodColors.length]}}>
-              <div style={{fontSize:"0.48rem",color:periodBorder[i%periodBorder.length],marginBottom:"4px",fontWeight:"800"}}>P{i+1}</div>
-              {editMode
-                ?<input style={{...inpStyle,marginBottom:"6px",fontSize:"0.58rem"}} value={subj} onChange={e=>updSubject(tab==="senior"?"senior":tab==="primary"?"primary":"pre",ci,i,e.target.value)}/>
-                :<div style={{fontSize:"0.68rem",fontWeight:"600",color:C.navy,lineHeight:"1.4",marginBottom:"6px"}}>{subj}</div>}
-              <div style={{fontSize:"0.48rem",background:"white",border:"1px solid "+C.gold+"40",color:C.goldDark,padding:"2px 5px",borderRadius:"4px",direction:"ltr",whiteSpace:"nowrap"}}>{getTimes()[i]||""}</div>
-            </div>);
-            return items;
-          })}
-        </div>
-      </div>
-    </div>)}
-  </div>;
-}
-
-// ===================== NOTIFICATIONS =====================
-function Notifications({students,addData}){
-  const [notifs,setNotifs]=useState([]); const [show,setShow]=useState(false);
-  const [f,setF]=useState({title:"",message:"",type:"general",targetHouse:"all",priority:"normal"});
-  useEffect(()=>{ return onSnapshot(query(collection(db,"notifications"),orderBy("createdAt","desc"),limit(30)),s=>setNotifs(s.docs.map(d=>({id:d.id,...d.data()})))); },[]);
-  const send=async()=>{ if(!f.title||!f.message)return; await addData("notifications",{...f}); setShow(false); setF({title:"",message:"",type:"general",targetHouse:"all",priority:"normal"}); };
-  const notifTypes={general:"📢 عام",fee:"💰 فیس",exam:"📝 امتحان",event:"🎭 تقریب",result:"📊 نتیجہ"};
-  const priorityC={urgent:C.red,high:C.amber,normal:C.abuBakr,low:"#888"};
-  return <div style={S.page}>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
-      <div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>📱 اطلاعات</div>
-      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نئی اطلاع</button>
-    </div>
-    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`}}>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
-        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>عنوان *</label><input style={S.inpSm} value={f.title} onChange={e=>setF({...f,title:e.target.value})} placeholder="اطلاع کا عنوان..."/></div>
-        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>قسم</label><select style={S.inpSm} value={f.type} onChange={e=>setF({...f,type:e.target.value})}>{Object.entries(notifTypes).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></div>
         <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>ترجیح</label><select style={S.inpSm} value={f.priority} onChange={e=>setF({...f,priority:e.target.value})}><option value="normal">عام</option><option value="high">اہم</option><option value="urgent">فوری</option></select></div>
         <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>پیغام *</label><textarea style={{...S.inpSm,minHeight:"80px",resize:"vertical"}} value={f.message} onChange={e=>setF({...f,message:e.target.value})} placeholder="پیغام یہاں لکھیں..."/></div>
       </div>
