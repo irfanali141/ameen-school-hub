@@ -1939,6 +1939,341 @@ function ReportCard({students,results,fees,addData}){
   );
 }
 
+// ================================================================
+// DMC — DETAIL MARKS CERTIFICATE
+// App.js mein 2 jagah changes karni hain:
+//
+// CHANGE 1: PAGES array mein add karein (line ~2069 ke baad):
+//   {id:"dmc",label:"🎓 DMC"},
+//
+// CHANGE 2: Page rendering section mein add karein (line ~2139 ke baad):
+//   {page==="dmc"&&<DMC students={students} results={results} fees={fees}/>}
+//
+// CHANGE 3: Yeh poora function App.js mein kisi bhi function ke baad paste karein
+//   (maslan ReportCard function ke baad, line ~1640 ke aaspass)
+// ================================================================
+
+function DMC({students, results, fees}){
+  const [q, setQ] = useState("");
+  const [selStudent, setSelStudent] = useState(null);
+  const [term, setTerm] = useState("سالانہ امتحان 2026");
+  const [examType, setExamType] = useState("Annual Examination");
+
+  const filtered = students.filter(s =>
+    s.name?.includes(q) || s.studentCode?.includes(q)
+  );
+
+  const printDMC = () => {
+    const el = document.getElementById("dmc-print-area");
+    if(!el) return;
+    const win = window.open("", "_blank", "width=900,height=1100");
+    win.document.write(`<!DOCTYPE html>
+<html dir="rtl" lang="ur">
+<head>
+<meta charset="UTF-8"/>
+<title>DMC — ${selStudent?.name || "Student"}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Cinzel:wght@400;700;900&display=swap');
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body {
+    font-family: 'Noto Nastaliq Urdu', 'Segoe UI', sans-serif;
+    direction: rtl;
+    background: white;
+    color: #1e293b;
+    padding: 8mm 12mm;
+  }
+  .header { text-align: center; border-bottom: 3px double #b7860b; padding-bottom: 12px; margin-bottom: 14px; }
+  .school-name { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 900; color: #b7860b; letter-spacing: 0.05em; }
+  .school-sub { font-family: 'Cinzel', serif; font-size: 10px; color: #888; letter-spacing: 0.2em; margin-top: 2px; }
+  .dmc-title { font-size: 16px; font-weight: 900; color: #1e293b; margin: 10px 0 4px; border: 2px solid #b7860b; display: inline-block; padding: 4px 24px; border-radius: 4px; }
+  .term { font-size: 12px; color: #555; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; margin: 14px 0; padding: 12px 16px; background: #fafaf8; border: 1px solid #e9e4d8; border-radius: 8px; }
+  .info-row { display: flex; gap: 6px; align-items: baseline; font-size: 12px; }
+  .info-label { color: #888; min-width: 100px; flex-shrink: 0; }
+  .info-val { font-weight: 700; color: #1e293b; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 12px; }
+  thead tr { background: #1e293b; color: white; }
+  th { padding: 9px 10px; text-align: right; font-weight: 700; }
+  td { padding: 8px 10px; text-align: right; border-bottom: 1px solid #eee; }
+  tr:nth-child(even) td { background: #fafaf8; }
+  tfoot tr { background: #f5e9c8; font-weight: 900; }
+  .grade-badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-weight: 800; font-size: 11px; }
+  .summary { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin: 14px 0; }
+  .sum-box { text-align: center; padding: 10px 8px; border: 2px solid #e9e4d8; border-radius: 8px; }
+  .sum-big { font-size: 22px; font-weight: 900; color: #b7860b; line-height: 1; }
+  .sum-label { font-size: 10px; color: #888; margin-top: 3px; }
+  .remarks { background: #fafaf8; border: 1px solid #e9e4d8; border-radius: 8px; padding: 10px 14px; margin: 12px 0; font-size: 12px; line-height: 1.8; }
+  .sig-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 30px; }
+  .sig-box { text-align: center; }
+  .sig-line { height: 40px; border-bottom: 2px solid #ccc; margin-bottom: 6px; }
+  .sig-label { font-size: 10px; color: #888; white-space: pre-line; line-height: 1.6; }
+  .footer { margin-top: 16px; padding-top: 10px; border-top: 2px double #b7860b; text-align: center; font-family: 'Cinzel', serif; font-size: 9px; color: #bbb; letter-spacing: 0.15em; }
+  .pass { color: #16a34a; } .fail { color: #dc2626; } .good { color: #1e40af; } .avg { color: #d97706; }
+  @media print { body { padding: 5mm 8mm; } }
+</style>
+</head>
+<body>
+${el.innerHTML}
+<script>window.onload=function(){window.print();setTimeout(function(){window.close();},2000);};<\/script>
+</body></html>`);
+    win.document.close();
+  };
+
+  if(selStudent){
+    const h = HOUSES.find(x => x.id === selStudent.houseId) || {};
+    const sResults = results.filter(r => r.studentId === selStudent.id);
+    const sFees = fees.filter(f => f.studentId === selStudent.id);
+    const pendingFees = sFees.filter(f => f.status === "pending").reduce((s,f) => s+(f.amount||0), 0);
+    const totalObtained = sResults.reduce((s,r) => s+(r.obtained||0), 0);
+    const totalMarks = sResults.reduce((s,r) => s+(r.total||100), 0);
+    const avgPct = sResults.length > 0 ? Math.round((totalObtained/totalMarks)*100) : 0;
+    const overallGrade = avgPct>=90?"A+":avgPct>=80?"A":avgPct>=70?"B":avgPct>=60?"C":avgPct>=50?"D":"F";
+    const passed = avgPct >= 40;
+
+    // Class position
+    const classResults = students
+      .filter(s => s.grade === selStudent.grade)
+      .map(s => {
+        const sr = results.filter(r => r.studentId === s.id);
+        const tot = sr.reduce((x,r) => x+(r.obtained||0), 0);
+        return { id: s.id, total: tot };
+      })
+      .sort((a,b) => b.total - a.total);
+    const position = classResults.findIndex(x => x.id === selStudent.id) + 1;
+
+    const gradeColor = overallGrade==="A+"||overallGrade==="A" ? "#16a34a" :
+                       overallGrade==="B" ? "#1e40af" :
+                       overallGrade==="C"||overallGrade==="D" ? "#d97706" : "#dc2626";
+
+    const remarks = avgPct>=80 ? "ماشاءاللہ! طالب علم نے نہایت اعلیٰ کارکردگی کا مظاہرہ کیا۔ مستقل محنت جاری رکھیں۔ Excellent performance — keep it up!" :
+                    avgPct>=60 ? "طالب علم کی کارکردگی اطمینان بخش ہے۔ مزید محنت سے بہتر نتائج آئیں گے۔ Satisfactory — more effort needed." :
+                    avgPct>=40 ? "طالب علم کو مزید توجہ کی ضرورت ہے۔ والدین سے گزارش ہے کہ توجہ دیں۔ Needs improvement — parental guidance required." :
+                    "طالب علم فیل ہے۔ فوری توجہ ضروری ہے۔ Student has failed — immediate attention required.";
+
+    return (
+      <div style={S.page}>
+        {/* Top buttons */}
+        <div style={{display:"flex",gap:"10px",marginBottom:"20px",flexWrap:"wrap"}}>
+          <button style={{...S.addBtn,background:"#eee",color:C.navy,boxShadow:"none"}} onClick={()=>setSelStudent(null)}>← واپس</button>
+          <button style={{...S.saveBtn,fontSize:"0.65rem"}} onClick={printDMC}>
+            🖨️ DMC پرنٹ / ڈاؤن لوڈ
+          </button>
+        </div>
+
+        {/* DMC Preview */}
+        <div id="dmc-print-area" style={{background:C.white,borderRadius:"20px",overflow:"hidden",boxShadow:"0 8px 32px rgba(0,0,0,0.12)",maxWidth:"820px",margin:"0 auto",padding:"24px 28px",border:`3px solid ${C.gold}40`}}>
+
+          {/* Header */}
+          <div style={{textAlign:"center",borderBottom:`3px double ${C.gold}`,paddingBottom:"14px",marginBottom:"16px"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"16px",marginBottom:"8px"}}>
+              <div style={{width:"56px",height:"56px",borderRadius:"50%",background:`conic-gradient(${C.gold},#e4b030,${C.gold})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.4rem",flexShrink:0}}>☪</div>
+              <div>
+                <div style={{fontFamily:"'Cinzel',serif",fontSize:"1.2rem",fontWeight:"900",color:C.gold,letterSpacing:"0.05em"}}>AMEEN ISLAMIC INSTITUTE</div>
+                <div style={{fontFamily:"'Cinzel',serif",fontSize:"0.55rem",color:"#888",letterSpacing:"0.2em",marginTop:"2px"}}>SWAT • KHYBER PAKHTUNKHWA • PAKISTAN</div>
+                <div style={{fontSize:"0.78rem",fontWeight:"700",color:C.navy,marginTop:"3px"}}>امین اسلامک انسٹیٹیوٹ — سوات</div>
+              </div>
+              <div style={{width:"56px",height:"56px",borderRadius:"50%",background:h.gradient||`linear-gradient(135deg,${C.gold},${C.goldDark})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.6rem",flexShrink:0}}>{h.emoji||"🏫"}</div>
+            </div>
+            <div style={{display:"inline-block",border:`2px solid ${C.gold}`,padding:"5px 28px",borderRadius:"4px",marginBottom:"4px"}}>
+              <div style={{fontSize:"0.85rem",fontWeight:"900",color:C.navy}}>تفصیلی نمبرات سند / DETAIL MARKS CERTIFICATE</div>
+            </div>
+            <div style={{fontSize:"0.65rem",color:"#666",marginTop:"4px"}}>{term} — {examType}</div>
+          </div>
+
+          {/* Student Info */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 24px",padding:"12px 16px",background:"#fafaf8",borderRadius:"10px",border:`1px solid ${C.goldLight}`,marginBottom:"16px"}}>
+            {[
+              ["نام / Name", selStudent.name],
+              ["والد کا نام / Father", selStudent.fatherName||"—"],
+              ["داخلہ نمبر / Adm. No", selStudent.studentCode||"—"],
+              ["جماعت / Class", selStudent.grade||"—"],
+              ["سیکشن / Section", selStudent.section||"—"],
+              ["ہاؤس / House", `${h.emoji||""} ${h.name||""} (${h.nameEn||"—"})`],
+            ].map(([l,v]) => (
+              <div key={l} style={{display:"flex",gap:"6px",alignItems:"baseline"}}>
+                <span style={{fontSize:"0.6rem",color:"#888",minWidth:"110px",flexShrink:0}}>{l}:</span>
+                <span style={{fontSize:"0.72rem",fontWeight:"700",color:C.navy}}>{v}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Summary Boxes */}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:"10px",marginBottom:"16px"}}>
+            {[
+              {icon:"🏆",label:"مجموعی گریڈ\nOverall Grade",val:overallGrade,color:gradeColor},
+              {icon:"📊",label:"فیصد\nPercentage",val:`${avgPct}%`,color:avgPct>=50?C.green:C.red},
+              {icon:"🥇",label:"پوزیشن\nPosition",val:position>0?`${position}/${classResults.length}`:"—",color:C.abuBakr},
+              {icon:passed?"✅":"❌",label:"نتیجہ\nResult",val:passed?"پاس\nPASS":"فیل\nFAIL",color:passed?C.green:C.red},
+            ].map((item,i) => (
+              <div key={i} style={{textAlign:"center",padding:"12px 8px",border:`2px solid ${item.color}20`,borderRadius:"10px",background:`${item.color}08`}}>
+                <div style={{fontSize:"1.2rem",marginBottom:"4px"}}>{item.icon}</div>
+                <div style={{fontSize:"1.4rem",fontWeight:"900",color:item.color,lineHeight:1,whiteSpace:"pre-line"}}>{item.val}</div>
+                <div style={{fontSize:"0.55rem",color:"#888",marginTop:"3px",whiteSpace:"pre-line",lineHeight:"1.4"}}>{item.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Marks Table */}
+          <div style={{fontSize:"0.78rem",fontWeight:"800",color:C.navy,marginBottom:"10px"}}>📋 تفصیلی نمبرات / Subject-wise Marks</div>
+          <table style={{width:"100%",borderCollapse:"collapse",marginBottom:"16px",fontSize:"0.68rem"}}>
+            <thead>
+              <tr style={{background:`linear-gradient(135deg,${C.navy},${C.navyMid})`,color:C.white}}>
+                {["#","مضمون / Subject","کل نمبر\nTotal","حاصل نمبر\nObtained","فیصد\n%","گریڈ\nGrade","نتیجہ\nResult"].map((h,i) => (
+                  <th key={i} style={{padding:"9px 10px",textAlign:"right",fontWeight:"700",whiteSpace:"pre-line",fontSize:"0.6rem"}}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {sResults.map((r,i) => {
+                const pct = r.percentage || Math.round((r.obtained/r.total)*100) || 0;
+                const subPassed = pct >= 40;
+                return (
+                  <tr key={r.id} style={{background:i%2===0?"#fafaf8":C.white}}>
+                    <td style={{...S.td,color:"#aaa"}}>{i+1}</td>
+                    <td style={{...S.td,fontWeight:"700"}}>{r.subject}</td>
+                    <td style={S.td}>{r.total||100}</td>
+                    <td style={{...S.td,fontWeight:"800",color:subPassed?C.navy:C.red}}>{r.obtained||0}</td>
+                    <td style={S.td}>
+                      <span style={{fontWeight:"700",color:pct>=70?C.green:pct>=50?C.amber:C.red}}>{pct}%</span>
+                    </td>
+                    <td style={S.td}>
+                      <span style={{padding:"2px 8px",borderRadius:"20px",fontSize:"0.6rem",fontWeight:"800",
+                        background:r.grade==="A+"||r.grade==="A"?"#dcfce7":r.grade==="B"?"#dbeafe":r.grade==="C"?"#fef3c7":"#fee2e2",
+                        color:r.grade==="A+"||r.grade==="A"?C.green:r.grade==="B"?C.abuBakr:r.grade==="C"?C.amber:C.red
+                      }}>{r.grade||"—"}</span>
+                    </td>
+                    <td style={S.td}>
+                      <span style={{fontWeight:"700",color:subPassed?C.green:C.red,fontSize:"0.62rem"}}>
+                        {subPassed?"✅ پاس":"❌ فیل"}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+              {sResults.length === 0 && (
+                <tr><td colSpan={7} style={{...S.td,textAlign:"center",color:"#bbb",padding:"30px"}}>کوئی نتیجہ درج نہیں</td></tr>
+              )}
+            </tbody>
+            {sResults.length > 0 && (
+              <tfoot>
+                <tr style={{background:C.goldLight}}>
+                  <td colSpan={2} style={{...S.td,fontWeight:"900",color:C.navy}}>مجموعہ / Grand Total</td>
+                  <td style={{...S.td,fontWeight:"900"}}>{totalMarks}</td>
+                  <td style={{...S.td,fontWeight:"900"}}>{totalObtained}</td>
+                  <td style={S.td}><span style={{fontWeight:"900",color:avgPct>=50?C.green:C.red}}>{avgPct}%</span></td>
+                  <td style={S.td}>
+                    <span style={{padding:"3px 10px",borderRadius:"20px",fontSize:"0.68rem",fontWeight:"900",
+                      background:`linear-gradient(135deg,${C.gold},${C.goldDark})`,color:C.white}}>
+                      {overallGrade}
+                    </span>
+                  </td>
+                  <td style={S.td}>
+                    <span style={{fontWeight:"900",color:passed?C.green:C.red}}>{passed?"✅ پاس":"❌ فیل"}</span>
+                  </td>
+                </tr>
+              </tfoot>
+            )}
+          </table>
+
+          {/* Fee Status */}
+          {pendingFees > 0 && (
+            <div style={{background:"#fff7ed",border:`2px solid ${C.amber}30`,borderRadius:"10px",padding:"10px 14px",marginBottom:"14px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <span style={{fontSize:"0.68rem",color:C.amber,fontWeight:"700"}}>⚠️ فیس باقی ہے — Pending Fee</span>
+              <span style={{fontSize:"0.72rem",fontWeight:"900",color:C.red}}>Rs. {pendingFees.toLocaleString()}</span>
+            </div>
+          )}
+
+          {/* Remarks */}
+          <div style={{background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`,borderRadius:"10px",padding:"12px 16px",marginBottom:"20px",border:`1px solid ${C.gold}30`}}>
+            <div style={{fontSize:"0.68rem",fontWeight:"800",color:C.navy,marginBottom:"6px"}}>📝 ریمارکس / Remarks</div>
+            <div style={{fontSize:"0.65rem",color:C.navy,lineHeight:"1.9"}}>{remarks}</div>
+          </div>
+
+          {/* Signatures */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"24px",paddingTop:"16px"}}>
+            {[
+              "کلاس ٹیچر\nClass Teacher",
+              "پرنسپل\nPrincipal / Head",
+              "والدین / سرپرست\nParent / Guardian"
+            ].map(r => (
+              <div key={r} style={{textAlign:"center"}}>
+                <div style={{height:"44px",borderBottom:`2px solid #ccc`,marginBottom:"6px"}}/>
+                <div style={{fontSize:"0.58rem",color:"#888",whiteSpace:"pre-line",lineHeight:"1.6"}}>{r}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Footer */}
+          <div style={{marginTop:"16px",paddingTop:"10px",borderTop:`2px double ${C.gold}`,textAlign:"center"}}>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:"0.55rem",color:"#bbb",letterSpacing:"0.15em"}}>
+              AMEEN ISLAMIC INSTITUTE • SWAT • KPK • PAKISTAN
+            </div>
+            <div style={{fontSize:"0.58rem",color:"#ccc",marginTop:"2px"}}>
+              امین اسلامک انسٹیٹیوٹ — یہ سند مہر و دستخط کے بغیر معتبر نہیں
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Student selection
+  return (
+    <div style={S.page}>
+      <div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy,marginBottom:"4px"}}>🎓 تفصیلی نمبرات سند (DMC)</div>
+      <div style={{fontSize:"0.62rem",color:"#888",marginBottom:"16px"}}>Detail Marks Certificate — طالب علم منتخب کریں</div>
+
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px",marginBottom:"20px"}}>
+        <input style={{...S.inpSm,fontSize:"0.8rem",padding:"14px 18px"}} placeholder="🔍 نام یا داخلہ نمبر..." value={q} onChange={e=>setQ(e.target.value)}/>
+        <input style={{...S.inpSm,direction:"ltr"}} value={term} onChange={e=>setTerm(e.target.value)} placeholder="Exam Term..."/>
+      </div>
+
+      {q && (
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:"14px"}}>
+          {filtered.map(s => {
+            const h = HOUSES.find(x => x.id === s.houseId) || {};
+            const sRes = results.filter(r => r.studentId === s.id);
+            const tot = sRes.reduce((x,r) => x+(r.obtained||0), 0);
+            const max = sRes.reduce((x,r) => x+(r.total||100), 0);
+            const pct = max > 0 ? Math.round((tot/max)*100) : 0;
+            const grade = pct>=90?"A+":pct>=80?"A":pct>=70?"B":pct>=60?"C":pct>=50?"D":sRes.length>0?"F":"—";
+            return (
+              <div key={s.id} onClick={()=>setSelStudent(s)} style={{...S.card,cursor:"pointer",borderRight:`4px solid ${h.color||C.gold}`}}>
+                <div style={{display:"flex",alignItems:"center",gap:"12px"}}>
+                  <div style={{width:"50px",height:"50px",borderRadius:"50%",background:h.gradient||`linear-gradient(135deg,${C.gold},${C.goldDark})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.3rem",flexShrink:0}}>{h.emoji||"🎓"}</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy}}>{s.name}</div>
+                    <div style={{fontSize:"0.62rem",color:"#888"}}>{s.grade} • {s.studentCode}</div>
+                    <div style={{display:"flex",gap:"8px",marginTop:"4px"}}>
+                      {sRes.length>0 && <span style={{fontSize:"0.62rem",fontWeight:"700",color:pct>=50?C.green:C.red}}>{pct}%</span>}
+                      {grade!=="—" && <span style={{padding:"2px 8px",borderRadius:"10px",fontSize:"0.6rem",fontWeight:"800",background:grade==="A+"||grade==="A"?"#dcfce7":"#fef3c7",color:grade==="A+"||grade==="A"?C.green:C.amber}}>{grade}</span>}
+                    </div>
+                  </div>
+                  <span style={{fontSize:"0.7rem",color:"#ccc"}}>←</span>
+                </div>
+              </div>
+            );
+          })}
+          {filtered.length===0 && (
+            <div style={{...S.card,textAlign:"center",color:"#bbb",padding:"40px",gridColumn:"1/-1"}}>
+              <div style={{fontSize:"2rem",marginBottom:"8px"}}>🔍</div>کوئی طالب علم نہیں ملا
+            </div>
+          )}
+        </div>
+      )}
+
+      {!q && (
+        <div style={{...S.card,textAlign:"center",padding:"60px"}}>
+          <div style={{fontSize:"3rem",marginBottom:"12px"}}>🎓</div>
+          <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy}}>تفصیلی نمبرات سند</div>
+          <div style={{fontSize:"0.62rem",color:"#888",marginTop:"8px",lineHeight:"1.8"}}>
+            Detail Marks Certificate<br/>اوپر طالب علم کا نام لکھیں
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ===================== STUDENT WELFARE FEEDBACK =====================
 function WelfareFeedback({students,addData}){
