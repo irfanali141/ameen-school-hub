@@ -116,11 +116,11 @@ const BADGE_IMGS = {
 };
 
 function AIILogo({size=120}){
-  return <img src={BADGE_IMGS.aii} style={{width:size,height:size,borderRadius:"50%",objectFit:"cover",filter:"drop-shadow(0 0 24px rgba(245,166,35,0.4))"}} alt="AII"/>;
+  return <img src={BADGE_IMGS.aii} style={{width:size,height:size,borderRadius:"50%",objectFit:"cover",filter:"drop-shadow(0 0 24px rgba(245,166,35,0.4))",transform:"scaleX(-1)"}} alt="AII"/>;
 }
 
 function HouseBadge({house,size=165}){
-  return <img src={BADGE_IMGS[house]} style={{width:size,height:size,borderRadius:"50%",objectFit:"cover",filter:"drop-shadow(0 8px 24px rgba(0,0,0,0.5))"}} alt={house}/>;
+  return <img src={BADGE_IMGS[house]} style={{width:size,height:size,borderRadius:"50%",objectFit:"cover",filter:"drop-shadow(0 8px 24px rgba(0,0,0,0.5))",transform:"scaleX(-1)"}} alt={house}/>;
 }
 
 function Login({onLogin,err,loading}){
