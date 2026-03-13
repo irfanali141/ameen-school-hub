@@ -626,18 +626,18 @@ function Timetable(){
       <div style={{overflowX:"auto"}}><div style={{display:"flex",minWidth:"max-content"}}>
         {cls.s.map((subj,i)=>{
           const showBreak=i===brkIdx+1;
-          return React.createElement(React.Fragment,{key:i},
-            showBreak&&React.createElement("div",{style:{width:"64px",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"rgba(26,74,46,0.08)",borderLeft:"1px solid rgba(26,100,46,0.2)",borderRight:"1px solid rgba(26,100,46,0.2)",padding:"8px 4px",minHeight:"90px"}},
-              React.createElement("div",{style:{fontSize:"1rem",marginBottom:"2px"}},"☕"),
-              React.createElement("div",{style:{fontSize:"0.55rem",fontWeight:"700",color:C.green}},"وقفہ"),
-              React.createElement("div",{style:{fontSize:"0.48rem",color:"#aaa",marginTop:"2px"}},tmg.b)
-            ),
-            React.createElement("div",{style:{width:"86px",flexShrink:0,padding:"10px 6px",textAlign:"center",borderLeft:"1px solid "+C.goldLight,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"90px",background:"#fafaf8"}},
-              React.createElement("div",{style:{fontSize:"0.48rem",color:"#aaa",marginBottom:"4px",fontFamily:"monospace",fontWeight:"700"}},"P"+(i+1)),
-              React.createElement("div",{style:{fontSize:"0.68rem",fontWeight:"600",color:C.navy,lineHeight:"1.4",marginBottom:"6px",minHeight:"28px",display:"flex",alignItems:"center",justifyContent:"center"}},subj),
-              React.createElement("div",{style:{fontSize:"0.5rem",background:C.goldLight,border:"1px solid "+C.gold+"30",color:C.goldDark,padding:"2px 5px",borderRadius:"4px",fontFamily:"monospace",direction:"ltr",whiteSpace:"nowrap"}},tmg.p[i]||"")
-            )
-          );
+          return <React.Fragment key={i}>
+            {showBreak&&<div style={{width:"64px",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"rgba(26,74,46,0.08)",borderLeft:"1px solid rgba(26,100,46,0.2)",borderRight:"1px solid rgba(26,100,46,0.2)",padding:"8px 4px",minHeight:"90px"}}>
+              <div style={{fontSize:"1rem",marginBottom:"2px"}}>☕</div>
+              <div style={{fontSize:"0.55rem",fontWeight:"700",color:C.green}}>وقفہ</div>
+              <div style={{fontSize:"0.48rem",color:"#aaa",marginTop:"2px"}}>{tmg.b}</div>
+            </div>}
+            <div style={{width:"86px",flexShrink:0,padding:"10px 6px",textAlign:"center",borderLeft:"1px solid "+C.goldLight,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"90px",background:"#fafaf8"}}>
+              <div style={{fontSize:"0.48rem",color:"#aaa",marginBottom:"4px",fontFamily:"monospace",fontWeight:"700"}}>P{i+1}</div>
+              <div style={{fontSize:"0.68rem",fontWeight:"600",color:C.navy,lineHeight:"1.4",marginBottom:"6px",minHeight:"28px",display:"flex",alignItems:"center",justifyContent:"center"}}>{subj}</div>
+              <div style={{fontSize:"0.5rem",background:C.goldLight,border:"1px solid "+C.gold+"30",color:C.goldDark,padding:"2px 5px",borderRadius:"4px",fontFamily:"monospace",direction:"ltr",whiteSpace:"nowrap"}}>{tmg.p[i]||""}</div>
+            </div>
+          </React.Fragment>;
         })}
       </div></div>
     </div>);
