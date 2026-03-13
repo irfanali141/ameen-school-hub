@@ -109,15 +109,17 @@ function pBar(val,max,color){ const pct=Math.min(100,Math.round((val/max)*100));
 // ===================== LOGIN =====================
 function AIILogo({size=120}){
   return <svg width={size} height={size} viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <path id="aiiarc" d="M 20,100 A 80,80 0 1,1 180,100"/>
-    </defs>
     <circle cx="100" cy="100" r="99" fill="#1a3a6b"/>
     <circle cx="100" cy="100" r="93" fill="none" stroke="#f5a623" strokeWidth="3.5"/>
     <circle cx="100" cy="100" r="86" fill="none" stroke="#f5a623" strokeWidth="1"/>
-    <text fontFamily="Arial,sans-serif" fontSize="13" fontWeight="900" fill="white" letterSpacing="3">
-      <textPath href="#aiiarc" startOffset="5%">AMEEN ISLAMIC INSTITUTE</textPath>
-    </text>
+    {/* Curved top text using individual rotated letters */}
+    {["A","M","E","E","N"," ","I","S","L","A","M","I","C"," ","I","N","S","T","I","T","U","T","E"].map((ch,i)=>{
+      const total=23; const startAngle=-100; const angleStep=8.5;
+      const angle=startAngle+(i*angleStep);
+      const rad=angle*Math.PI/180; const r=80;
+      const x=100+r*Math.sin(rad); const y=100-r*Math.cos(rad);
+      return <text key={i} x={x} y={y} fontFamily="Arial,sans-serif" fontSize="11" fontWeight="900" fill="white" textAnchor="middle" transform={`rotate(${angle},${x},${y})`}>{ch}</text>;
+    })}
     <circle cx="100" cy="100" r="52" fill="#1a3a6b" stroke="white" strokeWidth="2.5"/>
     <text x="56" y="97" fontFamily="Arial,sans-serif" fontSize="38" fontWeight="900" fill="#f5a623">A</text>
     <text x="96" y="97" fontFamily="Arial,sans-serif" fontSize="38" fontWeight="900" fill="white">II</text>
@@ -126,75 +128,87 @@ function AIILogo({size=120}){
   </svg>;
 }
 
-function HouseBadge({house,size=160}){
+function HouseBadge({house,size=165}){
   const configs={
-    abuBakr:{c1:"#1e3a8a",c2:"#2563eb",name:"ABU BAKR HOUSE",badge:"TRUTH & LOYALTY",
+    abuBakr:{c1:"#1e3a8a",c2:"#2563eb",topText:"AMEEN ISLAMIC INSTITUTE",botText:"ABU BAKR HOUSE",badge:"TRUTH & LOYALTY",
       icon:<g>
-        <line x1="88" y1="78" x2="112" y2="78" stroke="white" strokeWidth="3" strokeLinecap="round"/>
-        <line x1="100" y1="78" x2="100" y2="94" stroke="white" strokeWidth="3" strokeLinecap="round"/>
-        <path d="M84 86 Q90 80 96 86" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round"/>
-        <path d="M104 86 Q110 80 116 86" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round"/>
-        <rect x="84" y="86" width="12" height="9" rx="1" fill="none" stroke="white" strokeWidth="2.5"/>
-        <rect x="104" y="86" width="12" height="9" rx="1" fill="none" stroke="white" strokeWidth="2.5"/>
-        <path d="M110 100 Q117 95 124 100 L121 109 Q117 104 113 109 Z" fill="white"/>
-        <path d="M76 100 Q83 95 90 100" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+        <line x1="88" y1="80" x2="112" y2="80" stroke="white" strokeWidth="3" strokeLinecap="round"/>
+        <line x1="100" y1="80" x2="100" y2="93" stroke="white" strokeWidth="3" strokeLinecap="round"/>
+        <path d="M84 87 Q90 81 96 87" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+        <path d="M104 87 Q110 81 116 87" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+        <rect x="84" y="87" width="12" height="8" rx="1" fill="none" stroke="white" strokeWidth="2"/>
+        <rect x="104" y="87" width="12" height="8" rx="1" fill="none" stroke="white" strokeWidth="2"/>
+        <path d="M110 101 Q117 96 124 101 L121 110 Q117 105 113 110 Z" fill="white"/>
+        <path d="M76 101 Q83 96 90 101" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
       </g>
     },
-    umar:{c1:"#14532d",c2:"#16a34a",name:"UMAR HOUSE",badge:"JUSTICE & DISCIPLINE",
+    umar:{c1:"#14532d",c2:"#16a34a",topText:"AMEEN ISLAMIC INSTITUTE",botText:"UMAR HOUSE",badge:"JUSTICE & DISCIPLINE",
       icon:<g>
-        <rect x="89" y="79" width="8" height="25" rx="2" fill="white"/>
-        <rect x="83" y="102" width="20" height="5" rx="2" fill="white"/>
-        <circle cx="93" cy="75" r="6" fill="white"/>
-        <path d="M107 80 L120 77 L118 91 L105 94 Z" fill="none" stroke="white" strokeWidth="2.5" strokeLinejoin="round"/>
-        <circle cx="119" cy="84" r="9" fill="none" stroke="white" strokeWidth="2.5"/>
-        <line x1="113" y1="78" x2="125" y2="90" stroke="white" strokeWidth="2"/>
-        <line x1="113" y1="90" x2="125" y2="78" stroke="white" strokeWidth="2"/>
+        <rect x="90" y="80" width="8" height="24" rx="2" fill="white"/>
+        <rect x="84" y="102" width="20" height="5" rx="2" fill="white"/>
+        <circle cx="94" cy="76" r="6" fill="white"/>
+        <path d="M108 81 L120 78 L118 91 L106 94 Z" fill="none" stroke="white" strokeWidth="2.5" strokeLinejoin="round"/>
+        <circle cx="119" cy="85" r="9" fill="none" stroke="white" strokeWidth="2.5"/>
+        <line x1="113" y1="79" x2="125" y2="91" stroke="white" strokeWidth="2"/>
+        <line x1="113" y1="91" x2="125" y2="79" stroke="white" strokeWidth="2"/>
       </g>
     },
-    uthman:{c1:"#78350f",c2:"#b45309",name:"UTHMAN HOUSE",badge:"MODESTY & GENEROSITY",
+    uthman:{c1:"#78350f",c2:"#b45309",topText:"AMEEN ISLAMIC INSTITUTE",botText:"UTHMAN HOUSE",badge:"MODESTY & GENEROSITY",
       icon:<g>
-        <path d="M91 73 Q83 68 79 76 Q74 85 83 90 Q90 93 94 86 Q98 94 101 88 Q106 80 99 74 Q95 68 91 73Z" fill="white"/>
-        <path d="M109 90 L117 84 L121 89 L126 82 L130 87" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M107 99 Q115 93 123 99 L120 111 Q115 105 110 111 Z" fill="white"/>
+        <path d="M91 74 Q83 69 79 77 Q74 86 83 91 Q90 94 94 87 Q98 95 101 89 Q106 81 99 75 Q95 69 91 74Z" fill="white"/>
+        <path d="M109 91 L117 85 L121 90 L126 83 L130 88" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M107 100 Q115 94 123 100 L120 112 Q115 106 110 112 Z" fill="white"/>
       </g>
     },
-    ali:{c1:"#7f1d1d",c2:"#dc2626",name:"ALI HOUSE",badge:"BRAVERY & KNOWLEDGE",
+    ali:{c1:"#7f1d1d",c2:"#dc2626",topText:"AMEEN ISLAMIC INSTITUTE",botText:"ALI HOUSE",badge:"BRAVERY & KNOWLEDGE",
       icon:<g>
-        <path d="M84 108 L92 73 L96 82 L101 69 L106 82 L110 73 L118 108 Z" fill="none" stroke="white" strokeWidth="2.5" strokeLinejoin="round"/>
+        <path d="M84 108 L92 74 L96 83 L101 70 L106 83 L110 74 L118 108 Z" fill="none" stroke="white" strokeWidth="2.5" strokeLinejoin="round"/>
         <line x1="87" y1="99" x2="115" y2="99" stroke="white" strokeWidth="2.5"/>
-        <rect x="111" y="77" width="15" height="22" rx="2" fill="none" stroke="white" strokeWidth="2.5"/>
-        <line x1="114" y1="83" x2="123" y2="83" stroke="white" strokeWidth="1.5"/>
-        <line x1="114" y1="89" x2="123" y2="89" stroke="white" strokeWidth="1.5"/>
-        <line x1="114" y1="95" x2="123" y2="95" stroke="white" strokeWidth="1.5"/>
+        <rect x="111" y="78" width="15" height="21" rx="2" fill="none" stroke="white" strokeWidth="2.5"/>
+        <line x1="114" y1="84" x2="123" y2="84" stroke="white" strokeWidth="1.5"/>
+        <line x1="114" y1="90" x2="123" y2="90" stroke="white" strokeWidth="1.5"/>
+        <line x1="114" y1="96" x2="123" y2="96" stroke="white" strokeWidth="1.5"/>
       </g>
     }
   };
   const c=configs[house]; if(!c) return null;
+
+  // Render top curved text with individual rotated chars
+  const topChars=c.topText.split("");
+  const topR=80; const topStart=-90; const topStep=8;
+  const botChars=c.botText.split("");
+  const botR=80; const botStart=90-(botChars.length*4.5); const botStep=8.5;
+
   return <svg width={size} height={size} viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <linearGradient id={"hg"+house} x1="0%" y1="0%" x2="100%" y2="100%">
+      <linearGradient id={"hg4"+house} x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor={c.c1}/>
         <stop offset="60%" stopColor={c.c2}/>
         <stop offset="100%" stopColor={c.c1}/>
       </linearGradient>
-      <path id={"arc"+house} d="M 18,100 A 82,82 0 1,1 182,100"/>
     </defs>
-    <circle cx="100" cy="100" r="99" fill={`url(#hg${house})`}/>
+    <circle cx="100" cy="100" r="99" fill={`url(#hg4${house})`}/>
     <circle cx="100" cy="100" r="93" fill="none" stroke="white" strokeWidth="3"/>
     <circle cx="100" cy="100" r="86" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
-    {/* Top arc text - AMEEN ISLAMIC INSTITUTE */}
-    <text fontFamily="Arial,sans-serif" fontSize="12" fontWeight="900" fill="white" letterSpacing="2.5">
-      <textPath href={"#arc"+house} startOffset="8%">AMEEN ISLAMIC INSTITUTE</textPath>
-    </text>
-    {/* Bottom text - HOUSE NAME - fixed position, not arc */}
-    <text x="100" y="174" fontFamily="Arial,sans-serif" fontSize="13" fontWeight="900" fill="white" textAnchor="middle" letterSpacing="2">{c.name}</text>
-    {/* Center circle */}
+    {/* Top text - AMEEN ISLAMIC INSTITUTE */}
+    {topChars.map((ch,i)=>{
+      const angle=topStart+(i*topStep);
+      const rad=angle*Math.PI/180;
+      const x=100+topR*Math.sin(rad); const y=100-topR*Math.cos(rad);
+      return <text key={"t"+i} x={x} y={y} fontFamily="Arial,sans-serif" fontSize="11" fontWeight="900" fill="white" textAnchor="middle" dominantBaseline="middle" transform={`rotate(${angle},${x},${y})`}>{ch}</text>;
+    })}
+    {/* Bottom text - HOUSE NAME */}
+    {botChars.map((ch,i)=>{
+      const angle=botStart+(i*botStep);
+      const rad=angle*Math.PI/180;
+      const x=100+botR*Math.sin(rad); const y=100-botR*Math.cos(rad);
+      return <text key={"b"+i} x={x} y={y} fontFamily="Arial,sans-serif" fontSize="11" fontWeight="900" fill="white" textAnchor="middle" dominantBaseline="middle" transform={`rotate(${angle+180},${x},${y})`}>{ch}</text>;
+    })}
+    {/* Center */}
     <circle cx="100" cy="97" r="50" fill="rgba(0,0,0,0.2)" stroke="white" strokeWidth="2.5"/>
-    {/* Icons */}
     {c.icon}
-    {/* Badge ribbon */}
-    <rect x="64" y="136" width="72" height="16" rx="4" fill="white"/>
-    <text x="100" y="147" fontFamily="Arial,sans-serif" fontSize="8.5" fontWeight="900" fill={c.c1} textAnchor="middle" letterSpacing="0.5">{c.badge}</text>
+    <rect x="64" y="134" width="72" height="16" rx="4" fill="white"/>
+    <text x="100" y="145" fontFamily="Arial,sans-serif" fontSize="8" fontWeight="900" fill={c.c1} textAnchor="middle">{c.badge}</text>
   </svg>;
 }
 
@@ -260,132 +274,6 @@ function Login({onLogin,err,loading}){
     </div>
   </div>;
 }
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:"12px"}}><span style={{fontSize:"0.68rem",color:"#888"}}>پاس / فیل</span><span style={{fontSize:"0.72rem",fontWeight:"700"}}><span style={{color:C.green}}>{results.filter(r=>r.percentage>=50).length}</span><span style={{color:"#aaa"}}>/</span><span style={{color:C.red}}>{results.filter(r=>r.percentage<50).length}</span></span></div>
-          {pBar(avgResult,100,avgResult>=70?C.green:avgResult>=50?C.amber:C.red)}
-        </>}
-      </div>
-    </div>
-    <div style={S.card}>
-      <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy,marginBottom:"16px"}}>🏠 ہاؤس کارڈز</div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:"16px"}}>
-        {HOUSES.map((h,i)=>{ const hd=sorted.find(x=>x.id===h.id)||{}; const studs=students.filter(s=>s.houseId===h.id); return <div key={h.id} style={{background:h.gradient,borderRadius:"18px",padding:"20px",color:C.white,position:"relative",overflow:"hidden"}}>
-          {i===0&&sorted[0]?.id===h.id&&<div style={{position:"absolute",top:"10px",left:"12px",fontSize:"1.4rem"}}>👑</div>}
-          <div style={{fontSize:"2rem",marginBottom:"6px"}}>{h.emoji}</div>
-          <div style={{fontSize:"0.9rem",fontWeight:"800",marginBottom:"2px"}}>{h.nameEn} House</div>
-          <div style={{fontSize:"0.65rem",opacity:0.85,marginBottom:"4px"}}>{h.slogan}</div>
-          <div style={{fontSize:"2rem",fontWeight:"900",opacity:0.9}}>{hd.points||0}</div>
-          <div style={{fontSize:"0.6rem",opacity:0.7}}>کل پوائنٹس • {studs.length} طلبا</div>
-        </div>; })}
-      </div>
-    </div>
-  </div>;
-}
-
-// ===================== HVS ENTRY =====================
-function HVSEntry({students,houses,addData,updateHousePoints}){
-  const [show,setShow]=useState(false); const [houseId,setHouseId]=useState("abuBakr");
-  const [week,setWeek]=useState(new Date().toISOString().split("T")[0]);
-  const [scores,setScores]=useState({}); const [logs,setLogs]=useState([]); const [saving,setSaving]=useState(false);
-  useEffect(()=>{ return onSnapshot(query(collection(db,"hvs_logs"),orderBy("createdAt","desc"),limit(50)),s=>setLogs(s.docs.map(d=>({id:d.id,...d.data()})))); },[]);
-  const setScore=(cat,val)=>setScores({...scores,[cat]:val});
-  const calcScore=(r,max)=>Math.round((r/4)*max);
-  const total=HVS_CATS.reduce((sum,cat)=>sum+(calcScore(scores[cat.id]||0,cat.max)),0);
-  const hInfo=HOUSES.find(h=>h.id===houseId)||{};
-  const save=async()=>{ setSaving(true); const catScores={}; HVS_CATS.forEach(cat=>{ catScores[cat.id]=calcScore(scores[cat.id]||0,cat.max); }); await addData("hvs_logs",{houseId,week,ratings:scores,scores:catScores,total,maxTotal:HVS_TOTAL}); await updateHousePoints(houseId,total); setScores({}); setShow(false); setSaving(false); };
-  const houseSummary=HOUSES.map(h=>{ const hLogs=logs.filter(l=>l.houseId===h.id); const tot=hLogs.reduce((s,l)=>s+(l.total||0),0); const avg=hLogs.length>0?Math.round(tot/hLogs.length):0; return {...h,logCount:hLogs.length,totalPts:tot,avgScore:avg}; }).sort((a,b)=>b.totalPts-a.totalPts);
-  return <div style={S.page}>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"24px"}}>
-      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>📊 HVS اسکورنگ سسٹم</div><div style={{fontSize:"0.65rem",color:"#888",marginTop:"2px"}}>ہاؤس ویلیو اسکور — 160 مارکس فریم ورک</div></div>
-      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نیا HVS اسکور</button>
-    </div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:"14px",marginBottom:"24px"}}>
-      {houseSummary.map((h,i)=><div key={h.id} style={{background:h.gradient,borderRadius:"16px",padding:"18px",color:C.white,position:"relative"}}>
-        {i===0&&<div style={{position:"absolute",top:"10px",left:"10px",fontSize:"1rem"}}>👑</div>}
-        <div style={{fontSize:"1.5rem"}}>{h.emoji}</div>
-        <div style={{fontSize:"0.8rem",fontWeight:"800",marginTop:"4px"}}>{h.nameEn}</div>
-        <div style={{fontSize:"1.8rem",fontWeight:"900",marginTop:"8px"}}>{h.totalPts}</div>
-        <div style={{fontSize:"0.55rem",opacity:0.75}}>کل HVS پوائنٹس</div>
-        <div style={{fontSize:"0.6rem",marginTop:"6px",opacity:0.85}}>اوسط: {h.avgScore}/{HVS_TOTAL} | {h.logCount} ہفتے</div>
-      </div>)}
-    </div>
-    {show&&<div style={{...S.card,marginBottom:"24px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`,border:`2px solid ${C.gold}30`}}>
-      <div style={{fontSize:"0.9rem",fontWeight:"700",color:C.navy,marginBottom:"20px"}}>📝 ہفتہ وار HVS رپورٹ درج کریں</div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"20px"}}>
-        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>ہاؤس منتخب کریں</label><select style={{...S.inpSm,borderColor:hInfo.color||C.gold}} value={houseId} onChange={e=>setHouseId(e.target.value)}>{HOUSES.map(h=><option key={h.id} value={h.id}>{h.emoji} {h.nameEn}</option>)}</select></div>
-        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>ہفتے کی تاریخ</label><input style={{...S.inpSm,direction:"ltr"}} type="date" value={week} onChange={e=>setWeek(e.target.value)}/></div>
-      </div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px",marginBottom:"20px"}}>
-        {HVS_CATS.map(cat=>{ const rating=scores[cat.id]||0; const earned=calcScore(rating,cat.max); return <div key={cat.id} style={{background:C.white,borderRadius:"14px",padding:"16px",border:`1px solid ${C.goldLight}`}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"8px"}}>
-            <div><div style={{fontSize:"0.75rem",fontWeight:"700",color:C.navy}}>{cat.icon} {cat.label}</div><div style={{fontSize:"0.55rem",color:"#aaa",marginTop:"2px"}}>{cat.desc}</div></div>
-            <div style={{textAlign:"left",direction:"ltr"}}><div style={{fontSize:"0.65rem",fontWeight:"700",color:hInfo.color||C.gold}}>{earned}/{cat.max}</div></div>
-          </div>
-          <div style={{display:"flex",gap:"6px"}}>
-            {RATING.map(r=><button key={r.val} onClick={()=>setScore(cat.id,r.val)} style={{flex:1,padding:"6px 2px",borderRadius:"8px",border:"none",cursor:"pointer",fontSize:"0.55rem",fontWeight:"700",background:scores[cat.id]===r.val?r.bg:"#f5f5f5",color:scores[cat.id]===r.val?r.color:"#bbb",transition:"all 0.15s"}}>{r.val}<br/><span style={{fontSize:"0.45rem"}}>{r.labelEn}</span></button>)}
-          </div>
-        </div>; })}
-      </div>
-      <div style={{background:C.white,borderRadius:"14px",padding:"16px",marginBottom:"16px",textAlign:"center",border:`2px solid ${total>=120?C.green:total>=80?C.gold:C.red}30`}}>
-        <div style={{fontSize:"0.65rem",color:"#888",marginBottom:"4px"}}>کل اسکور</div>
-        <div style={{fontSize:"2.5rem",fontWeight:"900",color:total>=120?C.green:total>=80?C.gold:C.red}}>{total}</div>
-        <div style={{fontSize:"0.65rem",color:"#aaa"}}>/ {HVS_TOTAL} مارکس</div>
-        {pBar(total,HVS_TOTAL,total>=120?C.green:total>=80?C.gold:C.red)}
-      </div>
-      <button style={{...S.saveBtn,width:"100%"}} onClick={save} disabled={saving}>{saving?"محفوظ ہو رہا ہے...":"✅ HVS اسکور محفوظ کریں"}</button>
-    </div>}
-    <div style={S.card}>
-      <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy,marginBottom:"16px"}}>📋 HVS لاگ</div>
-      <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
-        <thead><tr><th style={S.th}>ہاؤس</th><th style={S.th}>ہفتہ</th>{HVS_CATS.slice(0,4).map(c=><th key={c.id} style={S.th}>{c.icon}</th>)}<th style={S.th}>کل</th><th style={S.th}>گریڈ</th></tr></thead>
-        <tbody>{logs.map(l=>{ const info=HOUSES.find(x=>x.id===l.houseId)||{}; const grade=l.total>=140?"A+":l.total>=120?"A":l.total>=100?"B":l.total>=80?"C":"D"; const gc=l.total>=120?C.green:l.total>=80?C.amber:C.red; return <tr key={l.id}>
-          <td style={S.td}><span style={hBadge(info.color,info.light)}>{info.emoji} {info.nameEn}</span></td>
-          <td style={{...S.td,fontFamily:"monospace",direction:"ltr",fontSize:"0.6rem"}}>{l.week}</td>
-          {HVS_CATS.slice(0,4).map(c=><td key={c.id} style={S.td}>{l.scores?.[c.id]||0}/{c.max}</td>)}
-          <td style={{...S.td,fontWeight:"800",color:gc}}>{l.total||0}/{HVS_TOTAL}</td>
-          <td style={S.td}><span style={{padding:"3px 10px",borderRadius:"20px",background:gc+"15",color:gc,fontSize:"0.62rem",fontWeight:"800"}}>{grade}</span></td>
-        </tr>; })}{logs.length===0&&<tr><td colSpan={8} style={{...S.td,textAlign:"center",color:"#bbb",padding:"40px"}}>ابھی تک کوئی HVS لاگ نہیں</td></tr>}</tbody>
-      </table></div>
-    </div>
-  </div>;
-}
-
-// ===================== STUDENTS =====================
-function Students({students,addData}){
-  const [show,setShow]=useState(false);
-  const [f,setF]=useState({name:"",fatherName:"",grade:"Grade 7",houseId:"abuBakr",studentCode:"",section:"Orchid",canteenBalance:100,talent:"",phone:""});
-  const [q,setQ]=useState(""); const [selStudent,setSelStudent]=useState(null);
-  const filtered=students.filter(s=>s.name?.includes(q)||s.studentCode?.includes(q)||s.grade?.includes(q));
-  const add=async()=>{ if(!f.name)return; await addData("students",{...f,enrollmentStatus:"active"}); setShow(false); setF({name:"",fatherName:"",grade:"Grade 7",houseId:"abuBakr",studentCode:"",section:"Orchid",canteenBalance:100,talent:"",phone:""}); };
-  if(selStudent){ const h=HOUSES.find(x=>x.id===selStudent.houseId)||{}; return <div style={S.page}>
-    <button style={{...S.addBtn,marginBottom:"20px",background:"#eee",color:C.navy,boxShadow:"none"}} onClick={()=>setSelStudent(null)}>← واپس</button>
-    <div style={{...S.card,background:h.gradient,color:C.white,marginBottom:"20px"}}><div style={{display:"flex",alignItems:"center",gap:"20px"}}><div style={{width:"70px",height:"70px",borderRadius:"50%",background:"rgba(255,255,255,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"2rem"}}>{h.emoji||"👤"}</div><div><div style={{fontSize:"1.2rem",fontWeight:"800"}}>{selStudent.name}</div><div style={{fontSize:"0.7rem",opacity:0.85,marginTop:"4px"}}>والد: {selStudent.fatherName}</div><div style={{fontSize:"0.65rem",opacity:0.7,fontFamily:"monospace",direction:"ltr",marginTop:"2px"}}>{selStudent.studentCode}</div></div></div></div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px"}}>{[{label:"جماعت",val:selStudent.grade,icon:"📚"},{label:"ہاؤس",val:h.nameEn||"—",icon:h.emoji||"🏠"},{label:"سیکشن",val:selStudent.section||"—",icon:"🏫"},{label:"ہنر",val:selStudent.talent||"—",icon:"⭐"},{label:"فون",val:selStudent.phone||"—",icon:"📱"},{label:"کینٹین بیلنس",val:`Rs. ${selStudent.canteenBalance||0}`,icon:"💰"}].map((item,i)=><div key={i} style={S.card}><div style={{fontSize:"1.2rem"}}>{item.icon}</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"6px"}}>{item.label}</div><div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy,marginTop:"2px"}}>{item.val}</div></div>)}</div>
-  </div>; }
-  return <div style={S.page}>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"8px"}}>
-      <div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>🎓 طلبا ({students.length})</div>
-      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نیا طالب علم</button>
-    </div>
-    {show&&<div style={{...S.card,margin:"16px 0",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`,border:`2px solid ${C.gold}30`}}>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
-        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>نام *</label><input style={S.inpSm} value={f.name} onChange={e=>setF({...f,name:e.target.value})} placeholder="طالب علم کا نام"/></div>
-        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>والد کا نام</label><input style={S.inpSm} value={f.fatherName} onChange={e=>setF({...f,fatherName:e.target.value})} placeholder="والد کا نام"/></div>
-        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>جماعت</label><select style={S.inpSm} value={f.grade} onChange={e=>setF({...f,grade:e.target.value})}>{["Grade 1","Grade 2","Grade 3","Grade 4","Grade 5","Grade 6","Grade 7","Grade 8","Grade 9","Grade 10"].map(g=><option key={g}>{g}</option>)}</select></div>
-        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>ہاؤس</label><select style={S.inpSm} value={f.houseId} onChange={e=>setF({...f,houseId:e.target.value})}>{HOUSES.map(h=><option key={h.id} value={h.id}>{h.emoji} {h.nameEn}</option>)}</select></div>
-        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>کوڈ</label><input style={{...S.inpSm,direction:"ltr"}} value={f.studentCode} onChange={e=>setF({...f,studentCode:e.target.value})} placeholder="AII-2026-XXX"/></div>
-        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>فون</label><input style={{...S.inpSm,direction:"ltr"}} value={f.phone} onChange={e=>setF({...f,phone:e.target.value})} placeholder="0300-1234567"/></div>
-        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>ہنر</label><input style={S.inpSm} value={f.talent} onChange={e=>setF({...f,talent:e.target.value})} placeholder="تقریر، نعت، کرکٹ..."/></div>
-      </div>
-      <button style={S.saveBtn} onClick={add}>✅ محفوظ کریں</button>
-    </div>}
-    <div style={{marginBottom:"16px"}}><input style={{...S.inpSm,direction:"rtl"}} placeholder="🔍 تلاش..." value={q} onChange={e=>setQ(e.target.value)}/></div>
-    <div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
-      <thead><tr><th style={S.th}>نام</th><th style={S.th}>والد</th><th style={S.th}>کوڈ</th><th style={S.th}>جماعت</th><th style={S.th}>ہاؤس</th><th style={S.th}>ہنر</th><th style={S.th}>بیلنس</th><th style={S.th}>پروفائل</th></tr></thead>
-      <tbody>{filtered.map(s=>{ const h=HOUSES.find(x=>x.id===s.houseId); return <tr key={s.id}>
-        <td style={{...S.td,fontWeight:"700"}}>{s.name}</td><td style={S.td}>{s.fatherName}</td>
-        <td style={{...S.td,fontFamily:"monospace",direction:"ltr",fontSize:"0.6rem",color:C.gold}}>{s.studentCode}</td>
-        <td style={S.td}>{s.grade}</td>
-        <td style={S.td}>{h&&<span style={hBadge(h.color,h.light)}>{h.emoji} {h.nameEn}</span>}</td>
         <td style={S.td}>{s.talent||"—"}</td>
         <td style={{...S.td,fontWeight:"700",color:(s.canteenBalance||0)<50?C.red:C.green}}>Rs. {s.canteenBalance||0}</td>
         <td style={S.td}><button onClick={()=>setSelStudent(s)} style={{...S.addBtn,padding:"5px 12px",fontSize:"0.58rem"}}>دیکھیں</button></td>
