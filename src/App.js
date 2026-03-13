@@ -2790,6 +2790,7 @@ export default function App(){
     {id:"seating",label:"🪑 نشست بندی"},{id:"faculty_dev",label:"👩‍🏫 استاد ترقی"},
     {id:"curriculum",label:"📚 نصابی وسائل"},{id:"marks",label:"✏️ نمبرات"},
     {id:"reportcard",label:"📋 رپورٹ کارڈ"},{id:"welfare",label:"💬 طالب علم فلاح"},
+      {id:"dmc",label:"🎓 DMC"},
     {id:"pride",label:"💌 پرائیڈ میسج"},{id:"wifaq",label:"🕌 وفاق کمپلائنس"},
     {id:"ethics",label:"🌟 اخلاق مانیٹر"},
     {id:"lessons",label:"📅 سبق منصوبہ"},{id:"analytics",label:"📊 کلاس تجزیہ"},
