@@ -1391,6 +1391,327 @@ function DirectorPortal({students,teachers,houses,fees,results,hvsLogs}){
   </div>;
 }
 
+// ===================== ALUMNI PORTAL =====================
+function AlumniPortal({addData}){
+  const [alumni,setAlumni]=useState([]); const [show,setShow]=useState(false);
+  const [f,setF]=useState({name:"",graduationYear:"",field:"",university:"",job:"",phone:"",achievement:"",houseId:"",notes:""});
+  useEffect(()=>{ return onSnapshot(query(collection(db,"alumni"),orderBy("createdAt","desc"),limit(50)),s=>setAlumni(s.docs.map(d=>({id:d.id,...d.data()}))));  },[]);
+  const add=async()=>{ if(!f.name)return; await addData("alumni",{...f}); setShow(false); setF({name:"",graduationYear:"",field:"",university:"",job:"",phone:"",achievement:"",houseId:"",notes:""}); };
+  const fields={medicine:"🏥 طب",engineering:"⚙️ انجینئرنگ",islamic:"🕌 اسلامی علوم",teaching:"👨‍🏫 تدریس",business:"💼 تجارت",government:"🏛️ سرکاری",other:"📋 دیگر"};
+  const byYear=alumni.reduce((acc,a)=>{ const y=a.graduationYear||"نامعلوم"; if(!acc[y])acc[y]=[]; acc[y].push(a); return acc; },{});
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>🎓 سابق طلبا پورٹل</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>فارغ التحصیل — کامیابیاں و رابطہ</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نیا سابق طالب علم</button>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:"12px",marginBottom:"20px"}}>
+      {[{c:C.gold,i:"🎓",n:alumni.length,l:"کل سابق طلبا"},{c:C.green,i:"🏥",n:alumni.filter(a=>a.field==="medicine").length,l:"ڈاکٹر"},{c:C.abuBakr,i:"⚙️",n:alumni.filter(a=>a.field==="engineering").length,l:"انجینئر"},{c:C.purple,i:"🕌",n:alumni.filter(a=>a.field==="islamic").length,l:"عالم دین"}].map((x,i)=><div key={i} style={{background:`linear-gradient(135deg,${x.c}12,${x.c}05)`,borderRadius:"16px",padding:"16px",border:`2px solid ${x.c}20`,textAlign:"center"}}><div style={{fontSize:"1.3rem"}}>{x.i}</div><div style={{fontSize:"1.4rem",fontWeight:"900",color:x.c}}>{x.n}</div><div style={{fontSize:"0.6rem",color:"#888"}}>{x.l}</div></div>)}
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`,border:`2px solid ${C.gold}30`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>نام *</label><input style={S.inpSm} value={f.name} onChange={e=>setF({...f,name:e.target.value})} placeholder="مکمل نام..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>فراغت سال</label><input style={{...S.inpSm,direction:"ltr"}} value={f.graduationYear} onChange={e=>setF({...f,graduationYear:e.target.value})} placeholder="2020"/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>شعبہ</label><select style={S.inpSm} value={f.field} onChange={e=>setF({...f,field:e.target.value})}><option value="">-- منتخب کریں --</option>{Object.entries(fields).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>ہاؤس</label><select style={S.inpSm} value={f.houseId} onChange={e=>setF({...f,houseId:e.target.value})}><option value="">-- منتخب کریں --</option>{HOUSES.map(h=><option key={h.id} value={h.id}>{h.emoji} {h.nameEn}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>یونیورسٹی</label><input style={S.inpSm} value={f.university} onChange={e=>setF({...f,university:e.target.value})} placeholder="یونیورسٹی کا نام..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>موجودہ عہدہ</label><input style={S.inpSm} value={f.job} onChange={e=>setF({...f,job:e.target.value})} placeholder="ڈاکٹر، استاد..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>فون</label><input style={{...S.inpSm,direction:"ltr"}} value={f.phone} onChange={e=>setF({...f,phone:e.target.value})} placeholder="03xx-xxxxxxx"/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>نمایاں کامیابی</label><input style={S.inpSm} value={f.achievement} onChange={e=>setF({...f,achievement:e.target.value})} placeholder="اہم کامیابی..."/></div>
+      </div>
+      <button style={S.saveBtn} onClick={add}>✅ محفوظ کریں</button>
+    </div>}
+    <div style={{display:"flex",flexDirection:"column",gap:"20px"}}>
+      {Object.entries(byYear).sort((a,b)=>b[0].localeCompare(a[0])).map(([year,list])=><div key={year}>
+        <div style={{fontSize:"0.75rem",fontWeight:"800",color:C.gold,marginBottom:"12px",borderBottom:`2px solid ${C.goldLight}`,paddingBottom:"6px"}}>🎓 {year} — {list.length} فارغ التحصیل</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:"12px"}}>
+          {list.map(a=>{ const h=HOUSES.find(x=>x.id===a.houseId)||{}; const fi=fields[a.field]||fields.other; return <div key={a.id} style={{...S.card,borderRight:`4px solid ${h.color||C.gold}`}}>
+            <div style={{display:"flex",alignItems:"center",gap:"12px",marginBottom:"10px"}}>
+              <div style={{width:"44px",height:"44px",borderRadius:"50%",background:h.gradient||`linear-gradient(135deg,${C.gold},${C.goldDark})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.2rem",flexShrink:0}}>{h.emoji||"🎓"}</div>
+              <div><div style={{fontSize:"0.82rem",fontWeight:"700",color:C.navy}}>{a.name}</div><div style={{fontSize:"0.6rem",color:"#888"}}>{fi}</div></div>
+            </div>
+            {a.university&&<div style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px"}}>🏫 {a.university}</div>}
+            {a.job&&<div style={{fontSize:"0.62rem",color:C.abuBakr,marginBottom:"4px",fontWeight:"600"}}>💼 {a.job}</div>}
+            {a.achievement&&<div style={{background:C.goldLight,borderRadius:"8px",padding:"6px 10px",fontSize:"0.6rem",color:C.goldDark}}>⭐ {a.achievement}</div>}
+          </div>; })}
+        </div>
+      </div>)}
+      {alumni.length===0&&<div style={{...S.card,textAlign:"center",color:"#bbb",padding:"60px"}}><div style={{fontSize:"3rem",marginBottom:"12px"}}>🎓</div>ابھی کوئی سابق طالب علم نہیں</div>}
+    </div>
+  </div>;
+}
+
+// ===================== CAMPUS SECURITY / VISITOR HUB =====================
+function VisitorHub({addData}){
+  const [visitors,setVisitors]=useState([]); const [show,setShow]=useState(false);
+  const [f,setF]=useState({name:"",cnic:"",phone:"",purpose:"meeting",meetingWith:"",vehicleNo:"",checkIn:new Date().toTimeString().slice(0,5),date:new Date().toISOString().split("T")[0]});
+  useEffect(()=>{ return onSnapshot(query(collection(db,"visitors"),orderBy("createdAt","desc"),limit(50)),s=>setVisitors(s.docs.map(d=>({id:d.id,...d.data()}))));  },[]);
+  const add=async()=>{ if(!f.name)return; await addData("visitors",{...f,status:"inside"}); setShow(false); setF({name:"",cnic:"",phone:"",purpose:"meeting",meetingWith:"",vehicleNo:"",checkIn:new Date().toTimeString().slice(0,5),date:new Date().toISOString().split("T")[0]}); };
+  const checkout=async(id)=>{ await updateDoc(doc(db,"visitors",id),{status:"left",checkOut:new Date().toTimeString().slice(0,5)}); };
+  const purposes={meeting:{c:C.abuBakr,i:"🤝",l:"ملاقات"},delivery:{c:C.amber,i:"📦",l:"ڈیلیوری"},maintenance:{c:C.teal,i:"🔧",l:"مرمت"},parent:{c:C.green,i:"👪",l:"والدین"},official:{c:C.gold,i:"🏛️",l:"سرکاری"},other:{c:"#888",i:"👤",l:"دیگر"}};
+  const inside=visitors.filter(v=>v.status==="inside");
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>🔒 سیکیورٹی / وزیٹر ہب</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>آنے جانے والوں کا ریکارڈ</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نیا وزیٹر</button>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:"12px",marginBottom:"20px"}}>
+      {[{c:C.green,i:"✅",n:inside.length,l:"ابھی اندر"},{c:C.abuBakr,i:"👥",n:visitors.filter(v=>v.date===new Date().toISOString().split("T")[0]).length,l:"آج کے وزیٹر"},{c:C.gold,i:"📋",n:visitors.length,l:"کل ریکارڈ"},{c:C.amber,i:"🚗",n:visitors.filter(v=>v.vehicleNo&&v.status==="inside").length,l:"گاڑیاں اندر"}].map((x,i)=><div key={i} style={{background:`linear-gradient(135deg,${x.c}12,${x.c}05)`,borderRadius:"16px",padding:"16px",border:`2px solid ${x.c}20`,textAlign:"center"}}><div style={{fontSize:"1.3rem"}}>{x.i}</div><div style={{fontSize:"1.4rem",fontWeight:"900",color:x.c}}>{x.n}</div><div style={{fontSize:"0.6rem",color:"#888"}}>{x.l}</div></div>)}
+    </div>
+    {inside.length>0&&<div style={{...S.card,marginBottom:"20px",background:"linear-gradient(135deg,#dcfce7,#f0fdf4)",border:`2px solid ${C.green}20`}}>
+      <div style={{fontSize:"0.78rem",fontWeight:"700",color:C.green,marginBottom:"12px"}}>✅ ابھی کیمپس میں ({inside.length})</div>
+      {inside.map(v=>{ const p=purposes[v.purpose]||purposes.other; return <div key={v.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px",background:C.white,borderRadius:"10px",padding:"10px 14px"}}>
+        <div><div style={{fontSize:"0.75rem",fontWeight:"700",color:C.navy}}>{p.i} {v.name}</div><div style={{fontSize:"0.6rem",color:"#888"}}>{p.l} {v.meetingWith&&`• ${v.meetingWith}`}</div><div style={{fontSize:"0.58rem",color:C.green,fontFamily:"monospace",direction:"ltr"}}>داخل: {v.checkIn}</div></div>
+        <button onClick={()=>checkout(v.id)} style={{...S.dangerBtn,padding:"6px 12px",fontSize:"0.6rem"}}>🚪 خروج</button>
+      </div>; })}
+    </div>}
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`,border:`2px solid ${C.gold}30`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>نام *</label><input style={S.inpSm} value={f.name} onChange={e=>setF({...f,name:e.target.value})} placeholder="وزیٹر کا نام..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>فون</label><input style={{...S.inpSm,direction:"ltr"}} value={f.phone} onChange={e=>setF({...f,phone:e.target.value})} placeholder="03xx-xxxxxxx"/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>مقصد</label><select style={S.inpSm} value={f.purpose} onChange={e=>setF({...f,purpose:e.target.value})}>{Object.entries(purposes).map(([k,v])=><option key={k} value={k}>{v.i} {v.l}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>ملاقات کس سے</label><input style={S.inpSm} value={f.meetingWith} onChange={e=>setF({...f,meetingWith:e.target.value})} placeholder="استاد / افسر..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>CNIC</label><input style={{...S.inpSm,direction:"ltr"}} value={f.cnic} onChange={e=>setF({...f,cnic:e.target.value})} placeholder="xxxxx-xxxxxxx-x"/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>گاڑی نمبر</label><input style={{...S.inpSm,direction:"ltr"}} value={f.vehicleNo} onChange={e=>setF({...f,vehicleNo:e.target.value})} placeholder="LEA-xxx"/></div>
+      </div>
+      <button style={S.saveBtn} onClick={add}>✅ وزیٹر رجسٹر کریں</button>
+    </div>}
+    <div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+      <thead><tr><th style={S.th}>نام</th><th style={S.th}>مقصد</th><th style={S.th}>داخل</th><th style={S.th}>حال</th><th style={S.th}>عمل</th></tr></thead>
+      <tbody>{visitors.slice(0,30).map(v=>{ const p=purposes[v.purpose]||purposes.other; return <tr key={v.id}>
+        <td style={{...S.td,fontWeight:"700"}}>{v.name}</td>
+        <td style={S.td}><span style={hBadge(p.c,p.c+"15")}>{p.i} {p.l}</span></td>
+        <td style={{...S.td,fontFamily:"monospace",direction:"ltr",fontSize:"0.6rem"}}>{v.checkIn}</td>
+        <td style={S.td}><span style={{padding:"3px 8px",borderRadius:"20px",fontSize:"0.55rem",fontWeight:"700",background:v.status==="inside"?"#dcfce7":"#f3f4f6",color:v.status==="inside"?C.green:"#888"}}>{v.status==="inside"?"اندر":"باہر"}</span></td>
+        <td style={S.td}>{v.status==="inside"&&<button onClick={()=>checkout(v.id)} style={{...S.dangerBtn,padding:"4px 8px",fontSize:"0.55rem"}}>خروج</button>}</td>
+      </tr>; })}{visitors.length===0&&<tr><td colSpan={5} style={{...S.td,textAlign:"center",color:"#bbb",padding:"40px"}}>کوئی ریکارڈ نہیں</td></tr>}</tbody>
+    </table></div></div>
+  </div>;
+}
+
+// ===================== EXAM SEATING MANAGEMENT =====================
+function ExamSeating({students,addData}){
+  const [plans,setPlans]=useState([]); const [show,setShow]=useState(false); const [sel,setSel]=useState(null);
+  const [f,setF]=useState({examName:"",date:"",venue:"",rows:5,cols:6,subject:"",examClass:""});
+  useEffect(()=>{ return onSnapshot(query(collection(db,"exam_seating"),orderBy("createdAt","desc"),limit(20)),s=>setPlans(s.docs.map(d=>({id:d.id,...d.data()}))));  },[]);
+  const create=async()=>{ if(!f.examName)return;
+    const rows=Number(f.rows); const cols=Number(f.cols);
+    const classStudents=students.filter(s=>!f.examClass||s.grade===f.examClass);
+    const shuffled=[...classStudents].sort(()=>Math.random()-0.5);
+    const seats=[];
+    for(let r=1;r<=rows;r++){ for(let c=1;c<=cols;c++){ const idx=(r-1)*cols+(c-1); const st=shuffled[idx]; seats.push({row:r,col:c,seatNo:`R${r}C${c}`,studentId:st?.id||null,studentName:st?.name||null,studentCode:st?.studentCode||null}); }}
+    await addData("exam_seating",{...f,rows,cols,seats,totalSeats:rows*cols,assignedSeats:shuffled.length});
+    setShow(false); setF({examName:"",date:"",venue:"",rows:5,cols:6,subject:"",examClass:""});
+  };
+  if(sel){ return <div style={S.page}>
+    <button style={{...S.addBtn,marginBottom:"16px",background:"#eee",color:C.navy,boxShadow:"none"}} onClick={()=>setSel(null)}>← واپس</button>
+    <div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.navy},${C.navyMid})`,color:C.white}}>
+      <div style={{fontSize:"1rem",fontWeight:"800"}}>{sel.examName}</div>
+      <div style={{fontSize:"0.62rem",opacity:0.7,marginTop:"4px"}}>{sel.subject} • {sel.venue} • {sel.date}</div>
+      <div style={{fontSize:"0.68rem",color:C.gold,marginTop:"8px"}}>{sel.assignedSeats}/{sel.totalSeats} نشستیں مختص</div>
+    </div>
+    <div style={{overflowX:"auto"}}><div style={{display:"grid",gridTemplateColumns:`repeat(${sel.cols},1fr)`,gap:"6px",minWidth:`${sel.cols*80}px`}}>
+      {(sel.seats||[]).map((seat,i)=><div key={i} style={{background:seat.studentId?"linear-gradient(135deg,#dbeafe,#eff6ff)":"#f9fafb",borderRadius:"8px",padding:"8px 6px",textAlign:"center",border:`1px solid ${seat.studentId?C.abuBakr+"40":"#e5e7eb"}`,minHeight:"64px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+        <div style={{fontSize:"0.55rem",color:"#aaa",marginBottom:"2px"}}>{seat.seatNo}</div>
+        {seat.studentName?<><div style={{fontSize:"0.58rem",fontWeight:"700",color:C.navy,lineHeight:"1.3"}}>{seat.studentName.split(" ")[0]}</div><div style={{fontSize:"0.5rem",color:C.abuBakr,fontFamily:"monospace",direction:"ltr"}}>{seat.studentCode}</div></>:<div style={{fontSize:"0.6rem",color:"#ddd"}}>خالی</div>}
+      </div>)}
+    </div></div>
+  </div>; }
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>🪑 امتحان نشست بندی</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>سیٹنگ پلان — خودکار ترتیب</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نیا پلان</button>
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`,border:`2px solid ${C.gold}30`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>امتحان کا نام *</label><input style={S.inpSm} value={f.examName} onChange={e=>setF({...f,examName:e.target.value})} placeholder="سالانہ امتحان 2026..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>مضمون</label><input style={S.inpSm} value={f.subject} onChange={e=>setF({...f,subject:e.target.value})} placeholder="ریاضی، اردو..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>ہال / کمرہ</label><input style={S.inpSm} value={f.venue} onChange={e=>setF({...f,venue:e.target.value})} placeholder="ہال A..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>تاریخ</label><input style={{...S.inpSm,direction:"ltr"}} type="date" value={f.date} onChange={e=>setF({...f,date:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>جماعت (خالی = سب)</label><input style={S.inpSm} value={f.examClass} onChange={e=>setF({...f,examClass:e.target.value})} placeholder="8, 9, 10..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>قطاریں</label><input style={{...S.inpSm,direction:"ltr"}} type="number" min="1" max="20" value={f.rows} onChange={e=>setF({...f,rows:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>کالم</label><input style={{...S.inpSm,direction:"ltr"}} type="number" min="1" max="20" value={f.cols} onChange={e=>setF({...f,cols:e.target.value})}/></div>
+      </div>
+      <div style={{background:C.white,borderRadius:"10px",padding:"10px 14px",marginBottom:"12px",fontSize:"0.65rem",color:"#888"}}>ℹ️ طلبا خودبخود random ترتیب سے بیٹھیں گے — کل {Number(f.rows)*Number(f.cols)} نشستیں</div>
+      <button style={S.saveBtn} onClick={create}>🪑 پلان بنائیں</button>
+    </div>}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:"14px"}}>
+      {plans.map(p=><div key={p.id} style={{...S.card,cursor:"pointer",borderTop:`4px solid ${C.gold}`}} onClick={()=>setSel(p)}>
+        <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy,marginBottom:"6px"}}>🪑 {p.examName}</div>
+        <div style={{fontSize:"0.65rem",color:"#888",marginBottom:"8px"}}>{p.subject} • {p.venue}</div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span style={{fontSize:"0.62rem",color:C.gold,fontFamily:"monospace",direction:"ltr"}}>{p.date}</span>
+          <span style={hBadge(C.abuBakr,"#dbeafe")}>{p.assignedSeats}/{p.totalSeats} طلبا</span>
+        </div>
+        <div style={{marginTop:"10px",fontSize:"0.6rem",color:C.abuBakr,fontWeight:"600"}}>👁️ پلان دیکھیں ←</div>
+      </div>)}
+      {plans.length===0&&<div style={{...S.card,textAlign:"center",color:"#bbb",padding:"40px",gridColumn:"1/-1"}}>کوئی پلان نہیں</div>}
+    </div>
+  </div>;
+}
+
+// ===================== FACULTY PROFESSIONAL DEVELOPMENT =====================
+function FacultyDevelopment({teachers,addData}){
+  const [programs,setPrograms]=useState([]); const [enrollments,setEnrollments]=useState([]); const [show,setShow]=useState(false); const [tab,setTab]=useState("programs");
+  const [f,setF]=useState({title:"",type:"training",trainer:"",startDate:"",endDate:"",hours:0,description:"",certificate:false});
+  const [enrF,setEnrF]=useState({teacherId:"",programId:"",status:"enrolled",score:"",notes:""});
+  useEffect(()=>{
+    const u1=onSnapshot(collection(db,"faculty_programs"),s=>setPrograms(s.docs.map(d=>({id:d.id,...d.data()}))));
+    const u2=onSnapshot(collection(db,"faculty_enrollments"),s=>setEnrollments(s.docs.map(d=>({id:d.id,...d.data()}))));
+    return()=>{u1();u2();};
+  },[]);
+  const add=async()=>{ if(!f.title)return; await addData("faculty_programs",{...f,hours:Number(f.hours)}); setShow(false); setF({title:"",type:"training",trainer:"",startDate:"",endDate:"",hours:0,description:"",certificate:false}); };
+  const enroll=async()=>{ if(!enrF.teacherId||!enrF.programId)return; await addData("faculty_enrollments",{...enrF}); setEnrF({teacherId:"",programId:"",status:"enrolled",score:"",notes:""}); };
+  const types={training:{c:C.abuBakr,bg:"#dbeafe",i:"🎓",l:"تربیت"},workshop:{c:C.green,bg:"#dcfce7",i:"🔧",l:"ورکشاپ"},seminar:{c:C.purple,bg:"#ede9fe",i:"🎤",l:"سیمینار"},online:{c:C.teal,bg:"#ccfbf1",i:"💻",l:"آن لائن"},islamic:{c:C.gold,bg:C.goldLight,i:"🕌",l:"اسلامی"}};
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>👩‍🏫 استاد ترقی پروگرام</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>تربیتی پروگرام، ورکشاپ، سند</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نیا پروگرام</button>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:"12px",marginBottom:"20px"}}>
+      {[{c:C.abuBakr,i:"📋",n:programs.length,l:"پروگرام"},{c:C.green,i:"✅",n:enrollments.filter(e=>e.status==="completed").length,l:"مکمل"},{c:C.amber,i:"⏳",n:enrollments.filter(e=>e.status==="enrolled").length,l:"جاری"},{c:C.gold,i:"🏆",n:enrollments.filter(e=>e.status==="completed"&&e.score).length,l:"سند یافتہ"}].map((x,i)=><div key={i} style={{background:`linear-gradient(135deg,${x.c}12,${x.c}05)`,borderRadius:"16px",padding:"16px",border:`2px solid ${x.c}20`,textAlign:"center"}}><div style={{fontSize:"1.3rem"}}>{x.i}</div><div style={{fontSize:"1.4rem",fontWeight:"900",color:x.c}}>{x.n}</div><div style={{fontSize:"0.6rem",color:"#888"}}>{x.l}</div></div>)}
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>پروگرام کا نام *</label><input style={S.inpSm} value={f.title} onChange={e=>setF({...f,title:e.target.value})} placeholder="Modern Teaching Methods..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>قسم</label><select style={S.inpSm} value={f.type} onChange={e=>setF({...f,type:e.target.value})}>{Object.entries(types).map(([k,v])=><option key={k} value={k}>{v.i} {v.l}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>ٹرینر</label><input style={S.inpSm} value={f.trainer} onChange={e=>setF({...f,trainer:e.target.value})} placeholder="ٹرینر کا نام..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>شروع</label><input style={{...S.inpSm,direction:"ltr"}} type="date" value={f.startDate} onChange={e=>setF({...f,startDate:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>اختتام</label><input style={{...S.inpSm,direction:"ltr"}} type="date" value={f.endDate} onChange={e=>setF({...f,endDate:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>گھنٹے</label><input style={{...S.inpSm,direction:"ltr"}} type="number" value={f.hours} onChange={e=>setF({...f,hours:e.target.value})}/></div>
+        <div style={{display:"flex",alignItems:"center",gap:"8px",paddingTop:"20px"}}><input type="checkbox" checked={f.certificate} onChange={e=>setF({...f,certificate:e.target.checked})} id="cert"/><label htmlFor="cert" style={{fontSize:"0.68rem",color:C.navy,cursor:"pointer"}}>🏆 سند دی جائے گی</label></div>
+      </div>
+      <button style={S.saveBtn} onClick={add}>✅ پروگرام شامل کریں</button>
+    </div>}
+    <div style={{display:"flex",gap:"8px",marginBottom:"16px"}}>{[["programs","📋 پروگرام"],["enroll","➕ اندراج"],["history","📊 تاریخ"]].map(([t,l])=><button key={t} onClick={()=>setTab(t)} style={{padding:"8px 14px",borderRadius:"10px",border:"none",cursor:"pointer",fontSize:"0.65rem",fontWeight:tab===t?"700":"400",background:tab===t?`linear-gradient(135deg,${C.gold},${C.goldDark})`:C.white,color:tab===t?C.white:"#888",fontFamily:"inherit"}}>{l}</button>)}</div>
+    {tab==="programs"&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:"14px"}}>
+      {programs.map(p=>{ const tc=types[p.type]||types.training; const enrolled=enrollments.filter(e=>e.programId===p.id).length; return <div key={p.id} style={{...S.card,borderTop:`4px solid ${tc.c}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:"8px"}}><div style={{fontSize:"0.82rem",fontWeight:"700",color:C.navy}}>{tc.i} {p.title}</div><span style={hBadge(tc.c,tc.bg)}>{tc.l}</span></div>
+        {p.trainer&&<div style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px"}}>👤 {p.trainer}</div>}
+        <div style={{fontSize:"0.6rem",color:"#aaa",marginBottom:"8px",fontFamily:"monospace",direction:"ltr"}}>{p.startDate} → {p.endDate}</div>
+        <div style={{display:"flex",gap:"8px",flexWrap:"wrap"}}><span style={{fontSize:"0.62rem",color:C.abuBakr}}>⏱️ {p.hours} گھنٹے</span><span style={hBadge(C.green,"#dcfce7")}>{enrolled} شرکاء</span>{p.certificate&&<span style={hBadge(C.gold,C.goldLight)}>🏆 سند</span>}</div>
+      </div>; })}
+      {programs.length===0&&<div style={{...S.card,textAlign:"center",color:"#bbb",padding:"40px",gridColumn:"1/-1"}}>کوئی پروگرام نہیں</div>}
+    </div>}
+    {tab==="enroll"&&<div style={{...S.card,background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>استاد</label><select style={S.inpSm} value={enrF.teacherId} onChange={e=>setEnrF({...enrF,teacherId:e.target.value})}><option value="">-- منتخب کریں --</option>{teachers.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>پروگرام</label><select style={S.inpSm} value={enrF.programId} onChange={e=>setEnrF({...enrF,programId:e.target.value})}><option value="">-- منتخب کریں --</option>{programs.map(p=><option key={p.id} value={p.id}>{p.title}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>حال</label><select style={S.inpSm} value={enrF.status} onChange={e=>setEnrF({...enrF,status:e.target.value})}><option value="enrolled">اندراج</option><option value="completed">مکمل</option><option value="dropped">چھوڑا</option></select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>اسکور</label><input style={S.inpSm} value={enrF.score} onChange={e=>setEnrF({...enrF,score:e.target.value})} placeholder="A, 90%..."/></div>
+      </div>
+      <button style={S.saveBtn} onClick={enroll}>✅ اندراج کریں</button>
+    </div>}
+    {tab==="history"&&<div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+      <thead><tr><th style={S.th}>استاد</th><th style={S.th}>پروگرام</th><th style={S.th}>حال</th><th style={S.th}>اسکور</th></tr></thead>
+      <tbody>{enrollments.map(e=>{ const t=teachers.find(x=>x.id===e.teacherId); const p=programs.find(x=>x.id===e.programId); return <tr key={e.id}>
+        <td style={{...S.td,fontWeight:"700"}}>{t?.name||"—"}</td><td style={S.td}>{p?.title||"—"}</td>
+        <td style={S.td}><span style={{padding:"3px 8px",borderRadius:"20px",fontSize:"0.55rem",fontWeight:"700",background:e.status==="completed"?"#dcfce7":e.status==="dropped"?"#fee2e2":"#fef3c7",color:e.status==="completed"?C.green:e.status==="dropped"?C.red:C.amber}}>{e.status==="completed"?"✅ مکمل":e.status==="dropped"?"❌ چھوڑا":"⏳ جاری"}</span></td>
+        <td style={S.td}>{e.score||"—"}</td>
+      </tr>; })}{enrollments.length===0&&<tr><td colSpan={4} style={{...S.td,textAlign:"center",color:"#bbb",padding:"40px"}}>کوئی ریکارڈ نہیں</td></tr>}</tbody>
+    </table></div></div>}
+  </div>;
+}
+
+// ===================== CURRICULUM RESOURCE REPOSITORY =====================
+function CurriculumHub({teachers,addData}){
+  const [resources,setResources]=useState([]); const [show,setShow]=useState(false); const [filter,setFilter]=useState("all");
+  const [f,setF]=useState({title:"",subject:"",grade:"",type:"notes",description:"",link:"",uploadedBy:"",tags:""});
+  useEffect(()=>{ return onSnapshot(query(collection(db,"curriculum_resources"),orderBy("createdAt","desc"),limit(100)),s=>setResources(s.docs.map(d=>({id:d.id,...d.data()}))));  },[]);
+  const add=async()=>{ if(!f.title)return; await addData("curriculum_resources",{...f}); setShow(false); setF({title:"",subject:"",grade:"",type:"notes",description:"",link:"",uploadedBy:"",tags:""}); };
+  const types={notes:{c:C.abuBakr,bg:"#dbeafe",i:"📝",l:"نوٹس"},book:{c:C.navy,bg:"#e0e7ff",i:"📚",l:"کتاب"},video:{c:C.red,bg:"#fee2e2",i:"🎬",l:"ویڈیو"},worksheet:{c:C.green,bg:"#dcfce7",i:"📋",l:"ورک شیٹ"},exam_paper:{c:C.amber,bg:"#fef3c7",i:"📄",l:"پرچہ"},islamic:{c:C.gold,bg:C.goldLight,i:"🕌",l:"اسلامی"},other:{c:"#888",bg:"#f3f4f6",i:"📦",l:"دیگر"}};
+  const filtered=filter==="all"?resources:resources.filter(r=>r.type===filter);
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>📚 نصابی وسائل</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>نوٹس، کتب، ویڈیو، پرچہ جات</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نیا وسیلہ</button>
+    </div>
+    <div style={{display:"flex",gap:"8px",marginBottom:"16px",flexWrap:"wrap"}}>
+      {[["all","📦 سب"],["notes","📝 نوٹس"],["book","📚 کتاب"],["video","🎬 ویڈیو"],["worksheet","📋 ورک"],["exam_paper","📄 پرچہ"],["islamic","🕌 اسلامی"]].map(([t,l])=><button key={t} onClick={()=>setFilter(t)} style={{padding:"6px 12px",borderRadius:"20px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:filter===t?"700":"400",background:filter===t?`linear-gradient(135deg,${C.gold},${C.goldDark})`:C.white,color:filter===t?C.white:"#888",fontFamily:"inherit"}}>{l}</button>)}
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`,border:`2px solid ${C.gold}30`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>عنوان *</label><input style={S.inpSm} value={f.title} onChange={e=>setF({...f,title:e.target.value})} placeholder="وسیلے کا نام..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>قسم</label><select style={S.inpSm} value={f.type} onChange={e=>setF({...f,type:e.target.value})}>{Object.entries(types).map(([k,v])=><option key={k} value={k}>{v.i} {v.l}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>مضمون</label><input style={S.inpSm} value={f.subject} onChange={e=>setF({...f,subject:e.target.value})} placeholder="ریاضی، اردو..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>جماعت</label><input style={S.inpSm} value={f.grade} onChange={e=>setF({...f,grade:e.target.value})} placeholder="8، 9، 10..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>اپلوڈ کنندہ</label><select style={S.inpSm} value={f.uploadedBy} onChange={e=>setF({...f,uploadedBy:e.target.value})}><option value="">-- منتخب کریں --</option>{teachers.map(t=><option key={t.id} value={t.name}>{t.name}</option>)}</select></div>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>لنک (اختیاری)</label><input style={{...S.inpSm,direction:"ltr"}} value={f.link} onChange={e=>setF({...f,link:e.target.value})} placeholder="https://..."/></div>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>تفصیل</label><textarea style={{...S.inpSm,minHeight:"60px",resize:"vertical"}} value={f.description} onChange={e=>setF({...f,description:e.target.value})} placeholder="مختصر تفصیل..."/></div>
+      </div>
+      <button style={S.saveBtn} onClick={add}>✅ شامل کریں</button>
+    </div>}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:"14px"}}>
+      {filtered.map(r=>{ const tc=types[r.type]||types.other; return <div key={r.id} style={{...S.card,borderTop:`4px solid ${tc.c}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"8px"}}><div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:"6px",marginBottom:"4px"}}><span style={{fontSize:"1.1rem"}}>{tc.i}</span><span style={{fontSize:"0.8rem",fontWeight:"700",color:C.navy}}>{r.title}</span></div></div><span style={hBadge(tc.c,tc.bg)}>{tc.l}</span></div>
+        {r.subject&&<div style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px"}}>📖 {r.subject}{r.grade&&` • جماعت ${r.grade}`}</div>}
+        {r.uploadedBy&&<div style={{fontSize:"0.62rem",color:"#888",marginBottom:"6px"}}>👤 {r.uploadedBy}</div>}
+        {r.description&&<div style={{fontSize:"0.62rem",color:"#666",lineHeight:"1.5",marginBottom:"8px"}}>{r.description.slice(0,100)}</div>}
+        {r.link&&<a href={r.link} target="_blank" rel="noreferrer" style={{fontSize:"0.62rem",color:C.abuBakr,fontWeight:"600",direction:"ltr",display:"block"}}>🔗 لنک کھولیں</a>}
+      </div>; })}
+      {filtered.length===0&&<div style={{...S.card,textAlign:"center",color:"#bbb",padding:"40px",gridColumn:"1/-1"}}>کوئی وسیلہ نہیں</div>}
+    </div>
+  </div>;
+}
+
+// ===================== ASSESSMENT MARKS ENTRY =====================
+function MarksEntry({students,addData}){
+  const [exams,setExams]=useState([]); const [marks,setMarks]=useState([]); const [show,setShow]=useState(false); const [selExam,setSelExam]=useState(null); const [tab,setTab]=useState("exams");
+  const [f,setF]=useState({title:"",subject:"",grade:"",date:"",totalMarks:100,type:"monthly"});
+  const [bulk,setBulk]=useState({});
+  useEffect(()=>{
+    const u1=onSnapshot(query(collection(db,"assessments"),orderBy("createdAt","desc"),limit(30)),s=>setExams(s.docs.map(d=>({id:d.id,...d.data()}))));
+    const u2=onSnapshot(query(collection(db,"assessment_marks"),orderBy("createdAt","desc"),limit(200)),s=>setMarks(s.docs.map(d=>({id:d.id,...d.data()}))));
+    return()=>{u1();u2();};
+  },[]);
+  const addExam=async()=>{ if(!f.title)return; await addData("assessments",{...f,totalMarks:Number(f.totalMarks)}); setShow(false); setF({title:"",subject:"",grade:"",date:"",totalMarks:100,type:"monthly"}); };
+  const saveBulkMarks=async()=>{
+    if(!selExam)return;
+    const saves=Object.entries(bulk).map(([sid,ob])=>{ const pct=Math.round((Number(ob)/selExam.totalMarks)*100); const gr=pct>=90?"A+":pct>=80?"A":pct>=70?"B":pct>=60?"C":pct>=50?"D":"F"; return addData("assessment_marks",{examId:selExam.id,studentId:sid,obtained:Number(ob),total:selExam.totalMarks,percentage:pct,grade:gr}); });
+    await Promise.all(saves); setBulk({});
+  };
+  const classStudents=selExam?students.filter(s=>!selExam.grade||s.grade===selExam.grade):[];
+  const types={monthly:{c:C.abuBakr,l:"ماہانہ"},midterm:{c:C.amber,l:"وسط سال"},annual:{c:C.gold,l:"سالانہ"},unit:{c:C.green,l:"یونٹ"},quiz:{c:C.teal,l:"کوئز"}};
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>📝 نمبرات درج</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>امتحانات اور نمبرات کا ریکارڈ</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نیا امتحان</button>
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>امتحان کا نام *</label><input style={S.inpSm} value={f.title} onChange={e=>setF({...f,title:e.target.value})} placeholder="ماہانہ ٹیسٹ..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>مضمون</label><input style={S.inpSm} value={f.subject} onChange={e=>setF({...f,subject:e.target.value})} placeholder="ریاضی..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>جماعت</label><input style={S.inpSm} value={f.grade} onChange={e=>setF({...f,grade:e.target.value})} placeholder="8..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>تاریخ</label><input style={{...S.inpSm,direction:"ltr"}} type="date" value={f.date} onChange={e=>setF({...f,date:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>کل نمبر</label><input style={{...S.inpSm,direction:"ltr"}} type="number" value={f.totalMarks} onChange={e=>setF({...f,totalMarks:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>قسم</label><select style={S.inpSm} value={f.type} onChange={e=>setF({...f,type:e.target.value})}>{Object.entries(types).map(([k,v])=><option key={k} value={k}>{v.l}</option>)}</select></div>
+      </div>
+      <button style={S.saveBtn} onClick={addExam}>✅ امتحان شامل کریں</button>
+    </div>}
+    <div style={{display:"flex",gap:"8px",marginBottom:"16px"}}>{[["exams","📋 امتحانات"],["entry","✏️ نمبرات درج"]].map(([t,l])=><button key={t} onClick={()=>setTab(t)} style={{padding:"8px 14px",borderRadius:"10px",border:"none",cursor:"pointer",fontSize:"0.65rem",fontWeight:tab===t?"700":"400",background:tab===t?`linear-gradient(135deg,${C.gold},${C.goldDark})`:C.white,color:tab===t?C.white:"#888",fontFamily:"inherit"}}>{l}</button>)}</div>
+    {tab==="exams"&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:"14px"}}>
+      {exams.map(ex=>{ const tc=types[ex.type]||types.monthly; const exMarks=marks.filter(m=>m.examId===ex.id); const avg=exMarks.length>0?Math.round(exMarks.reduce((s,m)=>s+(m.percentage||0),0)/exMarks.length):0; return <div key={ex.id} style={{...S.card,cursor:"pointer",borderTop:`4px solid ${tc.c}`}} onClick={()=>{setSelExam(ex);setTab("entry");}}>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:"8px"}}><div style={{fontSize:"0.82rem",fontWeight:"700",color:C.navy}}>{ex.title}</div><span style={hBadge(tc.c,tc.c+"15")}>{tc.l}</span></div>
+        <div style={{fontSize:"0.62rem",color:"#888",marginBottom:"8px"}}>{ex.subject} • جماعت {ex.grade}</div>
+        {exMarks.length>0&&<><div style={{display:"flex",justifyContent:"space-between",marginBottom:"4px"}}><span style={{fontSize:"0.6rem",color:"#888"}}>اوسط</span><span style={{fontSize:"0.68rem",fontWeight:"700",color:avg>=70?C.green:avg>=50?C.amber:C.red}}>{avg}%</span></div>{pBar(avg,100,avg>=70?C.green:avg>=50?C.amber:C.red)}</>}
+        <div style={{fontSize:"0.6rem",color:C.abuBakr,marginTop:"8px"}}>{exMarks.length} طلبا • نمبرات درج کریں ←</div>
+      </div>; })}
+      {exams.length===0&&<div style={{...S.card,textAlign:"center",color:"#bbb",padding:"40px",gridColumn:"1/-1"}}>کوئی امتحان نہیں</div>}
+    </div>}
+    {tab==="entry"&&<div>
+      <div style={{marginBottom:"12px"}}><select style={{...S.inpSm,maxWidth:"400px"}} value={selExam?.id||""} onChange={e=>setSelExam(exams.find(x=>x.id===e.target.value)||null)}><option value="">-- امتحان منتخب کریں --</option>{exams.map(ex=><option key={ex.id} value={ex.id}>{ex.title}</option>)}</select></div>
+      {selExam&&<div style={S.card}>
+        <div style={{fontSize:"0.82rem",fontWeight:"700",color:C.navy,marginBottom:"16px"}}>{selExam.title} — کل نمبر: {selExam.totalMarks}</div>
+        {classStudents.map(s=>{ const existing=marks.find(m=>m.examId===selExam.id&&m.studentId===s.id); return <div key={s.id} style={{display:"flex",alignItems:"center",gap:"12px",marginBottom:"10px",padding:"10px 14px",background:existing?"#f0fdf4":"#fafaf8",borderRadius:"10px"}}>
+          <div style={{flex:1}}><div style={{fontSize:"0.72rem",fontWeight:"700",color:C.navy}}>{s.name}</div><div style={{fontSize:"0.58rem",color:"#888"}}>{s.studentCode}</div></div>
+          {existing?<div style={{direction:"ltr"}}><span style={{fontSize:"0.82rem",fontWeight:"800",color:existing.percentage>=70?C.green:existing.percentage>=50?C.amber:C.red}}>{existing.obtained}/{selExam.totalMarks}</span><span style={hBadge(existing.percentage>=70?C.green:C.amber,existing.percentage>=70?"#dcfce7":"#fef3c7")}> {existing.grade}</span></div>:<input style={{...S.inpSm,width:"80px",direction:"ltr",textAlign:"center"}} type="number" min="0" max={selExam.totalMarks} placeholder="0" value={bulk[s.id]||""} onChange={e=>setBulk({...bulk,[s.id]:e.target.value})}/>}
+        </div>; })}
+        {classStudents.length>0&&<button style={{...S.saveBtn,marginTop:"12px",width:"100%"}} onClick={saveBulkMarks}>✅ سب نمبرات محفوظ کریں</button>}
+        {classStudents.length===0&&<div style={{textAlign:"center",color:"#bbb",padding:"30px"}}>کوئی طالب علم نہیں</div>}
+      </div>}
+    </div>}
+  </div>;
+}
+
 // ===================== TARBIYAH DIARY =====================
 function TarbiyahDiary({students,addData,updateHousePoints}){
   const [logs,setLogs]=useState([]); const [show,setShow]=useState(false); const [tab,setTab]=useState("entry");
@@ -1658,6 +1979,9 @@ export default function App(){
     {id:"donations",label:"🤲 عطیات"},{id:"meetings",label:"📝 میٹنگ"},
     {id:"assets",label:"🏗️ اثاثے"},{id:"staffperf",label:"📊 اسٹاف"},
     {id:"parents",label:"👪 والدین"},{id:"director",label:"👨‍💼 ڈائریکٹر"},
+    {id:"alumni",label:"🎓 سابق طلبا"},{id:"visitors",label:"🔒 سیکیورٹی"},
+    {id:"seating",label:"🪑 نشست بندی"},{id:"faculty_dev",label:"👩‍🏫 استاد ترقی"},
+    {id:"curriculum",label:"📚 نصابی وسائل"},{id:"marks",label:"✏️ نمبرات"},
   ];
 
   const uName=DEMO.find(d=>d.email===user?.email)?.name||user?.email||"";
@@ -1716,6 +2040,12 @@ export default function App(){
       {page==="staffperf"&&<StaffPerformance teachers={teachers} addData={addData}/>}
       {page==="parents"&&<ParentPortal students={students} fees={fees} results={results}/>}
       {page==="director"&&<DirectorPortal students={students} teachers={teachers} houses={houses} fees={fees} results={results} hvsLogs={hvs}/>}
+      {page==="alumni"&&<AlumniPortal addData={addData}/>}
+      {page==="visitors"&&<VisitorHub addData={addData}/>}
+      {page==="seating"&&<ExamSeating students={students} addData={addData}/>}
+      {page==="faculty_dev"&&<FacultyDevelopment teachers={teachers} addData={addData}/>}
+      {page==="curriculum"&&<CurriculumHub teachers={teachers} addData={addData}/>}
+      {page==="marks"&&<MarksEntry students={students} addData={addData}/>}
     </div>
   </div>;
 }
