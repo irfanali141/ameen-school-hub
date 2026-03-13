@@ -666,16 +666,18 @@ function Timetable(){
 
   return <div style={S.page}>
     {toast&&<div style={{position:"fixed",top:"80px",left:"50%",transform:"translateX(-50%)",background:C.navy,color:C.white,padding:"8px 20px",borderRadius:"20px",fontSize:"0.7rem",zIndex:999,fontWeight:"700",boxShadow:"0 4px 20px rgba(0,0,0,0.3)"}}>{toast}</div>}
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
-      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>🗓️ ٹائم ٹیبل</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>امین اسلامک انسٹیٹیوٹ — سوات</div></div>
-      <div style={{display:"flex",gap:"6px",alignItems:"center"}}>
-        <button onClick={()=>setSeason("summer")} style={{padding:"6px 12px",borderRadius:"8px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:season==="summer"?"700":"400",background:season==="summer"?C.gold:C.white,color:season==="summer"?C.white:"#888",fontFamily:"inherit"}}>☀️ گرما</button>
-        <button onClick={()=>setSeason("winter")} style={{padding:"6px 12px",borderRadius:"8px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:season==="winter"?"700":"400",background:season==="winter"?C.abuBakr:C.white,color:season==="winter"?C.white:"#888",fontFamily:"inherit"}}>❄️ سرما</button>
-        {editMode
-          ?<><button onClick={saveAll} disabled={saving} style={{...S.saveBtn,padding:"6px 14px",fontSize:"0.62rem"}}>{saving?"محفوظ...":"💾 محفوظ کریں"}</button><button onClick={()=>setEditMode(false)} style={{...S.dangerBtn,padding:"6px 14px",fontSize:"0.62rem"}}>❌ منسوخ</button></>
-          :<button onClick={()=>setEditMode(true)} style={{...S.addBtn,padding:"6px 14px",fontSize:"0.62rem"}}>✏️ ترمیم</button>
-        }
+    <div style={{marginBottom:"16px"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"12px"}}>
+        <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>🗓️ ٹائم ٹیبل</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>امین اسلامک انسٹیٹیوٹ — سوات</div></div>
+        <div style={{display:"flex",gap:"6px"}}>
+          <button onClick={()=>setSeason("summer")} style={{padding:"6px 12px",borderRadius:"8px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:season==="summer"?"700":"400",background:season==="summer"?C.gold:C.white,color:season==="summer"?C.white:"#888",fontFamily:"inherit"}}>☀️ گرما</button>
+          <button onClick={()=>setSeason("winter")} style={{padding:"6px 12px",borderRadius:"8px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:season==="winter"?"700":"400",background:season==="winter"?C.abuBakr:C.white,color:season==="winter"?C.white:"#888",fontFamily:"inherit"}}>❄️ سرما</button>
+        </div>
       </div>
+      {editMode
+        ?<div style={{display:"flex",gap:"8px"}}><button onClick={saveAll} disabled={saving} style={{...S.saveBtn,flex:1,fontSize:"0.7rem"}}>{saving?"محفوظ...":"💾 محفوظ کریں"}</button><button onClick={()=>setEditMode(false)} style={{...S.dangerBtn,flex:1,fontSize:"0.7rem"}}>❌ منسوخ</button></div>
+        :<button onClick={()=>setEditMode(true)} style={{...S.addBtn,width:"100%",textAlign:"center",fontSize:"0.7rem",padding:"10px"}}>✏️ ترمیم کریں — Subject اور Waqt tabdeel karen</button>
+      }
     </div>
     <div style={{display:"flex",gap:"8px",marginBottom:"20px",flexWrap:"wrap"}}>
       {tabs.map(([t,emoji,label])=><button key={t} onClick={()=>setTab(t)} style={{padding:"8px 16px",borderRadius:"12px",border:"none",cursor:"pointer",fontSize:"0.65rem",fontWeight:tab===t?"700":"400",background:tab===t?C.gold:C.white,color:tab===t?C.white:"#888",fontFamily:"inherit"}}>{emoji} {label}</button>)}
