@@ -857,6 +857,540 @@ function Transport({students,addData}){
   </div>;
 }
 
+// ===================== NOTICE BOARD =====================
+function NoticeBoard({addData,user}){
+  const [notices,setNotices]=useState([]); const [show,setShow]=useState(false);
+  const [f,setF]=useState({title:"",content:"",category:"general",priority:"normal",pinned:false,expiryDate:""});
+  useEffect(()=>{ return onSnapshot(query(collection(db,"notices"),orderBy("createdAt","desc"),limit(30)),s=>setNotices(s.docs.map(d=>({id:d.id,...d.data()}))));  },[]);
+  const add=async()=>{ if(!f.title||!f.content)return; await addData("notices",{...f}); setShow(false); setF({title:"",content:"",category:"general",priority:"normal",pinned:false,expiryDate:""}); };
+  const catConfig={general:{c:C.abuBakr,bg:"#dbeafe",i:"📢",l:"عام"},academic:{c:C.green,bg:"#dcfce7",i:"📚",l:"تعلیمی"},exam:{c:C.amber,bg:"#fef3c7",i:"📝",l:"امتحان"},event:{c:C.purple,bg:"#ede9fe",i:"🎭",l:"تقریب"},urgent:{c:C.red,bg:"#fee2e2",i:"🚨",l:"فوری"},hifz:{c:C.gold,bg:C.goldLight,i:"📖",l:"حفظ"}};
+  const pinned=notices.filter(n=>n.pinned); const regular=notices.filter(n=>!n.pinned);
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>📌 نوٹس بورڈ</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>اطلاعات، احکامات، اعلانات</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نیا نوٹس</button>
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`,border:`2px solid ${C.gold}30`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>عنوان *</label><input style={S.inpSm} value={f.title} onChange={e=>setF({...f,title:e.target.value})} placeholder="نوٹس کا عنوان..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>زمرہ</label><select style={S.inpSm} value={f.category} onChange={e=>setF({...f,category:e.target.value})}>{Object.entries(catConfig).map(([k,v])=><option key={k} value={k}>{v.i} {v.l}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>ترجیح</label><select style={S.inpSm} value={f.priority} onChange={e=>setF({...f,priority:e.target.value})}><option value="normal">عام</option><option value="high">اہم</option><option value="urgent">فوری</option></select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>میعاد ختم</label><input style={{...S.inpSm,direction:"ltr"}} type="date" value={f.expiryDate} onChange={e=>setF({...f,expiryDate:e.target.value})}/></div>
+        <div style={{display:"flex",alignItems:"center",gap:"8px",paddingTop:"20px"}}><input type="checkbox" checked={f.pinned} onChange={e=>setF({...f,pinned:e.target.checked})} id="pin"/><label htmlFor="pin" style={{fontSize:"0.68rem",color:C.navy,cursor:"pointer"}}>📌 اوپر پن کریں</label></div>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>مواد *</label><textarea style={{...S.inpSm,minHeight:"100px",resize:"vertical"}} value={f.content} onChange={e=>setF({...f,content:e.target.value})} placeholder="نوٹس کا مکمل متن..."/></div>
+      </div>
+      <button style={S.saveBtn} onClick={add}>📌 شائع کریں</button>
+    </div>}
+    {pinned.length>0&&<div style={{marginBottom:"20px"}}>
+      <div style={{fontSize:"0.72rem",fontWeight:"700",color:C.gold,marginBottom:"10px"}}>📌 پن شدہ نوٹسز</div>
+      {pinned.map(n=>{ const cc=catConfig[n.category]||catConfig.general; return <div key={n.id} style={{...S.card,marginBottom:"10px",borderRight:`4px solid ${cc.c}`,background:`linear-gradient(135deg,${cc.bg},#fff)`,borderTop:`2px solid ${C.gold}30`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"8px"}}>
+          <div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"4px"}}><span style={{fontSize:"1rem"}}>{cc.i}</span><span style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy}}>{n.title}</span><span style={{fontSize:"0.55rem",color:C.gold}}>📌</span></div></div>
+          <span style={{...hBadge(cc.c,cc.bg),fontSize:"0.55rem"}}>{cc.l}</span>
+        </div>
+        <div style={{fontSize:"0.7rem",color:"#555",lineHeight:"1.7"}}>{n.content}</div>
+      </div>; })}
+    </div>}
+    <div style={{display:"flex",flexDirection:"column",gap:"12px"}}>
+      {regular.map(n=>{ const cc=catConfig[n.category]||catConfig.general; return <div key={n.id} style={{...S.card,borderRight:`4px solid ${cc.c}`,padding:"16px 20px"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"8px"}}>
+          <div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"4px"}}><span style={{fontSize:"1rem"}}>{cc.i}</span><span style={{fontSize:"0.82rem",fontWeight:"700",color:C.navy}}>{n.title}</span></div></div>
+          <span style={{...hBadge(cc.c,cc.bg),fontSize:"0.55rem"}}>{cc.l}</span>
+        </div>
+        <div style={{fontSize:"0.68rem",color:"#555",lineHeight:"1.7"}}>{n.content}</div>
+      </div>; })}
+      {notices.length===0&&<div style={{...S.card,textAlign:"center",color:"#bbb",padding:"60px"}}>ابھی کوئی نوٹس نہیں!</div>}
+    </div>
+  </div>;
+}
+
+// ===================== HOSTEL MANAGEMENT =====================
+function HostelManagement({students,addData}){
+  const [rooms,setRooms]=useState([]); const [residents,setResidents]=useState([]); const [show,setShow]=useState(false); const [tab,setTab]=useState("rooms");
+  const [f,setF]=useState({roomNo:"",floor:"Ground",capacity:4,type:"standard",amenities:""});
+  const [resF,setResF]=useState({studentId:"",roomId:"",checkIn:new Date().toISOString().split("T")[0],monthlyFee:3000,notes:""});
+  useEffect(()=>{
+    const u1=onSnapshot(collection(db,"hostel_rooms"),s=>setRooms(s.docs.map(d=>({id:d.id,...d.data()}))));
+    const u2=onSnapshot(collection(db,"hostel_residents"),s=>setResidents(s.docs.map(d=>({id:d.id,...d.data()}))));
+    return()=>{u1();u2();};
+  },[]);
+  const addRoom=async()=>{ if(!f.roomNo)return; await addData("hostel_rooms",{...f,capacity:Number(f.capacity),occupied:0}); setShow(false); setF({roomNo:"",floor:"Ground",capacity:4,type:"standard",amenities:""}); };
+  const addResident=async()=>{ if(!resF.studentId||!resF.roomId)return; await addData("hostel_residents",{...resF,status:"active",monthlyFee:Number(resF.monthlyFee)}); setResF({studentId:"",roomId:"",checkIn:new Date().toISOString().split("T")[0],monthlyFee:3000,notes:""}); };
+  const getOccupancy=(roomId)=>residents.filter(r=>r.roomId===roomId&&r.status==="active").length;
+  const totalResidents=residents.filter(r=>r.status==="active").length;
+  const totalCapacity=rooms.reduce((s,r)=>s+(r.capacity||0),0);
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>🏠 ہوسٹل مینجمنٹ</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>رہائشی طلبا — کمرے اور سہولیات</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نیا کمرہ</button>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:"12px",marginBottom:"20px"}}>
+      {[{c:C.abuBakr,i:"🏠",n:rooms.length,l:"کمرے"},{c:C.green,i:"👥",n:totalResidents,l:"رہائشی"},{c:C.amber,i:"🛏️",n:totalCapacity-totalResidents,l:"خالی"},{c:C.gold,i:"💰",n:`Rs.${(residents.filter(r=>r.status==="active").reduce((s,r)=>s+(r.monthlyFee||0),0)/1000).toFixed(0)}K`,l:"ماہانہ آمدن"}].map((x,i)=><div key={i} style={{background:`linear-gradient(135deg,${x.c}12,${x.c}05)`,borderRadius:"16px",padding:"16px",border:`2px solid ${x.c}20`,textAlign:"center"}}><div style={{fontSize:"1.3rem"}}>{x.i}</div><div style={{fontSize:"1.4rem",fontWeight:"900",color:x.c}}>{x.n}</div><div style={{fontSize:"0.6rem",color:"#888"}}>{x.l}</div></div>)}
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>کمرہ نمبر *</label><input style={{...S.inpSm,direction:"ltr"}} value={f.roomNo} onChange={e=>setF({...f,roomNo:e.target.value})} placeholder="101, 202..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>منزل</label><select style={S.inpSm} value={f.floor} onChange={e=>setF({...f,floor:e.target.value})}>{["Ground","First","Second","Third"].map(fl=><option key={fl}>{fl}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>گنجائش</label><input style={{...S.inpSm,direction:"ltr"}} type="number" value={f.capacity} onChange={e=>setF({...f,capacity:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>قسم</label><select style={S.inpSm} value={f.type} onChange={e=>setF({...f,type:e.target.value})}><option value="standard">معیاری</option><option value="ac">AC</option><option value="vip">VIP</option></select></div>
+      </div>
+      <button style={S.saveBtn} onClick={addRoom}>✅ کمرہ شامل کریں</button>
+    </div>}
+    <div style={{display:"flex",gap:"8px",marginBottom:"16px"}}>{[["rooms","🏠 کمرے"],["residents","👥 رہائشی"],["assign","➕ داخلہ"]].map(([t,l])=><button key={t} onClick={()=>setTab(t)} style={{padding:"8px 14px",borderRadius:"10px",border:"none",cursor:"pointer",fontSize:"0.65rem",fontWeight:tab===t?"700":"400",background:tab===t?`linear-gradient(135deg,${C.gold},${C.goldDark})`:C.white,color:tab===t?C.white:"#888",fontFamily:"inherit"}}>{l}</button>)}</div>
+    {tab==="rooms"&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:"14px"}}>
+      {rooms.map(r=>{ const occ=getOccupancy(r.id); const full=occ>=r.capacity; return <div key={r.id} style={{...S.card,borderTop:`4px solid ${full?C.red:occ>0?C.amber:C.green}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:"8px"}}><div style={{fontSize:"1.2rem",fontWeight:"800",color:C.navy}}>🏠 {r.roomNo}</div><span style={{...hBadge(full?C.red:occ>0?C.amber:C.green,full?"#fee2e2":occ>0?"#fef3c7":"#dcfce7")}}>{full?"بھرا":occ>0?"جزوی":"خالی"}</span></div>
+        <div style={{fontSize:"0.62rem",color:"#888",marginBottom:"8px"}}>{r.floor} Floor • {r.type}</div>
+        {pBar(occ,r.capacity||1,full?C.red:C.green)}
+        <div style={{fontSize:"0.6rem",color:"#888",marginTop:"4px"}}>{occ}/{r.capacity} رہائشی</div>
+      </div>; })}
+      {rooms.length===0&&<div style={{...S.card,textAlign:"center",color:"#bbb",padding:"40px",gridColumn:"1/-1"}}>کوئی کمرہ نہیں</div>}
+    </div>}
+    {tab==="assign"&&<div style={{...S.card,background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>طالب علم *</label><select style={S.inpSm} value={resF.studentId} onChange={e=>setResF({...resF,studentId:e.target.value})}><option value="">-- منتخب کریں --</option>{students.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>کمرہ *</label><select style={S.inpSm} value={resF.roomId} onChange={e=>setResF({...resF,roomId:e.target.value})}><option value="">-- منتخب کریں --</option>{rooms.filter(r=>getOccupancy(r.id)<r.capacity).map(r=><option key={r.id} value={r.id}>{r.roomNo} ({getOccupancy(r.id)}/{r.capacity})</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>چیک ان تاریخ</label><input style={{...S.inpSm,direction:"ltr"}} type="date" value={resF.checkIn} onChange={e=>setResF({...resF,checkIn:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>ماہانہ فیس</label><input style={{...S.inpSm,direction:"ltr"}} type="number" value={resF.monthlyFee} onChange={e=>setResF({...resF,monthlyFee:e.target.value})}/></div>
+      </div>
+      <button style={S.saveBtn} onClick={addResident}>✅ رہائشی شامل کریں</button>
+    </div>}
+    {tab==="residents"&&<div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+      <thead><tr><th style={S.th}>طالب علم</th><th style={S.th}>کمرہ</th><th style={S.th}>چیک ان</th><th style={S.th}>ماہانہ فیس</th><th style={S.th}>حال</th></tr></thead>
+      <tbody>{residents.map(r=>{ const st=students.find(s=>s.id===r.studentId); const rm=rooms.find(x=>x.id===r.roomId); return <tr key={r.id}>
+        <td style={{...S.td,fontWeight:"700"}}>{st?.name||"—"}</td>
+        <td style={S.td}>{rm?.roomNo||"—"}</td>
+        <td style={{...S.td,fontFamily:"monospace",direction:"ltr",fontSize:"0.6rem"}}>{r.checkIn}</td>
+        <td style={{...S.td,fontWeight:"700",color:C.green}}>Rs. {(r.monthlyFee||0).toLocaleString()}</td>
+        <td style={S.td}><span style={{padding:"3px 8px",borderRadius:"20px",fontSize:"0.55rem",fontWeight:"700",background:r.status==="active"?"#dcfce7":"#f3f4f6",color:r.status==="active"?C.green:"#888"}}>{r.status==="active"?"فعال":"غیر فعال"}</span></td>
+      </tr>; })}{residents.length===0&&<tr><td colSpan={5} style={{...S.td,textAlign:"center",color:"#bbb",padding:"40px"}}>کوئی رہائشی نہیں</td></tr>}</tbody>
+    </table></div></div>}
+  </div>;
+}
+
+// ===================== STUDENT HEALTH & WELLNESS =====================
+function StudentHealth({students,addData}){
+  const [records,setRecords]=useState([]); const [show,setShow]=useState(false);
+  const [f,setF]=useState({studentId:"",date:new Date().toISOString().split("T")[0],type:"checkup",condition:"",treatment:"",doctor:"",followUp:"",notes:"",severity:"low"});
+  useEffect(()=>{ return onSnapshot(query(collection(db,"health_records"),orderBy("createdAt","desc"),limit(50)),s=>setRecords(s.docs.map(d=>({id:d.id,...d.data()}))));  },[]);
+  const add=async()=>{ if(!f.studentId)return; await addData("health_records",{...f}); setShow(false); setF({studentId:"",date:new Date().toISOString().split("T")[0],type:"checkup",condition:"",treatment:"",doctor:"",followUp:"",notes:"",severity:"low"}); };
+  const types={checkup:"🩺 معمول چیک اپ",sick:"🤒 بیماری",injury:"🤕 چوٹ",dental:"🦷 دانت",eye:"👁️ آنکھ",mental:"🧠 ذہنی صحت",other:"📋 دیگر"};
+  const sevConfig={low:{c:C.green,bg:"#dcfce7",l:"معمولی"},medium:{c:C.amber,bg:"#fef3c7",l:"درمیانہ"},high:{c:C.red,bg:"#fee2e2",l:"سنگین"}};
+  const recent=records.slice(0,5);
+  const studentHealth=students.map(st=>{ const stR=records.filter(r=>r.studentId===st.id); return {...st,visits:stR.length,lastVisit:stR[0]?.date||"—"}; }).filter(s=>s.visits>0).slice(0,8);
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>🏥 صحت و تندرستی</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>طلبا کی صحت کا ریکارڈ</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نیا ریکارڈ</button>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:"12px",marginBottom:"20px"}}>
+      {[{c:C.abuBakr,i:"📋",n:records.length,l:"کل وزٹ"},{c:C.red,i:"🤒",n:records.filter(r=>r.type==="sick").length,l:"بیماری"},{c:C.amber,i:"🤕",n:records.filter(r=>r.type==="injury").length,l:"چوٹ"},{c:C.green,i:"✅",n:records.filter(r=>r.type==="checkup").length,l:"چیک اپ"}].map((x,i)=><div key={i} style={{background:`linear-gradient(135deg,${x.c}12,${x.c}05)`,borderRadius:"16px",padding:"16px",border:`2px solid ${x.c}20`,textAlign:"center"}}><div style={{fontSize:"1.3rem"}}>{x.i}</div><div style={{fontSize:"1.4rem",fontWeight:"900",color:x.c}}>{x.n}</div><div style={{fontSize:"0.6rem",color:"#888"}}>{x.l}</div></div>)}
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,#dcfce7,#f0fdf4)`,border:`2px solid ${C.green}20`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>طالب علم *</label><select style={S.inpSm} value={f.studentId} onChange={e=>setF({...f,studentId:e.target.value})}><option value="">-- منتخب کریں --</option>{students.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>تاریخ</label><input style={{...S.inpSm,direction:"ltr"}} type="date" value={f.date} onChange={e=>setF({...f,date:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>قسم</label><select style={S.inpSm} value={f.type} onChange={e=>setF({...f,type:e.target.value})}>{Object.entries(types).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>شدت</label><select style={S.inpSm} value={f.severity} onChange={e=>setF({...f,severity:e.target.value})}><option value="low">معمولی</option><option value="medium">درمیانہ</option><option value="high">سنگین</option></select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>بیماری / مسئلہ</label><input style={S.inpSm} value={f.condition} onChange={e=>setF({...f,condition:e.target.value})} placeholder="بخار، سر درد..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>علاج</label><input style={S.inpSm} value={f.treatment} onChange={e=>setF({...f,treatment:e.target.value})} placeholder="دوائی، آرام..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>ڈاکٹر</label><input style={S.inpSm} value={f.doctor} onChange={e=>setF({...f,doctor:e.target.value})} placeholder="ڈاکٹر کا نام..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>فالو اپ تاریخ</label><input style={{...S.inpSm,direction:"ltr"}} type="date" value={f.followUp} onChange={e=>setF({...f,followUp:e.target.value})}/></div>
+      </div>
+      <button style={{...S.saveBtn,background:`linear-gradient(135deg,${C.green},#15803d)`}} onClick={add}>✅ ریکارڈ محفوظ کریں</button>
+    </div>}
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"20px"}}>
+      <div style={S.card}>
+        <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy,marginBottom:"16px"}}>📋 حالیہ ریکارڈ</div>
+        {recent.map(r=>{ const st=students.find(s=>s.id===r.studentId); const sev=sevConfig[r.severity]||sevConfig.low; return <div key={r.id} style={{display:"flex",gap:"10px",marginBottom:"12px",padding:"10px",background:"#fafaf8",borderRadius:"10px",border:`1px solid ${sev.c}20`}}>
+          <div style={{width:"36px",height:"36px",borderRadius:"50%",background:sev.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1rem",flexShrink:0}}>{types[r.type]?.split(" ")[0]||"📋"}</div>
+          <div style={{flex:1}}><div style={{fontSize:"0.7rem",fontWeight:"700",color:C.navy}}>{st?.name||"—"}</div><div style={{fontSize:"0.6rem",color:"#888"}}>{r.condition||types[r.type]||r.type}</div><div style={{fontSize:"0.55rem",color:"#aaa",fontFamily:"monospace",direction:"ltr"}}>{r.date}</div></div>
+          <span style={{...hBadge(sev.c,sev.bg),fontSize:"0.5rem",alignSelf:"flex-start"}}>{sev.l}</span>
+        </div>; })}
+        {records.length===0&&<div style={{textAlign:"center",color:"#bbb",fontSize:"0.65rem",padding:"20px"}}>کوئی ریکارڈ نہیں</div>}
+      </div>
+      <div style={S.card}>
+        <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy,marginBottom:"16px"}}>👥 طلبا کا صحت خلاصہ</div>
+        {studentHealth.map(s=>{ const h=HOUSES.find(x=>x.id===s.houseId)||{}; return <div key={s.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px",padding:"8px 12px",background:"#fafaf8",borderRadius:"10px"}}>
+          <div><div style={{fontSize:"0.7rem",fontWeight:"700",color:C.navy}}>{s.name}</div><div style={{fontSize:"0.58rem",color:"#888"}}>آخری وزٹ: {s.lastVisit}</div></div>
+          <span style={{...hBadge(h.color||C.gold,h.light||C.goldLight),fontSize:"0.55rem"}}>{s.visits} وزٹ</span>
+        </div>; })}
+        {studentHealth.length===0&&<div style={{textAlign:"center",color:"#bbb",fontSize:"0.65rem",padding:"20px"}}>کوئی ڈیٹا نہیں</div>}
+      </div>
+    </div>
+  </div>;
+}
+
+// ===================== MADRASA DARS-E-NIZAMI HUB =====================
+function MadrasaHub({students,addData}){
+  const [classes,setClasses]=useState([]); const [progress,setProgress]=useState([]); const [show,setShow]=useState(false); const [tab,setTab]=useState("classes");
+  const [f,setF]=useState({subject:"",level:"Ibtidai",teacher:"",schedule:"",kitab:"",totalDars:100});
+  const [progF,setProgF]=useState({studentId:"",subjectId:"",darsCompleted:0,grade:"",notes:""});
+  const LEVELS=["Ibtidai","Mutawassit","Thanawi","Aali"]; const LEVEL_UR={Ibtidai:"ابتدائی",Mutawassit:"متوسط",Thanawi:"ثانوی",Aali:"عالی"};
+  useEffect(()=>{
+    const u1=onSnapshot(collection(db,"madrasa_subjects"),s=>setClasses(s.docs.map(d=>({id:d.id,...d.data()}))));
+    const u2=onSnapshot(query(collection(db,"madrasa_progress"),orderBy("createdAt","desc"),limit(50)),s=>setProgress(s.docs.map(d=>({id:d.id,...d.data()}))));
+    return()=>{u1();u2();};
+  },[]);
+  const add=async()=>{ if(!f.subject)return; await addData("madrasa_subjects",{...f,totalDars:Number(f.totalDars)}); setShow(false); setF({subject:"",level:"Ibtidai",teacher:"",schedule:"",kitab:"",totalDars:100}); };
+  const addProg=async()=>{ if(!progF.studentId||!progF.subjectId)return; await addData("madrasa_progress",{...progF,darsCompleted:Number(progF.darsCompleted)}); setProgF({studentId:"",subjectId:"",darsCompleted:0,grade:"",notes:""}); };
+  const islamicSubjects=["تفسیر","حدیث","فقہ","عقیدہ","نحو","صرف","بلاغت","منطق","فلسفہ","تاریخ اسلام","سیرت","تجوید"];
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>🕌 درس نظامی ہب</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>اسلامی علوم — نصاب و پیشرفت</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نیا مضمون</button>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:"12px",marginBottom:"20px"}}>
+      {LEVELS.map(l=>{ const cnt=classes.filter(c=>c.level===l).length; return <div key={l} style={{background:`linear-gradient(135deg,${C.gold}12,${C.gold}05)`,borderRadius:"16px",padding:"16px",border:`2px solid ${C.gold}20`,textAlign:"center"}}><div style={{fontSize:"0.75rem",fontWeight:"800",color:C.goldDark}}>{LEVEL_UR[l]}</div><div style={{fontSize:"1.8rem",fontWeight:"900",color:C.gold,marginTop:"4px"}}>{cnt}</div><div style={{fontSize:"0.58rem",color:"#888"}}>مضامین</div></div>; })}
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>مضمون *</label><select style={S.inpSm} value={f.subject} onChange={e=>setF({...f,subject:e.target.value})}><option value="">-- منتخب کریں --</option>{islamicSubjects.map(s=><option key={s}>{s}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>درجہ</label><select style={S.inpSm} value={f.level} onChange={e=>setF({...f,level:e.target.value})}>{LEVELS.map(l=><option key={l} value={l}>{LEVEL_UR[l]}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>استاد</label><input style={S.inpSm} value={f.teacher} onChange={e=>setF({...f,teacher:e.target.value})} placeholder="استاد کا نام..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>کتاب</label><input style={S.inpSm} value={f.kitab} onChange={e=>setF({...f,kitab:e.target.value})} placeholder="ہدایہ، نورالانوار..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>کل دروس</label><input style={{...S.inpSm,direction:"ltr"}} type="number" value={f.totalDars} onChange={e=>setF({...f,totalDars:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>شیڈول</label><input style={S.inpSm} value={f.schedule} onChange={e=>setF({...f,schedule:e.target.value})} placeholder="صبح 8-9..."/></div>
+      </div>
+      <button style={S.saveBtn} onClick={add}>✅ محفوظ کریں</button>
+    </div>}
+    <div style={{display:"flex",gap:"8px",marginBottom:"16px"}}>{[["classes","📚 مضامین"],["progress","📊 پیشرفت"],["add_prog","➕ پیشرفت درج"]].map(([t,l])=><button key={t} onClick={()=>setTab(t)} style={{padding:"8px 14px",borderRadius:"10px",border:"none",cursor:"pointer",fontSize:"0.65rem",fontWeight:tab===t?"700":"400",background:tab===t?`linear-gradient(135deg,${C.gold},${C.goldDark})`:C.white,color:tab===t?C.white:"#888",fontFamily:"inherit"}}>{l}</button>)}</div>
+    {tab==="classes"&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:"14px"}}>
+      {classes.map(c=><div key={c.id} style={{...S.card,borderRight:`4px solid ${C.gold}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:"8px"}}><div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy}}>🕌 {c.subject}</div><span style={hBadge(C.gold,C.goldLight)}>{LEVEL_UR[c.level]||c.level}</span></div>
+        {c.kitab&&<div style={{fontSize:"0.65rem",color:"#888",marginBottom:"4px"}}>📖 {c.kitab}</div>}
+        {c.teacher&&<div style={{fontSize:"0.65rem",color:"#888",marginBottom:"4px"}}>👤 {c.teacher}</div>}
+        {c.schedule&&<div style={{fontSize:"0.65rem",color:C.gold}}>⏰ {c.schedule}</div>}
+        <div style={{marginTop:"8px"}}>{pBar(0,c.totalDars||100,C.gold)}<div style={{fontSize:"0.58rem",color:"#aaa",marginTop:"2px"}}>کل {c.totalDars} دروس</div></div>
+      </div>)}
+      {classes.length===0&&<div style={{...S.card,textAlign:"center",color:"#bbb",padding:"40px",gridColumn:"1/-1"}}>کوئی مضمون نہیں</div>}
+    </div>}
+    {tab==="add_prog"&&<div style={{...S.card,background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>طالب علم</label><select style={S.inpSm} value={progF.studentId} onChange={e=>setProgF({...progF,studentId:e.target.value})}><option value="">-- منتخب کریں --</option>{students.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>مضمون</label><select style={S.inpSm} value={progF.subjectId} onChange={e=>setProgF({...progF,subjectId:e.target.value})}><option value="">-- منتخب کریں --</option>{classes.map(c=><option key={c.id} value={c.id}>{c.subject}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>مکمل دروس</label><input style={{...S.inpSm,direction:"ltr"}} type="number" value={progF.darsCompleted} onChange={e=>setProgF({...progF,darsCompleted:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>گریڈ</label><select style={S.inpSm} value={progF.grade} onChange={e=>setProgF({...progF,grade:e.target.value})}><option value="">-- منتخب کریں --</option>{["ممتاز","جید جداً","جید","مقبول","ناکام"].map(g=><option key={g}>{g}</option>)}</select></div>
+      </div>
+      <button style={S.saveBtn} onClick={addProg}>✅ پیشرفت درج کریں</button>
+    </div>}
+    {tab==="progress"&&<div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+      <thead><tr><th style={S.th}>طالب علم</th><th style={S.th}>مضمون</th><th style={S.th}>دروس</th><th style={S.th}>گریڈ</th></tr></thead>
+      <tbody>{progress.map(p=>{ const st=students.find(s=>s.id===p.studentId); const subj=classes.find(c=>c.id===p.subjectId); const pct=subj?Math.round((p.darsCompleted/subj.totalDars)*100):0; return <tr key={p.id}>
+        <td style={{...S.td,fontWeight:"700"}}>{st?.name||"—"}</td>
+        <td style={S.td}>{subj?.subject||"—"}</td>
+        <td style={S.td}><div style={{display:"flex",alignItems:"center",gap:"6px"}}><div style={{flex:1,minWidth:"60px"}}>{pBar(p.darsCompleted,subj?.totalDars||100,C.gold)}</div><span style={{fontSize:"0.6rem",color:C.gold,fontWeight:"700"}}>{pct}%</span></div></td>
+        <td style={S.td}><span style={{...hBadge(C.gold,C.goldLight),fontSize:"0.6rem"}}>{p.grade||"—"}</span></td>
+      </tr>; })}{progress.length===0&&<tr><td colSpan={4} style={{...S.td,textAlign:"center",color:"#bbb",padding:"40px"}}>کوئی ریکارڈ نہیں</td></tr>}</tbody>
+    </table></div></div>}
+  </div>;
+}
+
+// ===================== DONATION / FINANCIAL GUARD =====================
+function DonationHub({addData}){
+  const [donations,setDonations]=useState([]); const [show,setShow]=useState(false);
+  const [f,setF]=useState({donorName:"",amount:0,type:"sadaqah",purpose:"",date:new Date().toISOString().split("T")[0],anonymous:false,notes:""});
+  useEffect(()=>{ return onSnapshot(query(collection(db,"donations"),orderBy("createdAt","desc"),limit(50)),s=>setDonations(s.docs.map(d=>({id:d.id,...d.data()}))));  },[]);
+  const add=async()=>{ if(!f.amount)return; await addData("donations",{...f,amount:Number(f.amount)}); setShow(false); setF({donorName:"",amount:0,type:"sadaqah",purpose:"",date:new Date().toISOString().split("T")[0],anonymous:false,notes:""}); };
+  const types={sadaqah:{c:C.green,bg:"#dcfce7",i:"💝",l:"صدقہ"},zakat:{c:C.gold,bg:C.goldLight,i:"🌙",l:"زکات"},khairat:{c:C.abuBakr,bg:"#dbeafe",i:"🤲",l:"خیرات"},waqf:{c:C.purple,bg:"#ede9fe",i:"🏛️",l:"وقف"},other:{c:C.teal,bg:"#ccfbf1",i:"💰",l:"دیگر"}};
+  const totalByType=(type)=>donations.filter(d=>d.type===type).reduce((s,d)=>s+(d.amount||0),0);
+  const grandTotal=donations.reduce((s,d)=>s+(d.amount||0),0);
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>🤲 عطیات و صدقات</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>صدقہ، زکات، خیرات، وقف</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نیا عطیہ</button>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:"12px",marginBottom:"20px"}}>
+      {Object.entries(types).map(([k,v])=><div key={k} style={{background:`linear-gradient(135deg,${v.c}12,${v.c}05)`,borderRadius:"16px",padding:"16px",border:`2px solid ${v.c}20`,textAlign:"center"}}><div style={{fontSize:"1.4rem"}}>{v.i}</div><div style={{fontSize:"0.72rem",fontWeight:"800",color:v.c,marginTop:"4px"}}>{v.l}</div><div style={{fontSize:"1rem",fontWeight:"900",color:v.c}}>Rs. {(totalByType(k)/1000).toFixed(1)}K</div></div>)}
+    </div>
+    <div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`,textAlign:"center"}}>
+      <div style={{fontSize:"0.65rem",color:"#888"}}>کل وصول شدہ عطیات</div>
+      <div style={{fontSize:"2.5rem",fontWeight:"900",color:C.gold}}>Rs. {grandTotal.toLocaleString()}</div>
+      <div style={{fontSize:"0.62rem",color:"#888",marginTop:"4px"}}>{donations.length} عطیات</div>
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`,border:`2px solid ${C.gold}30`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>عطیہ دہندہ</label><input style={S.inpSm} value={f.donorName} onChange={e=>setF({...f,donorName:e.target.value})} placeholder="نام (اختیاری)"/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>رقم *</label><input style={{...S.inpSm,direction:"ltr"}} type="number" value={f.amount} onChange={e=>setF({...f,amount:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>قسم</label><select style={S.inpSm} value={f.type} onChange={e=>setF({...f,type:e.target.value})}>{Object.entries(types).map(([k,v])=><option key={k} value={k}>{v.i} {v.l}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>مقصد</label><input style={S.inpSm} value={f.purpose} onChange={e=>setF({...f,purpose:e.target.value})} placeholder="تعمیر، تعلیم..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>تاریخ</label><input style={{...S.inpSm,direction:"ltr"}} type="date" value={f.date} onChange={e=>setF({...f,date:e.target.value})}/></div>
+        <div style={{display:"flex",alignItems:"center",gap:"8px",paddingTop:"20px"}}><input type="checkbox" checked={f.anonymous} onChange={e=>setF({...f,anonymous:e.target.checked})} id="anon"/><label htmlFor="anon" style={{fontSize:"0.68rem",color:C.navy,cursor:"pointer"}}>گمنام عطیہ</label></div>
+      </div>
+      <button style={S.saveBtn} onClick={add}>🤲 عطیہ درج کریں</button>
+    </div>}
+    <div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+      <thead><tr><th style={S.th}>عطیہ دہندہ</th><th style={S.th}>قسم</th><th style={S.th}>رقم</th><th style={S.th}>مقصد</th><th style={S.th}>تاریخ</th></tr></thead>
+      <tbody>{donations.map(d=>{ const tc=types[d.type]||types.other; return <tr key={d.id}>
+        <td style={{...S.td,fontWeight:"700"}}>{d.anonymous?"گمنام":d.donorName||"—"}</td>
+        <td style={S.td}><span style={hBadge(tc.c,tc.bg)}>{tc.i} {tc.l}</span></td>
+        <td style={{...S.td,fontWeight:"800",color:C.green}}>Rs. {(d.amount||0).toLocaleString()}</td>
+        <td style={S.td}>{d.purpose||"—"}</td>
+        <td style={{...S.td,fontFamily:"monospace",direction:"ltr",fontSize:"0.6rem"}}>{d.date}</td>
+      </tr>; })}{donations.length===0&&<tr><td colSpan={5} style={{...S.td,textAlign:"center",color:"#bbb",padding:"40px"}}>کوئی ریکارڈ نہیں</td></tr>}</tbody>
+    </table></div></div>
+  </div>;
+}
+
+// ===================== MEETING MINUTES =====================
+function MeetingMinutes({addData}){
+  const [meetings,setMeetings]=useState([]); const [show,setShow]=useState(false);
+  const [f,setF]=useState({title:"",date:new Date().toISOString().split("T")[0],type:"staff",attendees:"",agenda:"",minutes:"",decisions:"",nextMeeting:""});
+  useEffect(()=>{ return onSnapshot(query(collection(db,"meetings"),orderBy("createdAt","desc"),limit(30)),s=>setMeetings(s.docs.map(d=>({id:d.id,...d.data()}))));  },[]);
+  const add=async()=>{ if(!f.title)return; await addData("meetings",{...f}); setShow(false); setF({title:"",date:new Date().toISOString().split("T")[0],type:"staff",attendees:"",agenda:"",minutes:"",decisions:"",nextMeeting:""}); };
+  const types={staff:{c:C.abuBakr,bg:"#dbeafe",i:"👨‍🏫",l:"اسٹاف"},parents:{c:C.green,bg:"#dcfce7",i:"👪",l:"والدین"},board:{c:C.gold,bg:C.goldLight,i:"🏛️",l:"بورڈ"},emergency:{c:C.red,bg:"#fee2e2",i:"🚨",l:"ہنگامی"},academic:{c:C.purple,bg:"#ede9fe",i:"📚",l:"تعلیمی"}};
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>📝 میٹنگ منٹس</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>اجلاس کا ریکارڈ اور فیصلے</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نئی میٹنگ</button>
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`,border:`2px solid ${C.gold}30`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>میٹنگ کا عنوان *</label><input style={S.inpSm} value={f.title} onChange={e=>setF({...f,title:e.target.value})} placeholder="ماہانہ اسٹاف میٹنگ..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>تاریخ</label><input style={{...S.inpSm,direction:"ltr"}} type="date" value={f.date} onChange={e=>setF({...f,date:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>قسم</label><select style={S.inpSm} value={f.type} onChange={e=>setF({...f,type:e.target.value})}>{Object.entries(types).map(([k,v])=><option key={k} value={k}>{v.i} {v.l}</option>)}</select></div>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>شرکاء</label><input style={S.inpSm} value={f.attendees} onChange={e=>setF({...f,attendees:e.target.value})} placeholder="ناموں کی فہرست..."/></div>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>ایجنڈا</label><textarea style={{...S.inpSm,minHeight:"60px",resize:"vertical"}} value={f.agenda} onChange={e=>setF({...f,agenda:e.target.value})} placeholder="اجلاس کے نکات..."/></div>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>کارروائی (منٹس)</label><textarea style={{...S.inpSm,minHeight:"80px",resize:"vertical"}} value={f.minutes} onChange={e=>setF({...f,minutes:e.target.value})} placeholder="اجلاس کی مکمل کارروائی..."/></div>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>فیصلے</label><textarea style={{...S.inpSm,minHeight:"60px",resize:"vertical"}} value={f.decisions} onChange={e=>setF({...f,decisions:e.target.value})} placeholder="اہم فیصلے اور احکامات..."/></div>
+      </div>
+      <button style={S.saveBtn} onClick={add}>✅ منٹس محفوظ کریں</button>
+    </div>}
+    <div style={{display:"flex",flexDirection:"column",gap:"14px"}}>
+      {meetings.map(m=>{ const tc=types[m.type]||types.staff; return <div key={m.id} style={{...S.card,borderRight:`4px solid ${tc.c}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"10px"}}>
+          <div><div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"4px"}}><span style={{fontSize:"1rem"}}>{tc.i}</span><span style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy}}>{m.title}</span></div><div style={{fontSize:"0.6rem",color:"#aaa",fontFamily:"monospace",direction:"ltr"}}>{m.date}</div></div>
+          <span style={hBadge(tc.c,tc.bg)}>{tc.l}</span>
+        </div>
+        {m.attendees&&<div style={{fontSize:"0.62rem",color:"#888",marginBottom:"8px"}}>👥 {m.attendees}</div>}
+        {m.decisions&&<div style={{background:"#fef3c7",borderRadius:"10px",padding:"10px 14px",marginBottom:"8px"}}><div style={{fontSize:"0.62rem",fontWeight:"700",color:C.amber,marginBottom:"4px"}}>⚡ فیصلے</div><div style={{fontSize:"0.65rem",color:"#555",lineHeight:"1.6"}}>{m.decisions}</div></div>}
+        {m.minutes&&<div style={{fontSize:"0.65rem",color:"#666",lineHeight:"1.6"}}>{m.minutes.slice(0,200)}{m.minutes.length>200?"...":""}</div>}
+      </div>; })}
+      {meetings.length===0&&<div style={{...S.card,textAlign:"center",color:"#bbb",padding:"60px"}}>کوئی میٹنگ ریکارڈ نہیں</div>}
+    </div>
+  </div>;
+}
+
+// ===================== LOGISTICS & ASSET TRACKER =====================
+function LogisticsTracker({addData}){
+  const [assets,setAssets]=useState([]); const [show,setShow]=useState(false); const [tab,setTab]=useState("assets");
+  const [f,setF]=useState({name:"",category:"furniture",quantity:1,condition:"good",location:"",purchaseDate:"",purchasePrice:0,notes:""});
+  const [mainF,setMainF]=useState({assetId:"",issue:"",reportedBy:"",priority:"normal",date:new Date().toISOString().split("T")[0]});
+  const [maintenance,setMaintenance]=useState([]);
+  useEffect(()=>{
+    const u1=onSnapshot(collection(db,"assets"),s=>setAssets(s.docs.map(d=>({id:d.id,...d.data()}))));
+    const u2=onSnapshot(query(collection(db,"maintenance"),orderBy("createdAt","desc"),limit(30)),s=>setMaintenance(s.docs.map(d=>({id:d.id,...d.data()}))));
+    return()=>{u1();u2();};
+  },[]);
+  const add=async()=>{ if(!f.name)return; await addData("assets",{...f,quantity:Number(f.quantity),purchasePrice:Number(f.purchasePrice)}); setShow(false); setF({name:"",category:"furniture",quantity:1,condition:"good",location:"",purchaseDate:"",purchasePrice:0,notes:""}); };
+  const addMaint=async()=>{ if(!mainF.assetId||!mainF.issue)return; await addData("maintenance",{...mainF,status:"open"}); setMainF({assetId:"",issue:"",reportedBy:"",priority:"normal",date:new Date().toISOString().split("T")[0]}); };
+  const resolveM=async(id)=>{ await updateDoc(doc(db,"maintenance",id),{status:"resolved",resolvedAt:serverTimestamp()}); };
+  const cats={furniture:"🪑 فرنیچر",electronics:"💻 الیکٹرونکس",sports:"⚽ کھیل",kitchen:"🍽️ باورچی خانہ",classroom:"📚 کلاس",other:"📦 دیگر"};
+  const condConfig={good:{c:C.green,l:"اچھی"},fair:{c:C.amber,l:"ٹھیک"},poor:{c:C.red,l:"خراب"},broken:{c:"#888",l:"ٹوٹا"}};
+  const totalValue=assets.reduce((s,a)=>s+(a.purchasePrice||0),0);
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>🏗️ اثاثہ ٹریکر</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>سامان، فرنیچر، الیکٹرونکس</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نیا اثاثہ</button>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:"12px",marginBottom:"20px"}}>
+      {[{c:C.navy,i:"📦",n:assets.length,l:"کل اثاثے"},{c:C.green,i:"✅",n:assets.filter(a=>a.condition==="good").length,l:"اچھی حالت"},{c:C.red,i:"⚠️",n:maintenance.filter(m=>m.status==="open").length,l:"زیر مرمت"},{c:C.gold,i:"💰",n:`Rs.${(totalValue/1000).toFixed(0)}K`,l:"کل مالیت"}].map((x,i)=><div key={i} style={{background:`linear-gradient(135deg,${x.c}12,${x.c}05)`,borderRadius:"16px",padding:"16px",border:`2px solid ${x.c}20`,textAlign:"center"}}><div style={{fontSize:"1.3rem"}}>{x.i}</div><div style={{fontSize:"1.2rem",fontWeight:"900",color:x.c}}>{x.n}</div><div style={{fontSize:"0.6rem",color:"#888"}}>{x.l}</div></div>)}
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>نام *</label><input style={S.inpSm} value={f.name} onChange={e=>setF({...f,name:e.target.value})} placeholder="کرسی، کمپیوٹر..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>زمرہ</label><select style={S.inpSm} value={f.category} onChange={e=>setF({...f,category:e.target.value})}>{Object.entries(cats).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>تعداد</label><input style={{...S.inpSm,direction:"ltr"}} type="number" value={f.quantity} onChange={e=>setF({...f,quantity:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>حالت</label><select style={S.inpSm} value={f.condition} onChange={e=>setF({...f,condition:e.target.value})}>{Object.entries(condConfig).map(([k,v])=><option key={k} value={k}>{v.l}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>مقام</label><input style={S.inpSm} value={f.location} onChange={e=>setF({...f,location:e.target.value})} placeholder="کمرہ 101..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>قیمت</label><input style={{...S.inpSm,direction:"ltr"}} type="number" value={f.purchasePrice} onChange={e=>setF({...f,purchasePrice:e.target.value})}/></div>
+      </div>
+      <button style={S.saveBtn} onClick={add}>✅ محفوظ کریں</button>
+    </div>}
+    <div style={{display:"flex",gap:"8px",marginBottom:"16px"}}>{[["assets","📦 اثاثے"],["maintenance","🔧 مرمت"],["report","⚠️ مسئلہ رپورٹ"]].map(([t,l])=><button key={t} onClick={()=>setTab(t)} style={{padding:"8px 14px",borderRadius:"10px",border:"none",cursor:"pointer",fontSize:"0.65rem",fontWeight:tab===t?"700":"400",background:tab===t?`linear-gradient(135deg,${C.gold},${C.goldDark})`:C.white,color:tab===t?C.white:"#888",fontFamily:"inherit"}}>{l}</button>)}</div>
+    {tab==="assets"&&<div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+      <thead><tr><th style={S.th}>نام</th><th style={S.th}>زمرہ</th><th style={S.th}>تعداد</th><th style={S.th}>مقام</th><th style={S.th}>حالت</th><th style={S.th}>قیمت</th></tr></thead>
+      <tbody>{assets.map(a=>{ const cc=condConfig[a.condition]||condConfig.good; return <tr key={a.id}>
+        <td style={{...S.td,fontWeight:"700"}}>{a.name}</td><td style={S.td}>{cats[a.category]||a.category}</td><td style={S.td}>{a.quantity}</td><td style={S.td}>{a.location||"—"}</td>
+        <td style={S.td}><span style={hBadge(cc.c,cc.c+"15")}>{cc.l}</span></td>
+        <td style={{...S.td,color:C.gold,fontWeight:"700"}}>{a.purchasePrice>0?`Rs. ${a.purchasePrice.toLocaleString()}`:"—"}</td>
+      </tr>; })}{assets.length===0&&<tr><td colSpan={6} style={{...S.td,textAlign:"center",color:"#bbb",padding:"40px"}}>کوئی اثاثہ نہیں</td></tr>}</tbody>
+    </table></div></div>}
+    {tab==="report"&&<div style={{...S.card,background:"linear-gradient(135deg,#fee2e2,#fff5f5)"}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>اثاثہ</label><select style={S.inpSm} value={mainF.assetId} onChange={e=>setMainF({...mainF,assetId:e.target.value})}><option value="">-- منتخب کریں --</option>{assets.map(a=><option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>ترجیح</label><select style={S.inpSm} value={mainF.priority} onChange={e=>setMainF({...mainF,priority:e.target.value})}><option value="normal">عام</option><option value="high">اہم</option><option value="urgent">فوری</option></select></div>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>مسئلہ</label><textarea style={{...S.inpSm,minHeight:"60px",resize:"vertical"}} value={mainF.issue} onChange={e=>setMainF({...mainF,issue:e.target.value})} placeholder="مسئلے کی تفصیل..."/></div>
+      </div>
+      <button style={{...S.saveBtn,background:`linear-gradient(135deg,${C.amber},#b45309)`}} onClick={addMaint}>⚠️ مسئلہ رپورٹ کریں</button>
+    </div>}
+    {tab==="maintenance"&&<div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+      <thead><tr><th style={S.th}>اثاثہ</th><th style={S.th}>مسئلہ</th><th style={S.th}>ترجیح</th><th style={S.th}>حال</th><th style={S.th}>عمل</th></tr></thead>
+      <tbody>{maintenance.map(m=>{ const a=assets.find(x=>x.id===m.assetId); const pc=m.priority==="urgent"?C.red:m.priority==="high"?C.amber:C.abuBakr; return <tr key={m.id}>
+        <td style={{...S.td,fontWeight:"700"}}>{a?.name||"—"}</td><td style={S.td}>{m.issue?.slice(0,50)||"—"}</td>
+        <td style={S.td}><span style={hBadge(pc,pc+"15")}>{m.priority==="urgent"?"فوری":m.priority==="high"?"اہم":"عام"}</span></td>
+        <td style={S.td}><span style={{padding:"3px 8px",borderRadius:"20px",fontSize:"0.55rem",fontWeight:"700",background:m.status==="resolved"?"#dcfce7":"#fef3c7",color:m.status==="resolved"?C.green:C.amber}}>{m.status==="resolved"?"✅ حل":"⏳ کھلا"}</span></td>
+        <td style={S.td}>{m.status==="open"&&<button onClick={()=>resolveM(m.id)} style={{...S.saveBtn,padding:"4px 10px",fontSize:"0.55rem"}}>✅ حل</button>}</td>
+      </tr>; })}{maintenance.length===0&&<tr><td colSpan={5} style={{...S.td,textAlign:"center",color:"#bbb",padding:"40px"}}>کوئی مرمت ریکارڈ نہیں</td></tr>}</tbody>
+    </table></div></div>}
+  </div>;
+}
+
+// ===================== STAFF PERFORMANCE =====================
+function StaffPerformance({teachers,addData}){
+  const [reviews,setReviews]=useState([]); const [show,setShow]=useState(false);
+  const [f,setF]=useState({teacherId:"",month:"",punctuality:3,teaching:3,discipline:3,islamic:3,teamwork:3,comments:"",reviewedBy:""});
+  useEffect(()=>{ return onSnapshot(query(collection(db,"staff_reviews"),orderBy("createdAt","desc"),limit(50)),s=>setReviews(s.docs.map(d=>({id:d.id,...d.data()}))));  },[]);
+  const calcTotal=(f)=>Math.round(((f.punctuality+f.teaching+f.discipline+f.islamic+f.teamwork)/25)*100);
+  const add=async()=>{ if(!f.teacherId||!f.month)return; const score=calcTotal(f); await addData("staff_reviews",{...f,score}); setShow(false); setF({teacherId:"",month:"",punctuality:3,teaching:3,discipline:3,islamic:3,teamwork:3,comments:"",reviewedBy:""}); };
+  const criteria=[{id:"punctuality",l:"وقت کی پابندی"},{id:"teaching",l:"تدریسی معیار"},{id:"discipline",l:"نظم و ضبط"},{id:"islamic",l:"اسلامی کردار"},{id:"teamwork",l:"ٹیم ورک"}];
+  const teacherScores=teachers.map(t=>{ const tR=reviews.filter(r=>r.teacherId===t.id); const avgScore=tR.length>0?Math.round(tR.reduce((s,r)=>s+(r.score||0),0)/tR.length):0; return {...t,avgScore,reviews:tR.length}; }).sort((a,b)=>b.avgScore-a.avgScore);
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>📊 اسٹاف کارکردگی</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>ماہانہ جائزہ و تشخیص</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نیا جائزہ</button>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:"14px",marginBottom:"20px"}}>
+      {teacherScores.map((t,i)=>{ const h=HOUSES.find(x=>x.id===t.houseId)||{}; return <div key={t.id} style={{...S.card,borderTop:`4px solid ${i===0?C.gold:h.color||C.navy}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"8px"}}>
+          <div><div style={{fontSize:"0.82rem",fontWeight:"700",color:C.navy}}>{t.name}</div><div style={{fontSize:"0.6rem",color:"#888"}}>{t.subject}</div></div>
+          <div style={{background:i===0?`linear-gradient(135deg,${C.gold},${C.goldDark})`:"#eee",color:i===0?C.white:"#aaa",padding:"4px 10px",borderRadius:"20px",fontSize:"0.65rem",fontWeight:"900"}}>{i===0?"👑":`${i+1}`}</div>
+        </div>
+        <div style={{fontSize:"2rem",fontWeight:"900",color:t.avgScore>=80?C.green:t.avgScore>=60?C.amber:t.avgScore>0?C.red:"#ddd"}}>{t.avgScore>0?`${t.avgScore}%`:"—"}</div>
+        {pBar(t.avgScore,100,t.avgScore>=80?C.green:t.avgScore>=60?C.amber:C.red)}
+        <div style={{fontSize:"0.58rem",color:"#aaa",marginTop:"4px"}}>{t.reviews} جائزے</div>
+      </div>; })}
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"16px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>استاد *</label><select style={S.inpSm} value={f.teacherId} onChange={e=>setF({...f,teacherId:e.target.value})}><option value="">-- منتخب کریں --</option>{teachers.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>مہینہ *</label><input style={{...S.inpSm,direction:"ltr"}} type="month" value={f.month} onChange={e=>setF({...f,month:e.target.value})}/></div>
+      </div>
+      {criteria.map(c=><div key={c.id} style={{background:C.white,borderRadius:"12px",padding:"12px 16px",marginBottom:"10px",border:`1px solid ${C.goldLight}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:"6px"}}><span style={{fontSize:"0.72rem",fontWeight:"700",color:C.navy}}>{c.l}</span><span style={{fontSize:"0.68rem",fontWeight:"700",color:C.gold}}>{f[c.id]}/5</span></div>
+        <div style={{display:"flex",gap:"6px"}}>{[1,2,3,4,5].map(star=><button key={star} onClick={()=>setF({...f,[c.id]:star})} style={{fontSize:"1.3rem",background:"none",border:"none",cursor:"pointer",color:star<=f[c.id]?C.gold:"#ddd"}}>★</button>)}</div>
+      </div>)}
+      <div style={{background:C.white,padding:"10px 16px",borderRadius:"10px",marginBottom:"12px",textAlign:"center"}}><div style={{fontSize:"0.62rem",color:"#888"}}>مجموعی اسکور</div><div style={{fontSize:"1.8rem",fontWeight:"900",color:calcTotal(f)>=80?C.green:calcTotal(f)>=60?C.amber:C.red}}>{calcTotal(f)}%</div></div>
+      <div style={{marginBottom:"12px"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>تبصرہ</label><textarea style={{...S.inpSm,minHeight:"60px",resize:"vertical"}} value={f.comments} onChange={e=>setF({...f,comments:e.target.value})} placeholder="تبصرہ..."/></div>
+      <button style={S.saveBtn} onClick={add}>✅ جائزہ محفوظ کریں</button>
+    </div>}
+    <div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+      <thead><tr><th style={S.th}>استاد</th><th style={S.th}>مہینہ</th><th style={S.th}>وقت</th><th style={S.th}>تدریس</th><th style={S.th}>اسکور</th></tr></thead>
+      <tbody>{reviews.map(r=>{ const t=teachers.find(x=>x.id===r.teacherId); const sc=r.score||0; return <tr key={r.id}>
+        <td style={{...S.td,fontWeight:"700"}}>{t?.name||"—"}</td>
+        <td style={{...S.td,fontFamily:"monospace",direction:"ltr",fontSize:"0.6rem"}}>{r.month}</td>
+        <td style={S.td}><span style={{color:C.gold}}>{"★".repeat(r.punctuality||0)}</span></td>
+        <td style={S.td}><span style={{color:C.gold}}>{"★".repeat(r.teaching||0)}</span></td>
+        <td style={S.td}><span style={{padding:"4px 10px",borderRadius:"20px",fontSize:"0.62rem",fontWeight:"800",background:sc>=80?"#dcfce7":sc>=60?"#fef3c7":"#fee2e2",color:sc>=80?C.green:sc>=60?C.amber:C.red}}>{sc}%</span></td>
+      </tr>; })}{reviews.length===0&&<tr><td colSpan={5} style={{...S.td,textAlign:"center",color:"#bbb",padding:"40px"}}>کوئی جائزہ نہیں</td></tr>}</tbody>
+    </table></div></div>
+  </div>;
+}
+
+// ===================== STUDENT PARENT PORTAL =====================
+function ParentPortal({students,fees,results}){
+  const [selStudent,setSelStudent]=useState(null); const [q,setQ]=useState("");
+  const filtered=students.filter(s=>s.name?.includes(q)||s.studentCode?.includes(q));
+  if(selStudent){
+    const h=HOUSES.find(x=>x.id===selStudent.houseId)||{};
+    const sFees=fees.filter(f=>f.studentId===selStudent.id);
+    const sResults=results.filter(r=>r.studentId===selStudent.id);
+    const pendingFees=sFees.filter(f=>f.status==="pending");
+    const avgResult=sResults.length>0?Math.round(sResults.reduce((s,r)=>s+(r.percentage||0),0)/sResults.length):0;
+    return <div style={S.page}>
+      <button style={{...S.addBtn,marginBottom:"20px",background:"#eee",color:C.navy,boxShadow:"none"}} onClick={()=>setSelStudent(null)}>← واپس</button>
+      <div style={{background:h.gradient||`linear-gradient(135deg,${C.navy},${C.navyMid})`,borderRadius:"22px",padding:"24px",marginBottom:"20px",color:C.white}}>
+        <div style={{display:"flex",alignItems:"center",gap:"16px"}}>
+          <div style={{width:"64px",height:"64px",borderRadius:"50%",background:"rgba(255,255,255,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"2rem"}}>{h.emoji||"👤"}</div>
+          <div><div style={{fontSize:"1.3rem",fontWeight:"800"}}>{selStudent.name}</div><div style={{fontSize:"0.7rem",opacity:0.8,marginTop:"2px"}}>والد: {selStudent.fatherName}</div><div style={{fontSize:"0.65rem",opacity:0.7,fontFamily:"monospace",direction:"ltr",marginTop:"2px"}}>{selStudent.studentCode}</div></div>
+        </div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:"14px",marginBottom:"20px"}}>
+        {[{c:C.abuBakr,i:"📚",n:selStudent.grade,l:"جماعت"},{c:h.color||C.gold,i:h.emoji||"🏠",n:h.nameEn||"—",l:"ہاؤس"},{c:C.green,i:"📊",n:`${avgResult}%`,l:"اوسط نتیجہ"},{c:C.red,i:"💰",n:pendingFees.length,l:"واجب الادا فیس"}].map((x,i)=><div key={i} style={{background:`linear-gradient(135deg,${x.c}12,${x.c}05)`,borderRadius:"16px",padding:"16px",border:`2px solid ${x.c}20`,textAlign:"center"}}><div style={{fontSize:"1.4rem"}}>{x.i}</div><div style={{fontSize:"1.1rem",fontWeight:"900",color:x.c,marginTop:"4px"}}>{x.n}</div><div style={{fontSize:"0.6rem",color:"#888",marginTop:"2px"}}>{x.l}</div></div>)}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px"}}>
+        <div style={S.card}>
+          <div style={{fontSize:"0.82rem",fontWeight:"700",color:C.navy,marginBottom:"12px"}}>📊 حالیہ نتائج</div>
+          {sResults.slice(0,5).map(r=><div key={r.id} style={{display:"flex",justifyContent:"space-between",marginBottom:"8px",padding:"6px 10px",background:"#fafaf8",borderRadius:"8px"}}>
+            <span style={{fontSize:"0.65rem",fontWeight:"600",color:C.navy}}>{r.subject}</span>
+            <span style={{fontSize:"0.65rem",fontWeight:"800",color:r.percentage>=70?C.green:r.percentage>=50?C.amber:C.red}}>{r.grade} ({r.percentage}%)</span>
+          </div>)}
+          {sResults.length===0&&<div style={{textAlign:"center",color:"#bbb",fontSize:"0.62rem",padding:"20px"}}>کوئی نتیجہ نہیں</div>}
+        </div>
+        <div style={S.card}>
+          <div style={{fontSize:"0.82rem",fontWeight:"700",color:C.navy,marginBottom:"12px"}}>💰 فیس صورتحال</div>
+          {pendingFees.length>0&&<div style={{background:"#fee2e2",borderRadius:"10px",padding:"10px 14px",marginBottom:"10px"}}><div style={{fontSize:"0.65rem",fontWeight:"700",color:C.red}}>⚠️ {pendingFees.length} فیس باقی ہے</div><div style={{fontSize:"1rem",fontWeight:"900",color:C.red}}>Rs. {pendingFees.reduce((s,f)=>s+(f.amount||0),0).toLocaleString()}</div></div>}
+          {sFees.filter(f=>f.status==="paid").slice(0,3).map(f=><div key={f.id} style={{display:"flex",justifyContent:"space-between",marginBottom:"6px",padding:"6px 10px",background:"#dcfce7",borderRadius:"8px"}}>
+            <span style={{fontSize:"0.62rem",color:C.green}}>✅ {f.month||f.type}</span>
+            <span style={{fontSize:"0.62rem",fontWeight:"700",color:C.green}}>Rs. {(f.amount||0).toLocaleString()}</span>
+          </div>)}
+          {sFees.length===0&&<div style={{textAlign:"center",color:"#bbb",fontSize:"0.62rem",padding:"20px"}}>کوئی فیس ریکارڈ نہیں</div>}
+        </div>
+      </div>
+    </div>;
+  }
+  return <div style={S.page}>
+    <div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy,marginBottom:"6px"}}>👪 والدین پورٹل</div>
+    <div style={{fontSize:"0.62rem",color:"#888",marginBottom:"20px"}}>طالب علم کا نام یا کوڈ لکھ کر تلاش کریں</div>
+    <div style={{marginBottom:"20px"}}><input style={{...S.inpSm,fontSize:"0.8rem",padding:"14px 18px"}} placeholder="🔍 نام یا کوڈ لکھیں..." value={q} onChange={e=>setQ(e.target.value)}/></div>
+    {q&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:"14px"}}>
+      {filtered.map(s=>{ const h=HOUSES.find(x=>x.id===s.houseId)||{}; return <div key={s.id} onClick={()=>setSelStudent(s)} style={{...S.card,cursor:"pointer",borderRight:`4px solid ${h.color||C.gold}`}}>
+        <div style={{display:"flex",alignItems:"center",gap:"14px"}}>
+          <div style={{width:"48px",height:"48px",borderRadius:"50%",background:h.gradient||`linear-gradient(135deg,${C.navy},#2563eb)`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.4rem"}}>{h.emoji||"👤"}</div>
+          <div><div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy}}>{s.name}</div><div style={{fontSize:"0.62rem",color:"#888"}}>{s.grade} • {h.nameEn||"—"}</div><div style={{fontSize:"0.6rem",color:C.gold,fontFamily:"monospace",direction:"ltr"}}>{s.studentCode}</div></div>
+        </div>
+      </div>; })}
+      {filtered.length===0&&<div style={{...S.card,textAlign:"center",color:"#bbb",padding:"40px",gridColumn:"1/-1"}}>"{q}" کوئی نتیجہ نہیں</div>}
+    </div>}
+    {!q&&<div style={{...S.card,textAlign:"center",padding:"60px"}}><div style={{fontSize:"3rem",marginBottom:"12px"}}>👪</div><div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy,marginBottom:"8px"}}>والدین پورٹل میں خوش آمدید</div><div style={{fontSize:"0.65rem",color:"#888"}}>اپنے بچے کا نام یا داخلہ نمبر تلاش کریں</div></div>}
+  </div>;
+}
+
+// ===================== DIRECTOR PORTAL =====================
+function DirectorPortal({students,teachers,houses,fees,results,hvsLogs}){
+  const totalFees=fees.reduce((s,f)=>s+(f.amount||0),0);
+  const paidFees=fees.filter(f=>f.status==="paid").reduce((s,f)=>s+(f.amount||0),0);
+  const sortedHouses=[...houses].sort((a,b)=>(b.points||0)-(a.points||0));
+  const winner=sortedHouses[0]; const winnerInfo=HOUSES.find(x=>x.id===winner?.id);
+  const avgResult=results.length>0?Math.round(results.reduce((s,r)=>s+(r.percentage||0),0)/results.length):0;
+  return <div style={S.page}>
+    <div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy,marginBottom:"6px"}}>👨‍💼 ڈائریکٹر پورٹل</div>
+    <div style={{fontSize:"0.62rem",color:"#888",marginBottom:"20px"}}>مکمل ادارہ — اعلیٰ نظریہ</div>
+    <div style={{background:`linear-gradient(135deg,${C.navyDark},${C.navyMid})`,borderRadius:"22px",padding:"24px",marginBottom:"24px",color:C.white}}>
+      <div style={{fontSize:"0.65rem",opacity:0.6,marginBottom:"8px",letterSpacing:"0.15em"}}>EXECUTIVE SUMMARY</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:"16px"}}>
+        {[{i:"🎓",n:students.length,l:"طلبا"},{i:"👨‍🏫",n:teachers.length,l:"اساتذہ"},{i:"📊",n:`${avgResult}%`,l:"اوسط نتیجہ"},{i:"💰",n:`${totalFees>0?Math.round((paidFees/totalFees)*100):0}%`,l:"فیس وصولی"},{i:"🏆",n:winnerInfo?.nameEn||"—",l:"سپر ہاؤس"},{i:"📈",n:hvsLogs.length,l:"HVS لاگز"}].map((x,i)=><div key={i} style={{textAlign:"center"}}><div style={{fontSize:"1.6rem"}}>{x.i}</div><div style={{fontSize:"1.4rem",fontWeight:"900",color:C.gold,marginTop:"4px"}}>{x.n}</div><div style={{fontSize:"0.58rem",opacity:0.7,marginTop:"2px"}}>{x.l}</div></div>)}
+      </div>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"20px",marginBottom:"20px"}}>
+      <div style={S.card}>
+        <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy,marginBottom:"16px"}}>🏆 ہاؤس رینکنگ</div>
+        {sortedHouses.map((h,i)=>{ const info=HOUSES.find(x=>x.id===h.id)||{}; return <div key={h.id} style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"12px"}}>
+          <div style={{width:"28px",height:"28px",borderRadius:"50%",background:i===0?`linear-gradient(135deg,${C.gold},${C.goldDark})`:"#eee",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.65rem",fontWeight:"900",color:i===0?C.white:"#aaa",flexShrink:0}}>{i===0?"👑":`${i+1}`}</div>
+          <span style={{fontSize:"1.2rem"}}>{info.emoji}</span>
+          <div style={{flex:1}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:"4px"}}><span style={{fontSize:"0.7rem",fontWeight:"700",color:C.navy}}>{info.nameEn}</span><span style={{fontSize:"0.7rem",fontWeight:"800",color:info.color||C.gold}}>{h.points||0}</span></div>{pBar(h.points||0,Math.max(...houses.map(x=>x.points||0),1),info.color||C.gold)}</div>
+        </div>; })}
+      </div>
+      <div style={S.card}>
+        <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy,marginBottom:"16px"}}>💰 مالی خلاصہ</div>
+        <div style={{marginBottom:"16px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:"6px"}}><span style={{fontSize:"0.68rem",color:"#888"}}>کل فیس</span><span style={{fontSize:"0.72rem",fontWeight:"700"}}>Rs. {totalFees.toLocaleString()}</span></div>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:"6px"}}><span style={{fontSize:"0.68rem",color:"#888"}}>وصول</span><span style={{fontSize:"0.72rem",fontWeight:"700",color:C.green}}>Rs. {paidFees.toLocaleString()}</span></div>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:"10px"}}><span style={{fontSize:"0.68rem",color:"#888"}}>باقی</span><span style={{fontSize:"0.72rem",fontWeight:"700",color:C.red}}>Rs. {(totalFees-paidFees).toLocaleString()}</span></div>
+          {pBar(paidFees,totalFees||1,C.green)}
+        </div>
+        <div style={{background:"#fafaf8",borderRadius:"12px",padding:"12px"}}><div style={{fontSize:"0.65rem",color:"#888",marginBottom:"4px"}}>وصولی کا تناسب</div><div style={{fontSize:"2rem",fontWeight:"900",color:totalFees>0&&(paidFees/totalFees)>=0.8?C.green:C.amber}}>{totalFees>0?Math.round((paidFees/totalFees)*100):0}%</div></div>
+      </div>
+    </div>
+    <div style={S.card}>
+      <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy,marginBottom:"16px"}}>📊 نتائج تجزیہ</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:"12px"}}>
+        {[["A+",results.filter(r=>r.grade==="A+").length,C.green],["A",results.filter(r=>r.grade==="A").length,C.green],["B",results.filter(r=>r.grade==="B").length,C.abuBakr],["C",results.filter(r=>r.grade==="C").length,C.amber],["D",results.filter(r=>r.grade==="D").length,C.amber],["F",results.filter(r=>r.grade==="F").length,C.red]].map(([g,n,c])=><div key={g} style={{background:`${c}12`,borderRadius:"12px",padding:"12px",textAlign:"center",border:`1px solid ${c}20`}}><div style={{fontSize:"1.2rem",fontWeight:"900",color:c}}>{g}</div><div style={{fontSize:"1.4rem",fontWeight:"900",color:c}}>{n}</div><div style={{fontSize:"0.6rem",color:"#888"}}>طلبا</div></div>)}
+      </div>
+    </div>
+  </div>;
+}
+
 // ===================== TARBIYAH DIARY =====================
 function TarbiyahDiary({students,addData,updateHousePoints}){
   const [logs,setLogs]=useState([]); const [show,setShow]=useState(false); const [tab,setTab]=useState("entry");
@@ -1119,6 +1653,11 @@ export default function App(){
     {id:"library",label:"📚 لائبریری"},{id:"salary",label:"💼 تنخواہ"},{id:"exams",label:"📝 امتحان"},
     {id:"transport",label:"🚌 ٹرانسپورٹ"},{id:"tarbiyah",label:"🌟 تربیت"},{id:"superhouse",label:"🏆 سپر ہاؤس"},
     {id:"hpri",label:"⚠️ HPRI"},{id:"registrar",label:"📋 رجسٹرار"},
+    {id:"noticeboard",label:"📌 نوٹس"},{id:"hostel",label:"🏠 ہوسٹل"},
+    {id:"health",label:"🏥 صحت"},{id:"madrasa",label:"🕌 درس نظامی"},
+    {id:"donations",label:"🤲 عطیات"},{id:"meetings",label:"📝 میٹنگ"},
+    {id:"assets",label:"🏗️ اثاثے"},{id:"staffperf",label:"📊 اسٹاف"},
+    {id:"parents",label:"👪 والدین"},{id:"director",label:"👨‍💼 ڈائریکٹر"},
   ];
 
   const uName=DEMO.find(d=>d.email===user?.email)?.name||user?.email||"";
@@ -1167,6 +1706,16 @@ export default function App(){
       {page==="superhouse"&&<SuperHouseDashboard houses={houses} hvsLogs={hvs} students={students}/>}
       {page==="hpri"&&<HPRISystem students={students} addData={addData}/>}
       {page==="registrar"&&<RegistrarHub students={students} addData={addData}/>}
+      {page==="noticeboard"&&<NoticeBoard addData={addData} user={user}/>}
+      {page==="hostel"&&<HostelManagement students={students} addData={addData}/>}
+      {page==="health"&&<StudentHealth students={students} addData={addData}/>}
+      {page==="madrasa"&&<MadrasaHub students={students} addData={addData}/>}
+      {page==="donations"&&<DonationHub addData={addData}/>}
+      {page==="meetings"&&<MeetingMinutes addData={addData}/>}
+      {page==="assets"&&<LogisticsTracker addData={addData}/>}
+      {page==="staffperf"&&<StaffPerformance teachers={teachers} addData={addData}/>}
+      {page==="parents"&&<ParentPortal students={students} fees={fees} results={results}/>}
+      {page==="director"&&<DirectorPortal students={students} teachers={teachers} houses={houses} fees={fees} results={results} hvsLogs={hvs}/>}
     </div>
   </div>;
 }
