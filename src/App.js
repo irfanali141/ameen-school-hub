@@ -2487,16 +2487,105 @@ function TarbiyahDiary({students,addData,updateHousePoints}){
         <td style={{...S.td,fontWeight:"800",color:C.gold}}>{l.points||0}</td>
       </tr>; })}{logs.length===0&&<tr><td colSpan={5} style={{...S.td,textAlign:"center",color:"#bbb",padding:"40px"}}>ابھی کوئی اندراج نہیں</td></tr>}</tbody>
     </table></div></div>}
-    {tab==="report"&&<div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
-      <thead><tr><th style={S.th}>#</th><th style={S.th}>طالب علم</th><th style={S.th}>اندراجات</th><th style={S.th}>اوسط نماز</th><th style={S.th}>کل پوائنٹس</th></tr></thead>
-      <tbody>{studentSummary.map((st,i)=><tr key={st.id} style={{background:i===0?`${C.gold}08`:undefined}}>
-        <td style={{...S.td,fontWeight:"800",color:i===0?C.gold:"#aaa"}}>{i===0?"👑":i+1}</td>
-        <td style={{...S.td,fontWeight:"700"}}>{st.name}</td>
-        <td style={S.td}>{st.entries}</td>
-        <td style={S.td}><span style={{color:st.namazAvg>=4?C.green:st.namazAvg>=2?C.amber:C.red,fontWeight:"700"}}>{st.namazAvg}/5</span></td>
-        <td style={{...S.td,fontWeight:"900",color:C.gold}}>{st.totalPts}</td>
-      </tr>)}</tbody>
-    </table></div></div>}
+   // ================================================================
+// TARBIYAH DIARY — REPORT TAB KA SIRF YEH HISSA REPLACE KAREIN
+// App.js mein line 1856 ke aaspass yeh code dhundhen:
+//
+//   {tab==="report"&&<div style={S.card}>...
+//
+// Aur poori woh line replace karein is se:
+// ================================================================
+
+{tab==="report"&&<div>
+  {/* Print CSS — sirf tarbiyah report print hogi */}
+  <style>{`
+    @media print {
+      body > * { display: none !important; }
+      #tarbiyah-report-print { display: block !important; position: fixed; top:0; left:0; width:100%; background:white; z-index:99999; padding: 10mm; }
+      #tarbiyah-report-print * { visibility: visible !important; }
+    }
+  `}</style>
+
+  {/* Print Button */}
+  <div style={{display:"flex",justifyContent:"flex-end",marginBottom:"12px"}}>
+    <button
+      style={{...S.saveBtn, background:`linear-gradient(135deg,${C.green},#15803d)`, fontSize:"0.65rem"}}
+      onClick={()=>{
+        const el = document.getElementById("tarbiyah-report-print");
+        const win = window.open("","_blank","width=900,height=700");
+        win.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>تربیت رپورٹ — امین اسکول</title>
+        <style>
+          body{font-family:sans-serif;direction:rtl;padding:15mm;color:#1e293b;background:white;}
+          h2{color:#b7860b;text-align:center;margin-bottom:4px;}
+          p{text-align:center;color:#888;font-size:12px;margin-bottom:16px;}
+          table{width:100%;border-collapse:collapse;font-size:13px;}
+          th{background:#1e293b;color:white;padding:10px;text-align:right;}
+          td{padding:8px 10px;border-bottom:1px solid #eee;text-align:right;}
+          tr:nth-child(even){background:#f9f9f7;}
+          tr:first-child td{font-weight:900;color:#b7860b;}
+          .footer{margin-top:30px;text-align:center;font-size:11px;color:#bbb;border-top:1px solid #eee;padding-top:10px;}
+        </style></head><body>
+        <h2>☪ امین اسلامک انسٹیٹیوٹ — سوات</h2>
+        <p>تربیت ڈائری رپورٹ | TARBIYAH DIARY REPORT</p>
+        <table>
+          <thead><tr><th>#</th><th>طالب علم</th><th>اندراجات</th><th>اوسط نماز</th><th>کل پوائنٹس</th></tr></thead>
+          <tbody>
+            ${studentSummary.map((st,i)=>`<tr>
+              <td>${i===0?"👑":(i+1)}</td>
+              <td><strong>${st.name||"—"}</strong></td>
+              <td>${st.entries}</td>
+              <td style="color:${st.namazAvg>=4?"#16a34a":st.namazAvg>=2?"#d97706":"#dc2626"};font-weight:700">${st.namazAvg}/5</td>
+              <td style="color:#b7860b;font-weight:900">${st.totalPts}</td>
+            </tr>`).join("")}
+          </tbody>
+        </table>
+        <div class="footer">AMEEN ISLAMIC INSTITUTE • SWAT • امین اسلامک انسٹیٹیوٹ</div>
+        <script>window.onload=function(){window.print();setTimeout(function(){window.close();},1500);}<\/script>
+        </body></html>`);
+        win.document.close();
+      }}
+    >
+      🖨️ PDF ڈاؤن لوڈ کریں
+    </button>
+  </div>
+
+  {/* Report Table */}
+  <div style={S.card} id="tarbiyah-report-print">
+    <div style={{textAlign:"center",marginBottom:"16px",paddingBottom:"12px",borderBottom:`2px solid ${C.goldLight}`}}>
+      <div style={{fontSize:"1.1rem",fontWeight:"900",color:C.gold}}>☪ امین اسلامک انسٹیٹیوٹ</div>
+      <div style={{fontSize:"0.6rem",color:"#888",marginTop:"2px",letterSpacing:"0.1em"}}>TARBIYAH DIARY REPORT</div>
+    </div>
+    <div style={{overflowX:"auto"}}>
+      <table style={{width:"100%",borderCollapse:"collapse"}}>
+        <thead>
+          <tr>
+            <th style={S.th}>#</th>
+            <th style={S.th}>طالب علم</th>
+            <th style={S.th}>اندراجات</th>
+            <th style={S.th}>اوسط نماز</th>
+            <th style={S.th}>کل پوائنٹس</th>
+          </tr>
+        </thead>
+        <tbody>
+          {studentSummary.map((st,i)=>(
+            <tr key={st.id} style={{background:i===0?`${C.gold}08`:undefined}}>
+              <td style={{...S.td,fontWeight:"800",color:i===0?C.gold:"#aaa"}}>{i===0?"👑":i+1}</td>
+              <td style={{...S.td,fontWeight:"700"}}>{st.name}</td>
+              <td style={S.td}>{st.entries}</td>
+              <td style={S.td}>
+                <span style={{color:st.namazAvg>=4?C.green:st.namazAvg>=2?C.amber:C.red,fontWeight:"700"}}>
+                  {st.namazAvg}/5
+                </span>
+              </td>
+              <td style={{...S.td,fontWeight:"900",color:C.gold}}>{st.totalPts}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>}
+
   </div>;
 }
 
