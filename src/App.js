@@ -2861,6 +2861,7 @@ export default function App(){
       {page==="curriculum"&&<CurriculumHub teachers={teachers} addData={addData}/>}
       {page==="marks"&&<MarksEntry students={students} addData={addData}/>}
       {page==="reportcard"&&<ReportCard students={students} results={results} fees={fees} addData={addData}/>}
+      {page==="dmc"&&<DMC students={students} results={results} fees={fees}/>}
       {page==="welfare"&&<WelfareFeedback students={students} addData={addData}/>}
       {page==="pride"&&<PrideMessages students={students} teachers={teachers} addData={addData}/>}
       {page==="wifaq"&&<WifaqCompliance addData={addData}/>}
