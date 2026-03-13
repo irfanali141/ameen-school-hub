@@ -557,23 +557,104 @@ function Results({students,addData}){
 
 // ===================== TIMETABLE =====================
 function Timetable(){
-  const [selGrade,setSelGrade]=useState("Grade 7"); const [selDay,setSelDay]=useState("Monday");
-  const gradeData=TIMETABLE[selGrade]||{}; const dayData=gradeData[selDay]||[];
-  const periodColors=["#dbeafe","#dcfce7","#fef3c7","#f3f4f6","#fee2e2","#ede9fe","#fce7f3","#ccfbf1"];
-  const periodBorder=[C.abuBakr,C.umar,C.amber,"#6b7280",C.red,C.purple,C.teal,"#0d9488"];
+  const [tab,setTab]=useState("friday");
+  const [season,setSeason]=useState("summer");
+  const TT={
+    timings:{
+      summer:{p:["08:30–09:05","09:05–09:40","09:40–10:10","10:10–10:40","11:30–12:00","12:00–12:30","12:30–01:00"],b:"10:40–11:30"},
+      winter:{p:["09:00–09:35","09:35–10:10","10:10–10:40","10:40–11:10","12:00–12:30","12:30–01:00","01:00–01:30"],b:"11:10–12:00"}
+    },
+    preTmg:{
+      summer:{p:["08:30–09:20","09:20–10:10","10:10–11:00","11:50–12:25","12:25–01:00"],b:"11:00–11:50"},
+      winter:{p:["09:00–09:50","09:50–10:35","10:35–11:10","12:00–12:45","12:45–01:30"],b:"11:10–12:00"}
+    },
+    sections:{
+      senior:[
+        {n:"7ویں — آرکڈ",s:["سائنس","اردو","تاریخ","ریاضی","اسلامیات","انگریزی","جنرل نالج"]},
+        {n:"6ویں — للی",s:["اردو","انگریزی","ریاضی","فونکس","جنرل نالج","اسلامیات","تاریخ"]},
+        {n:"5ویں — آئرس",s:["اردو","انگریزی","ریاضی","فونکس","اردو رائٹنگ","انگریزی رائٹنگ","سائنس"]},
+        {n:"4تھی — جیسمین",s:["اردو","ریاضی","انگریزی","فونکس","اردو رائٹنگ","انگریزی رائٹنگ","اسلامیات"]}
+      ],
+      primary:[
+        {n:"3سری — وائلٹ",s:["ریاضی","جنرل نالج","انگریزی","اردو","قرآن","فونکس","اسلامیات"]},
+        {n:"2سری — ٹیولپ",s:["اردو","ریاضی","اسلامیات","فونکس","انگریزی","جنرل نالج","قرآن"]},
+        {n:"1لی — سن فلاور",s:["انگریزی","اردو","ریاضی","قرآن","فونکس","اسلامیات","جنرل نالج"]}
+      ],
+      pre:[
+        {n:"کے جی — کلور",s:["فونکس","ریاضی","قرآن","اردو","کے جی فونکس"]},
+        {n:"نرسری — لیونڈر",s:["اردو","قرآن","فونکس","انگریزی","ریاضی"]},
+        {n:"پلے گروپ — ڈیزی",s:["قرآن","اردو","انگریزی","ریاضی","فونکس"]}
+      ],
+      friday:[
+        {n:"Orchid (7th)",a:"اسلامی کردار سازی اور کیریئر گائیڈنس"},
+        {n:"Lily (6th)",a:"تاریخ اسلام اور عظیم شخصیات"},
+        {n:"Iris (5th)",a:"فقہ کی بنیادی باتیں اور نماز پریکٹیکل"},
+        {n:"Jasmine (4th)",a:"دعائیں اور روزانہ کے اذکار"},
+        {n:"Violet (3rd)",a:"قرآنی کہانیاں اور اخلاقی سبق"},
+        {n:"Tulip (2nd)",a:"سیرت النبی ﷺ کی کہانیاں"},
+        {n:"Sunflower (1st)",a:"انبیاء کی کہانیاں اور نشید"},
+        {n:"Clover (K.G)",a:"سنت سیکھنا اور وضو پریکٹیکل"},
+        {n:"Lavender (Nur)",a:"بنیادی اخلاقیات اور آداب"},
+        {n:"Daisy (P.G)",a:"اسلامی نظمیں اور تفریحی سرگرمی"}
+      ]
+    }
+  };
+  const tabs=[["friday","🕌","جمعہ سیشن"],["senior","📚","سینئر"],["primary","✏️","پرائمری"],["pre","🎨","پری پرائمری"]];
+  const renderFriday=()=><div style={{...S.card,background:"linear-gradient(135deg,rgba(26,74,46,0.06),rgba(14,31,53,0.02))",border:"2px solid rgba(26,100,46,0.15)"}}>
+    <div style={{textAlign:"center",padding:"16px 0 20px",borderBottom:"2px solid rgba(26,100,46,0.12)",marginBottom:"16px"}}>
+      <div style={{fontSize:"1.1rem",fontWeight:"800",color:C.green}}>✦ جمعہ تربیہ سیشن ✦</div>
+      <div style={{fontSize:"0.6rem",color:"#888",marginTop:"4px",direction:"ltr"}}>11:00 AM – 12:00 PM | Dismissal @ 12:00 PM</div>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px"}}>
+      {TT.sections.friday.map((f,i)=><div key={i} style={{background:"rgba(26,74,46,0.06)",borderRadius:"12px",padding:"12px 14px",border:"1px solid rgba(26,100,46,0.15)"}}>
+        <div style={{fontSize:"0.58rem",fontWeight:"700",color:C.green,marginBottom:"4px",fontFamily:"monospace"}}>{f.n}</div>
+        <div style={{fontSize:"0.72rem",fontWeight:"600",color:C.navy,lineHeight:"1.5"}}>{f.a}</div>
+      </div>)}
+    </div>
+    <div style={{textAlign:"center",marginTop:"16px",paddingTop:"12px",borderTop:"1px solid rgba(26,100,46,0.12)",fontSize:"0.62rem",color:"#888"}}>📌 جمعہ کے دن تمام کلاسیں 12:00 بجے چھٹی کریں گی</div>
+  </div>;
+  const renderSections=(key)=>{
+    const secs=TT.sections[key];
+    const isPre=key==="pre";
+    const tmg=isPre?TT.preTmg[season]:TT.timings[season];
+    const brkIdx=isPre?2:3;
+    return secs.map((cls,ci)=><div key={ci} style={{...S.card,marginBottom:"14px"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px",paddingBottom:"10px",borderBottom:"2px solid "+C.goldLight}}>
+        <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy}}>{cls.n}</div>
+        <span style={hBadge(C.gold,C.goldLight)}>{season==="summer"?"☀️ گرما":"❄️ سرما"}</span>
+      </div>
+      <div style={{overflowX:"auto"}}><div style={{display:"flex",minWidth:"max-content"}}>
+        {cls.s.map((subj,i)=>{
+          const showBreak=i===brkIdx+1;
+          return React.createElement(React.Fragment,{key:i},
+            showBreak&&React.createElement("div",{style:{width:"64px",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"rgba(26,74,46,0.08)",borderLeft:"1px solid rgba(26,100,46,0.2)",borderRight:"1px solid rgba(26,100,46,0.2)",padding:"8px 4px",minHeight:"90px"}},
+              React.createElement("div",{style:{fontSize:"1rem",marginBottom:"2px"}},"☕"),
+              React.createElement("div",{style:{fontSize:"0.55rem",fontWeight:"700",color:C.green}},"وقفہ"),
+              React.createElement("div",{style:{fontSize:"0.48rem",color:"#aaa",marginTop:"2px"}},tmg.b)
+            ),
+            React.createElement("div",{style:{width:"86px",flexShrink:0,padding:"10px 6px",textAlign:"center",borderLeft:"1px solid "+C.goldLight,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"90px",background:"#fafaf8"}},
+              React.createElement("div",{style:{fontSize:"0.48rem",color:"#aaa",marginBottom:"4px",fontFamily:"monospace",fontWeight:"700"}},"P"+(i+1)),
+              React.createElement("div",{style:{fontSize:"0.68rem",fontWeight:"600",color:C.navy,lineHeight:"1.4",marginBottom:"6px",minHeight:"28px",display:"flex",alignItems:"center",justifyContent:"center"}},subj),
+              React.createElement("div",{style:{fontSize:"0.5rem",background:C.goldLight,border:"1px solid "+C.gold+"30",color:C.goldDark,padding:"2px 5px",borderRadius:"4px",fontFamily:"monospace",direction:"ltr",whiteSpace:"nowrap"}},tmg.p[i]||"")
+            )
+          );
+        })}
+      </div></div>
+    </div>);
+  };
   return <div style={S.page}>
-    <div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy,marginBottom:"20px"}}>🗓️ ٹائم ٹیبل</div>
-    <div style={{display:"flex",gap:"8px",marginBottom:"16px",flexWrap:"wrap"}}>{Object.keys(TIMETABLE).map(g=><button key={g} onClick={()=>setSelGrade(g)} style={{padding:"9px 16px",borderRadius:"12px",border:"none",cursor:"pointer",fontSize:"0.68rem",fontWeight:selGrade===g?"700":"400",background:selGrade===g?`linear-gradient(135deg,${C.navy},${C.navyMid})`:C.white,color:selGrade===g?C.white:"#888",fontFamily:"inherit"}}>{g}</button>)}</div>
-    <div style={{display:"flex",gap:"8px",marginBottom:"20px",flexWrap:"wrap"}}>{DAYS.map(d=><button key={d} onClick={()=>setSelDay(d)} style={{padding:"9px 16px",borderRadius:"12px",border:"none",cursor:"pointer",fontSize:"0.68rem",fontWeight:selDay===d?"700":"400",background:selDay===d?`linear-gradient(135deg,${C.gold},${C.goldDark})`:C.white,color:selDay===d?C.white:"#888",fontFamily:"inherit"}}>{DAYS_UR[d]}</button>)}</div>
-    <div style={S.card}>
-      <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy,marginBottom:"16px"}}>{selGrade} — {DAYS_UR[selDay]}</div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:"12px"}}>
-        {dayData.map((period,i)=>{ const isBreak=period.toLowerCase().includes("break"); const isQuran=period.toLowerCase().includes("quran")||period.toLowerCase().includes("hifz"); return <div key={i} style={{padding:"14px 16px",borderRadius:"14px",background:isBreak?"#f5f5f5":isQuran?`linear-gradient(135deg,${C.goldLight},#fdf8ee)`:periodColors[i%periodColors.length],border:`2px solid ${isBreak?"#ddd":isQuran?C.gold:periodBorder[i%periodBorder.length]}30`,position:"relative"}}>
-          <div style={{position:"absolute",top:"8px",left:"10px",fontSize:"0.55rem",fontWeight:"800",color:isBreak?"#aaa":isQuran?C.gold:periodBorder[i%periodBorder.length],fontFamily:"monospace"}}>{i===3?"BREAK":`P${i+1}`}</div>
-          <div style={{marginTop:"16px",fontSize:"0.75rem",fontWeight:"700",color:isBreak?"#aaa":C.navy}}>{period}</div>
-        </div>; })}
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>🗓️ ٹائم ٹیبل</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>امین اسلامک انسٹیٹیوٹ — سوات</div></div>
+      <div style={{display:"flex",gap:"6px"}}>
+        <button onClick={()=>setSeason("summer")} style={{padding:"6px 12px",borderRadius:"8px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:season==="summer"?"700":"400",background:season==="summer"?"linear-gradient(135deg,"+C.amber+","+C.gold+")":C.white,color:season==="summer"?C.white:"#888",fontFamily:"inherit"}}>☀️ گرما</button>
+        <button onClick={()=>setSeason("winter")} style={{padding:"6px 12px",borderRadius:"8px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:season==="winter"?"700":"400",background:season==="winter"?"linear-gradient(135deg,"+C.abuBakr+",#1d4ed8)":C.white,color:season==="winter"?C.white:"#888",fontFamily:"inherit"}}>❄️ سرما</button>
       </div>
     </div>
+    <div style={{display:"flex",gap:"8px",marginBottom:"20px",flexWrap:"wrap"}}>
+      {tabs.map(([t,emoji,label])=><button key={t} onClick={()=>setTab(t)} style={{padding:"8px 16px",borderRadius:"12px",border:"none",cursor:"pointer",fontSize:"0.65rem",fontWeight:tab===t?"700":"400",background:tab===t?"linear-gradient(135deg,"+C.gold+","+C.goldDark+")":C.white,color:tab===t?C.white:"#888",fontFamily:"inherit"}}>{emoji} {label}</button>)}
+    </div>
+    {tab==="friday"&&renderFriday()}
+    {tab!=="friday"&&renderSections(tab)}
   </div>;
 }
 
