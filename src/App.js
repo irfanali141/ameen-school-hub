@@ -1244,9 +1244,38 @@ function LearningMaterials({teachers,addData}){
 }
 
 // ===================== STUDENT REPORT CARD =====================
+// ===================== ENHANCED REPORT CARD with PDF Print =====================
+// INSTRUCTIONS: App.js mein purana "function ReportCard({students,results,fees,addData})"
+// wala poora function delete kar ke yeh naya code paste karein
+// Line 1247 se 1307 tak replace karein
+
 function ReportCard({students,results,fees,addData}){
-  const [selStudent,setSelStudent]=useState(null); const [q,setQ]=useState(""); const [term,setTerm]=useState("سالانہ 2026");
+  const [selStudent,setSelStudent]=useState(null);
+  const [q,setQ]=useState("");
+  const [term,setTerm]=useState("سالانہ 2026");
+  const [hvsLogs2,setHvsLogs2]=useState([]);
+  const [tarbiyahLogs,setTarbiyahLogs]=useState([]);
+  const [attendanceLogs,setAttendanceLogs]=useState([]);
+  const [printing,setPrinting]=useState(false);
+
+  // Firestore se data fetch karo
+  useEffect(()=>{
+    const u1=onSnapshot(query(collection(db,"hvs_logs"),orderBy("createdAt","desc"),limit(100)),s=>setHvsLogs2(s.docs.map(d=>({id:d.id,...d.data()}))));
+    const u2=onSnapshot(query(collection(db,"tarbiyah_logs"),orderBy("createdAt","desc"),limit(100)),s=>setTarbiyahLogs(s.docs.map(d=>({id:d.id,...d.data()}))));
+    return ()=>{ u1(); u2(); };
+  },[]);
+
   const filtered=students.filter(s=>s.name?.includes(q)||s.studentCode?.includes(q));
+
+  // PDF Print function
+  const printReport=()=>{
+    setPrinting(true);
+    setTimeout(()=>{
+      window.print();
+      setTimeout(()=>setPrinting(false),1000);
+    },300);
+  };
+
   if(selStudent){
     const h=HOUSES.find(x=>x.id===selStudent.houseId)||{};
     const sResults=results.filter(r=>r.studentId===selStudent.id);
@@ -1257,54 +1286,342 @@ function ReportCard({students,results,fees,addData}){
     const overallGrade=avgPct>=90?"A+":avgPct>=80?"A":avgPct>=70?"B":avgPct>=60?"C":avgPct>=50?"D":"F";
     const totalObtained=sResults.reduce((s,r)=>s+(r.obtained||0),0);
     const totalMarks=sResults.reduce((s,r)=>s+(r.total||100),0);
-    return <div style={S.page}>
-      <div style={{display:"flex",gap:"10px",marginBottom:"20px",flexWrap:"wrap"}}>
-        <button style={{...S.addBtn,background:"#eee",color:C.navy,boxShadow:"none"}} onClick={()=>setSelStudent(null)}>← واپس</button>
-        <button style={{...S.saveBtn,fontSize:"0.65rem"}} onClick={()=>window.print()}>🖨️ پرنٹ / PDF</button>
-      </div>
-      <div style={{background:C.white,borderRadius:"22px",overflow:"hidden",boxShadow:"0 8px 32px rgba(0,0,0,0.12)",maxWidth:"800px",margin:"0 auto"}}>
-        <div style={{background:`linear-gradient(135deg,${C.navyDark},${C.navyMid})`,padding:"24px",color:C.white,textAlign:"center"}}>
-          <div style={{fontSize:"1.4rem",fontWeight:"900",color:C.gold,marginBottom:"4px"}}>امین اسکول ہب</div>
-          <div style={{fontSize:"0.65rem",letterSpacing:"0.15em",opacity:0.7,marginBottom:"16px"}}>AMEEN ISLAMIC INSTITUTE • SWAT</div>
-          <div style={{background:"rgba(255,255,255,0.1)",borderRadius:"12px",padding:"12px",display:"inline-block"}}><div style={{fontSize:"0.85rem",fontWeight:"700",color:C.gold}}>رپورٹ کارڈ — {term}</div></div>
+
+    // HVS data for this student's house
+    const houseHVS=hvsLogs2.filter(l=>l.houseId===selStudent.houseId);
+    const studentHVS=hvsLogs2.filter(l=>l.studentId===selStudent.id);
+    const hvsTotal=studentHVS.reduce((s,l)=>{
+      if(l.scores){ return s+Object.values(l.scores).reduce((a,b)=>a+(Number(b)||0),0); }
+      return s+(l.points||0);
+    },0);
+
+    // Tarbiyah logs for this student
+    const sTarbiyah=tarbiyahLogs.filter(l=>l.studentId===selStudent.id);
+    const tarbiyahAvg=sTarbiyah.length>0?Math.round(sTarbiyah.reduce((s,l)=>s+(l.rating||0),0)/sTarbiyah.length):0;
+    const tarbiyahLabel=tarbiyahAvg>=4?"شاندار ممتاز":tarbiyahAvg>=3?"اچھا":tarbiyahAvg>=2?"مناسب":"بہتری درکار";
+    const tarbiyahColor=tarbiyahAvg>=4?C.green:tarbiyahAvg>=3?C.abuBakr:tarbiyahAvg>=2?C.amber:C.red;
+    const latestTarbiyah=sTarbiyah[0];
+
+    // Attendance estimate (from hvs attendance category)
+    const attendanceScore=studentHVS.reduce((s,l)=>{
+      if(l.scores?.attendance) return s+(Number(l.scores.attendance)||0);
+      return s;
+    },0);
+    const maxAttendance=studentHVS.length*10;
+    const attendancePct=maxAttendance>0?Math.min(100,Math.round((attendanceScore/maxAttendance)*100)):85;
+    const attendanceLabel=attendancePct>=95?"ممتاز":attendancePct>=85?"اچھا":attendancePct>=70?"مناسب":"کمزور";
+
+    const gradeColor=overallGrade==="A+"||overallGrade==="A"?C.green:overallGrade==="B"?C.abuBakr:overallGrade==="C"||overallGrade==="D"?C.amber:C.red;
+
+    return (
+      <div style={S.page}>
+        {/* Print CSS — ye sirf print pe apply hoga */}
+        <style>{`
+          @media print {
+            body * { visibility: hidden !important; }
+            #report-card-print, #report-card-print * { visibility: visible !important; }
+            #report-card-print { position: fixed !important; left:0; top:0; width:100% !important; z-index:9999; background:white !important; }
+            .no-print { display: none !important; }
+          }
+          @page { size: A4; margin: 10mm; }
+        `}</style>
+
+        {/* Buttons — print mein nahi aayenge */}
+        <div className="no-print" style={{display:"flex",gap:"10px",marginBottom:"20px",flexWrap:"wrap"}}>
+          <button style={{...S.addBtn,background:"#eee",color:C.navy,boxShadow:"none"}} onClick={()=>setSelStudent(null)}>← واپس</button>
+          <button style={{...S.saveBtn,fontSize:"0.65rem",background:`linear-gradient(135deg,${C.green},#15803d)`}} onClick={printReport}>
+            {printing?"⏳ تیار ہو رہا ہے...":"🖨️ PDF / پرنٹ کریں"}
+          </button>
         </div>
-        <div style={{padding:"20px 24px",borderBottom:`2px solid ${C.goldLight}`,display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px"}}>
-          {[["نام",selStudent.name],["والد کا نام",selStudent.fatherName||"—"],["داخلہ نمبر",selStudent.studentCode||"—"],["جماعت",selStudent.grade||"—"],["ہاؤس",`${h.emoji||""} ${h.nameEn||"—"}`],["سیکشن",selStudent.section||"A"]].map(([l,v])=><div key={l} style={{display:"flex",gap:"8px",alignItems:"center"}}><span style={{fontSize:"0.62rem",color:"#888",minWidth:"80px"}}>{l}:</span><span style={{fontSize:"0.72rem",fontWeight:"700",color:C.navy}}>{v}</span></div>)}
-        </div>
-        <div style={{padding:"20px 24px"}}>
-          <div style={{fontSize:"0.82rem",fontWeight:"700",color:C.navy,marginBottom:"14px",borderBottom:`2px solid ${C.goldLight}`,paddingBottom:"8px"}}>📊 نتائج</div>
-          <table style={{width:"100%",borderCollapse:"collapse",marginBottom:"20px"}}>
-            <thead><tr style={{background:`linear-gradient(135deg,${C.navy},${C.navyMid})`,color:C.white}}>{["مضمون","کل","حاصل","فیصد","گریڈ"].map(h=><th key={h} style={{padding:"10px 12px",fontSize:"0.65rem",textAlign:"right",fontWeight:"700"}}>{h}</th>)}</tr></thead>
-            <tbody>{sResults.map((r,i)=><tr key={r.id} style={{background:i%2===0?"#fafaf8":C.white}}>
-              <td style={{...S.td,fontWeight:"600"}}>{r.subject}</td><td style={S.td}>{r.total||100}</td>
-              <td style={{...S.td,fontWeight:"700",color:r.percentage>=50?C.navy:C.red}}>{r.obtained||0}</td>
-              <td style={S.td}><div style={{display:"flex",alignItems:"center",gap:"6px"}}><div style={{flex:1}}>{pBar(r.percentage||0,100,r.percentage>=70?C.green:r.percentage>=50?C.amber:C.red)}</div><span style={{fontSize:"0.6rem",fontWeight:"700",color:r.percentage>=70?C.green:r.percentage>=50?C.amber:C.red}}>{r.percentage}%</span></div></td>
-              <td style={S.td}><span style={{padding:"3px 10px",borderRadius:"20px",fontSize:"0.65rem",fontWeight:"800",background:r.grade==="A+"||r.grade==="A"?"#dcfce7":r.grade==="B"?"#dbeafe":"#fef3c7",color:r.grade==="A+"||r.grade==="A"?C.green:r.grade==="B"?C.abuBakr:C.amber}}>{r.grade||"—"}</span></td>
-            </tr>)}{sResults.length===0&&<tr><td colSpan={5} style={{...S.td,textAlign:"center",color:"#bbb",padding:"30px"}}>کوئی نتیجہ نہیں</td></tr>}</tbody>
-            {sResults.length>0&&<tfoot><tr style={{background:C.goldLight}}><td style={{...S.td,fontWeight:"800",color:C.navy}}>مجموعہ</td><td style={{...S.td,fontWeight:"800"}}>{totalMarks}</td><td style={{...S.td,fontWeight:"800"}}>{totalObtained}</td><td style={S.td}><span style={{fontWeight:"800",color:avgPct>=70?C.green:avgPct>=50?C.amber:C.red}}>{avgPct}%</span></td><td style={S.td}><span style={{padding:"4px 12px",borderRadius:"20px",fontSize:"0.72rem",fontWeight:"900",background:`linear-gradient(135deg,${C.gold},${C.goldDark})`,color:C.white}}>{overallGrade}</span></td></tr></tfoot>}
-          </table>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"14px",marginBottom:"20px"}}>
-            <div style={{background:"#fafaf8",borderRadius:"12px",padding:"14px",display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:"0.72rem",fontWeight:"700",color:C.navy,marginBottom:"4px"}}>💰 فیس</div><div style={{fontSize:"0.62rem",color:"#888"}}>ادا: Rs. {paidFees.toLocaleString()}</div></div><span style={{...hBadge(pendingFees>0?C.red:C.green,pendingFees>0?"#fee2e2":"#dcfce7"),fontSize:"0.62rem"}}>{pendingFees>0?`⚠️ Rs.${pendingFees.toLocaleString()} باقی`:"✅ کلیئر"}</span></div>
-            <div style={{background:"#fafaf8",borderRadius:"12px",padding:"14px",textAlign:"center"}}><div style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px"}}>مجموعی گریڈ</div><div style={{fontSize:"2rem",fontWeight:"900",color:C.gold}}>{overallGrade}</div></div>
+
+        {/* Report Card — yahan se print hoga */}
+        <div id="report-card-print" style={{background:C.white,borderRadius:"22px",overflow:"hidden",boxShadow:"0 8px 32px rgba(0,0,0,0.12)",maxWidth:"800px",margin:"0 auto"}}>
+
+          {/* Header */}
+          <div style={{background:`linear-gradient(135deg,${C.navyDark},${C.navyMid})`,padding:"24px",color:C.white,textAlign:"center",position:"relative"}}>
+            <div style={{position:"absolute",top:"12px",left:"16px",width:"40px",height:"40px",borderRadius:"50%",background:h.gradient||`linear-gradient(135deg,${C.gold},${C.goldDark})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.3rem"}}>{h.emoji||"🏫"}</div>
+            <div style={{fontSize:"1.6rem",fontWeight:"900",color:C.gold,marginBottom:"2px",fontFamily:"'Cinzel',serif",letterSpacing:"0.05em"}}>☪</div>
+            <div style={{fontSize:"1.1rem",fontWeight:"900",color:C.gold,marginBottom:"2px"}}>امین اسکول ہب</div>
+            <div style={{fontSize:"0.6rem",letterSpacing:"0.15em",opacity:0.6,marginBottom:"10px",fontFamily:"'Cinzel',serif"}}>AMEEN ISLAMIC INSTITUTE • SWAT</div>
+            <div style={{background:"rgba(255,255,255,0.1)",borderRadius:"12px",padding:"8px 20px",display:"inline-block",border:`1px solid ${C.gold}40`}}>
+              <div style={{fontSize:"0.78rem",fontWeight:"800",color:C.gold}}>پیشرفت رپورٹ — {term}</div>
+              <div style={{fontSize:"0.55rem",color:"rgba(255,255,255,0.5)",marginTop:"2px",fontFamily:"'Cinzel',serif"}}>PROGRESS REPORT</div>
+            </div>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"20px",marginTop:"30px"}}>{["کلاس ٹیچر","پرنسپل","والدین"].map(r=><div key={r} style={{textAlign:"center"}}><div style={{borderTop:`2px solid #ddd`,paddingTop:"8px",fontSize:"0.6rem",color:"#888"}}>{r} کے دستخط</div></div>)}</div>
+
+          {/* Student Info */}
+          <div style={{padding:"16px 24px",borderBottom:`2px solid ${C.goldLight}`,background:"#fafaf8"}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px 20px"}}>
+              {[
+                ["نام / Name",selStudent.name],
+                ["والد / Father",selStudent.fatherName||"—"],
+                ["داخلہ نمبر / Admission No",selStudent.studentCode||"—"],
+                ["جماعت / Grade",selStudent.grade||"—"],
+                ["ہاؤس / House",`${h.emoji||""} ${h.name||""} (${h.nameEn||"—"})`],
+                ["سیکشن / Section",selStudent.section||"—"],
+                ["صلاحیت / Talent",selStudent.talent||"—"],
+                ["رابطہ / Phone",selStudent.phone||"—"],
+              ].map(([l,v])=>(
+                <div key={l} style={{display:"flex",gap:"6px",alignItems:"baseline"}}>
+                  <span style={{fontSize:"0.6rem",color:"#888",minWidth:"120px",flexShrink:0}}>{l}:</span>
+                  <span style={{fontSize:"0.72rem",fontWeight:"700",color:C.navy}}>{v}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 4 Summary Badges */}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:"0",borderBottom:`2px solid ${C.goldLight}`}}>
+            {[
+              {icon:"🎓",label:"مجموعی گریڈ",labelEn:"Overall Grade",val:overallGrade,color:gradeColor,big:true},
+              {icon:"📊",label:"اوسط فیصد",labelEn:"Average %",val:`${avgPct}%`,color:avgPct>=70?C.green:avgPct>=50?C.amber:C.red,big:false},
+              {icon:"✅",label:"حاضری",labelEn:"Attendance",val:`${attendancePct}%`,color:attendancePct>=85?C.green:attendancePct>=70?C.amber:C.red,big:false},
+              {icon:"🏆",label:"ہاؤس پوائنٹس",labelEn:"HVS Points",val:hvsTotal||0,color:C.abuBakr,big:false},
+            ].map((item,i)=>(
+              <div key={i} style={{padding:"14px 12px",textAlign:"center",borderRight:i<3?`1px solid ${C.goldLight}`:"none",background:i===0?`${gradeColor}08`:"white"}}>
+                <div style={{fontSize:"1.1rem",marginBottom:"4px"}}>{item.icon}</div>
+                <div style={{fontSize:item.big?"2rem":"1.4rem",fontWeight:"900",color:item.color,lineHeight:1}}>{item.val}</div>
+                <div style={{fontSize:"0.58rem",color:"#888",marginTop:"3px"}}>{item.label}</div>
+                <div style={{fontSize:"0.5rem",color:"#bbb",fontFamily:"'Cinzel',serif"}}>{item.labelEn}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Results Table */}
+          <div style={{padding:"16px 24px"}}>
+            <div style={{fontSize:"0.82rem",fontWeight:"800",color:C.navy,marginBottom:"12px",display:"flex",alignItems:"center",gap:"8px"}}>
+              <span>📚 نتائج / Results</span>
+            </div>
+            <table style={{width:"100%",borderCollapse:"collapse",marginBottom:"20px",fontSize:"0.68rem"}}>
+              <thead>
+                <tr style={{background:`linear-gradient(135deg,${C.navy},${C.navyMid})`,color:C.white}}>
+                  {["مضمون / Subject","کل / Total","حاصل / Obtained","فیصد / %","گریڈ / Grade"].map(h=>(
+                    <th key={h} style={{padding:"9px 10px",textAlign:"right",fontWeight:"700"}}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {sResults.map((r,i)=>(
+                  <tr key={r.id} style={{background:i%2===0?"#fafaf8":C.white}}>
+                    <td style={{...S.td,fontWeight:"600"}}>{r.subject}</td>
+                    <td style={S.td}>{r.total||100}</td>
+                    <td style={{...S.td,fontWeight:"700",color:r.percentage>=50?C.navy:C.red}}>{r.obtained||0}</td>
+                    <td style={S.td}>
+                      <div style={{display:"flex",alignItems:"center",gap:"6px"}}>
+                        {pBar(r.percentage||0,100,r.percentage>=70?C.green:r.percentage>=50?C.amber:C.red)}
+                        <span style={{fontSize:"0.62rem",fontWeight:"700",color:r.percentage>=70?C.green:r.percentage>=50?C.amber:C.red,minWidth:"32px"}}>{r.percentage}%</span>
+                      </div>
+                    </td>
+                    <td style={S.td}>
+                      <span style={{padding:"3px 10px",borderRadius:"20px",fontSize:"0.65rem",fontWeight:"800",background:r.grade==="A+"||r.grade==="A"?"#dcfce7":r.grade==="B"?"#dbeafe":"#fef3c7",color:r.grade==="A+"||r.grade==="A"?C.green:r.grade==="B"?C.abuBakr:C.amber}}>
+                        {r.grade||"—"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {sResults.length===0&&(
+                  <tr><td colSpan={5} style={{...S.td,textAlign:"center",color:"#bbb",padding:"30px"}}>کوئی نتیجہ نہیں درج</td></tr>
+                )}
+              </tbody>
+              {sResults.length>0&&(
+                <tfoot>
+                  <tr style={{background:C.goldLight}}>
+                    <td style={{...S.td,fontWeight:"800",color:C.navy}}>مجموعہ / Total</td>
+                    <td style={{...S.td,fontWeight:"800"}}>{totalMarks}</td>
+                    <td style={{...S.td,fontWeight:"800"}}>{totalObtained}</td>
+                    <td style={S.td}><span style={{fontWeight:"800",color:avgPct>=70?C.green:avgPct>=50?C.amber:C.red}}>{avgPct}%</span></td>
+                    <td style={S.td}>
+                      <span style={{padding:"4px 12px",borderRadius:"20px",fontSize:"0.72rem",fontWeight:"900",background:`linear-gradient(135deg,${C.gold},${C.goldDark})`,color:C.white}}>
+                        {overallGrade}
+                      </span>
+                    </td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+
+            {/* HVS Points Section */}
+            <div style={{marginBottom:"20px"}}>
+              <div style={{fontSize:"0.78rem",fontWeight:"800",color:C.navy,marginBottom:"10px",borderBottom:`2px solid ${C.goldLight}`,paddingBottom:"6px"}}>
+                🏆 ہاؤس ویلیو اسکور / House Value Score (HVS)
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:"8px",marginBottom:"10px"}}>
+                {HVS_CATS.slice(0,8).map(cat=>{
+                  const catTotal=studentHVS.reduce((s,l)=>s+(l.scores?.(Number(l.scores[cat.id])||0)||0),0);
+                  const pct=Math.min(100,Math.round((catTotal/(cat.max*Math.max(studentHVS.length,1)))*100));
+                  return (
+                    <div key={cat.id} style={{background:"#f8f8f6",borderRadius:"10px",padding:"8px 10px",textAlign:"center",border:`1px solid ${C.goldLight}`}}>
+                      <div style={{fontSize:"1rem"}}>{cat.icon}</div>
+                      <div style={{fontSize:"0.58rem",color:"#888",marginBottom:"3px"}}>{cat.label}</div>
+                      <div style={{fontSize:"0.72rem",fontWeight:"800",color:pct>=70?C.green:pct>=50?C.amber:C.red}}>{hvsTotal>0?pct+"%":"—"}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{background:`linear-gradient(135deg,${C.abuBakrLight},#dbeafe80)`,borderRadius:"12px",padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div>
+                  <div style={{fontSize:"0.7rem",fontWeight:"700",color:C.abuBakr}}>🏠 ہاؤس: {h.name||"—"} ({h.nameEn||""})</div>
+                  <div style={{fontSize:"0.6rem",color:"#888",marginTop:"2px"}}>{h.slogan||""}</div>
+                </div>
+                <div style={{textAlign:"center"}}>
+                  <div style={{fontSize:"1.4rem",fontWeight:"900",color:C.abuBakr}}>{hvsTotal}</div>
+                  <div style={{fontSize:"0.55rem",color:"#888"}}>کل پوائنٹس</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Attendance + Fee + Tarbiyah */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"12px",marginBottom:"20px"}}>
+              {/* Attendance */}
+              <div style={{background:"#f8fdf8",borderRadius:"14px",padding:"14px",border:`2px solid ${attendancePct>=85?C.green:C.amber}25`}}>
+                <div style={{fontSize:"0.7rem",fontWeight:"800",color:C.navy,marginBottom:"8px"}}>✅ حاضری / Attendance</div>
+                <div style={{textAlign:"center",padding:"8px 0"}}>
+                  <div style={{fontSize:"1.6rem",fontWeight:"900",color:attendancePct>=85?C.green:attendancePct>=70?C.amber:C.red}}>{attendancePct}%</div>
+                  <div style={{fontSize:"0.62rem",fontWeight:"700",color:attendancePct>=85?C.green:C.amber,marginTop:"2px"}}>{attendanceLabel}</div>
+                </div>
+                <div style={{background:"#eee",borderRadius:"20px",height:"6px",overflow:"hidden"}}>
+                  <div style={{height:"100%",width:`${attendancePct}%`,background:attendancePct>=85?C.green:C.amber,borderRadius:"20px",transition:"width 1s"}}/>
+                </div>
+              </div>
+
+              {/* Fee Status */}
+              <div style={{background:"#fffaf0",borderRadius:"14px",padding:"14px",border:`2px solid ${pendingFees>0?C.amber:C.green}25`}}>
+                <div style={{fontSize:"0.7rem",fontWeight:"800",color:C.navy,marginBottom:"8px"}}>💰 فیس / Fees</div>
+                <div style={{display:"flex",flexDirection:"column",gap:"6px"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <span style={{fontSize:"0.6rem",color:"#888"}}>ادا شدہ:</span>
+                    <span style={{fontSize:"0.68rem",fontWeight:"800",color:C.green}}>Rs. {paidFees.toLocaleString()}</span>
+                  </div>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <span style={{fontSize:"0.6rem",color:"#888"}}>باقی:</span>
+                    <span style={{fontSize:"0.68rem",fontWeight:"800",color:pendingFees>0?C.red:C.green}}>
+                      {pendingFees>0?`Rs. ${pendingFees.toLocaleString()}`:"✅ صفر"}
+                    </span>
+                  </div>
+                  <div style={{marginTop:"4px",padding:"4px 10px",borderRadius:"20px",textAlign:"center",fontSize:"0.6rem",fontWeight:"700",background:pendingFees>0?"#fee2e2":"#dcfce7",color:pendingFees>0?C.red:C.green}}>
+                    {pendingFees>0?"⚠️ فیس باقی ہے":"✅ کلیئر"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Tarbiyah */}
+              <div style={{background:"#fdf0ff",borderRadius:"14px",padding:"14px",border:`2px solid ${tarbiyahColor}25`}}>
+                <div style={{fontSize:"0.7rem",fontWeight:"800",color:C.navy,marginBottom:"8px"}}>💎 تربیت / Tarbiyah</div>
+                <div style={{textAlign:"center",padding:"6px 0"}}>
+                  <div style={{fontSize:"1.6rem",fontWeight:"900",color:tarbiyahColor}}>{tarbiyahAvg>0?tarbiyahAvg+"/4":"—"}</div>
+                  <div style={{fontSize:"0.62rem",fontWeight:"700",color:tarbiyahColor,marginTop:"2px"}}>{tarbiyahAvg>0?tarbiyahLabel:"کوئی ریکارڈ نہیں"}</div>
+                </div>
+                {latestTarbiyah?.notes&&(
+                  <div style={{fontSize:"0.58rem",color:"#777",marginTop:"6px",fontStyle:"italic",textAlign:"center",lineHeight:"1.4"}}>
+                    "{latestTarbiyah.notes.slice(0,60)}{latestTarbiyah.notes.length>60?"...":""}"
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Teacher Remarks */}
+            <div style={{background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`,borderRadius:"14px",padding:"14px",marginBottom:"20px",border:`1px solid ${C.gold}30`}}>
+              <div style={{fontSize:"0.72rem",fontWeight:"800",color:C.navyDark,marginBottom:"8px"}}>📝 ریمارکس / Remarks</div>
+              <div style={{fontSize:"0.65rem",color:C.navy,lineHeight:"1.8",minHeight:"40px"}}>
+                {avgPct>=80?"ماشاءاللہ! طالب علم نے نہایت اعلیٰ کارکردگی دکھائی ہے۔ مستقل محنت جاری رکھیں۔ Excellent performance! Keep up the great work.":
+                 avgPct>=60?"طالب علم کی کارکردگی اطمینان بخش ہے۔ مزید محنت سے بہتر نتائج ممکن ہیں۔ Satisfactory performance. More effort will bring better results.":
+                 avgPct>=40?"طالب علم کو مزید توجہ اور محنت کی ضرورت ہے۔ والدین سے گزارش ہے کہ توجہ دیں۔ Student needs more attention and effort.":
+                 "طالب علم کو فوری توجہ کی ضرورت ہے۔ والدین سے ملاقات ضروری ہے۔ Immediate attention required. Parent meeting needed."}
+              </div>
+            </div>
+
+            {/* Signature Section */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"20px",marginTop:"10px",paddingTop:"16px"}}>
+              {["کلاس ٹیچر\nClass Teacher","پرنسپل\nPrincipal","والدین\nParents/Guardian"].map(r=>(
+                <div key={r} style={{textAlign:"center"}}>
+                  <div style={{height:"40px",borderBottom:`2px solid #ddd`,marginBottom:"6px"}}/>
+                  <div style={{fontSize:"0.58rem",color:"#888",whiteSpace:"pre-line",lineHeight:"1.6"}}>{r}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div style={{marginTop:"16px",paddingTop:"12px",borderTop:`1px solid ${C.goldLight}`,textAlign:"center"}}>
+              <div style={{fontSize:"0.55rem",color:"#bbb",fontFamily:"'Cinzel',serif",letterSpacing:"0.1em"}}>
+                AMEEN ISLAMIC INSTITUTE • SWAT • امین اسلامک انسٹیٹیوٹ
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>;
+    );
   }
-  return <div style={S.page}>
-    <div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy,marginBottom:"6px"}}>📋 رپورٹ کارڈ</div>
-    <div style={{fontSize:"0.62rem",color:"#888",marginBottom:"16px"}}>طالب علم تلاش کریں</div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:"10px",marginBottom:"20px"}}><input style={{...S.inpSm,fontSize:"0.8rem",padding:"14px 18px"}} placeholder="🔍 نام یا کوڈ..." value={q} onChange={e=>setQ(e.target.value)}/><input style={{...S.inpSm,direction:"ltr",minWidth:"140px"}} value={term} onChange={e=>setTerm(e.target.value)} placeholder="Term..."/></div>
-    {q&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:"14px"}}>
-      {filtered.map(s=>{ const h=HOUSES.find(x=>x.id===s.houseId)||{}; const sRes=results.filter(r=>r.studentId===s.id); const avg=sRes.length>0?Math.round(sRes.reduce((sum,r)=>sum+(r.percentage||0),0)/sRes.length):0; return <div key={s.id} onClick={()=>setSelStudent(s)} style={{...S.card,cursor:"pointer",borderRight:`4px solid ${h.color||C.gold}`}}>
-        <div style={{display:"flex",alignItems:"center",gap:"12px"}}><div style={{width:"48px",height:"48px",borderRadius:"50%",background:h.gradient||`linear-gradient(135deg,${C.gold},${C.goldDark})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.4rem"}}>{h.emoji||"🎓"}</div><div><div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy}}>{s.name}</div><div style={{fontSize:"0.62rem",color:"#888"}}>{s.grade} • {h.nameEn||"—"}</div>{sRes.length>0&&<div style={{fontSize:"0.65rem",fontWeight:"700",color:avg>=70?C.green:avg>=50?C.amber:C.red}}>اوسط: {avg}%</div>}</div></div>
-      </div>; })}
-      {filtered.length===0&&<div style={{...S.card,textAlign:"center",color:"#bbb",padding:"40px",gridColumn:"1/-1"}}>کوئی نتیجہ نہیں</div>}
-    </div>}
-    {!q&&<div style={{...S.card,textAlign:"center",padding:"60px"}}><div style={{fontSize:"3rem",marginBottom:"12px"}}>📋</div><div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy}}>رپورٹ کارڈ جنریٹر</div><div style={{fontSize:"0.65rem",color:"#888",marginTop:"8px"}}>اوپر نام لکھیں</div></div>}
-  </div>;
+
+  // Student selection screen
+  return (
+    <div style={S.page}>
+      <div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy,marginBottom:"6px"}}>📋 پیشرفت رپورٹ کارڈ</div>
+      <div style={{fontSize:"0.62rem",color:"#888",marginBottom:"16px"}}>
+        طالب علم منتخب کریں — نتائج، حاضری، HVS اور تربیت سمیت مکمل رپورٹ
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:"10px",marginBottom:"20px"}}>
+        <input
+          style={{...S.inpSm,fontSize:"0.8rem",padding:"14px 18px"}}
+          placeholder="🔍 نام یا داخلہ نمبر تلاش کریں..."
+          value={q}
+          onChange={e=>setQ(e.target.value)}
+        />
+        <input
+          style={{...S.inpSm,direction:"ltr",minWidth:"140px"}}
+          value={term}
+          onChange={e=>setTerm(e.target.value)}
+          placeholder="Term..."
+        />
+      </div>
+      {q&&(
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:"14px"}}>
+          {filtered.map(s=>{
+            const h=HOUSES.find(x=>x.id===s.houseId)||{};
+            const sRes=results.filter(r=>r.studentId===s.id);
+            const avg=sRes.length>0?Math.round(sRes.reduce((sum,r)=>sum+(r.percentage||0),0)/sRes.length):0;
+            const grade=avg>=90?"A+":avg>=80?"A":avg>=70?"B":avg>=60?"C":avg>=50?"D":sRes.length>0?"F":"—";
+            return (
+              <div key={s.id} onClick={()=>setSelStudent(s)} style={{...S.card,cursor:"pointer",borderRight:`4px solid ${h.color||C.gold}`,transition:"transform 0.2s,box-shadow 0.2s"}}>
+                <div style={{display:"flex",alignItems:"center",gap:"12px"}}>
+                  <div style={{width:"52px",height:"52px",borderRadius:"50%",background:h.gradient||`linear-gradient(135deg,${C.gold},${C.goldDark})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.4rem",flexShrink:0}}>
+                    {h.emoji||"🎓"}
+                  </div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy}}>{s.name}</div>
+                    <div style={{fontSize:"0.62rem",color:"#888"}}>{s.grade} • {h.nameEn||"—"} • {s.section||""}</div>
+                    <div style={{display:"flex",gap:"8px",marginTop:"4px",alignItems:"center"}}>
+                      {sRes.length>0&&<span style={{fontSize:"0.62rem",fontWeight:"700",color:avg>=70?C.green:avg>=50?C.amber:C.red}}>📊 {avg}%</span>}
+                      {grade!=="—"&&<span style={{padding:"2px 8px",borderRadius:"10px",fontSize:"0.6rem",fontWeight:"800",background:grade==="A+"||grade==="A"?"#dcfce7":"#fef3c7",color:grade==="A+"||grade==="A"?C.green:C.amber}}>{grade}</span>}
+                      <span style={{fontSize:"0.6rem",color:"#bbb"}}>{s.studentCode}</span>
+                    </div>
+                  </div>
+                  <div style={{fontSize:"0.7rem",color:"#ccc"}}>←</div>
+                </div>
+              </div>
+            );
+          })}
+          {filtered.length===0&&(
+            <div style={{...S.card,textAlign:"center",color:"#bbb",padding:"40px",gridColumn:"1/-1"}}>
+              <div style={{fontSize:"2rem",marginBottom:"8px"}}>🔍</div>
+              کوئی طالب علم نہیں ملا
+            </div>
+          )}
+        </div>
+      )}
+      {!q&&(
+        <div style={{...S.card,textAlign:"center",padding:"60px"}}>
+          <div style={{fontSize:"3rem",marginBottom:"12px"}}>📋</div>
+          <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy}}>پیشرفت رپورٹ کارڈ</div>
+          <div style={{fontSize:"0.65rem",color:"#888",marginTop:"8px",lineHeight:"1.8"}}>
+            اوپر طالب علم کا نام لکھیں<br/>
+            نتائج • حاضری • HVS پوائنٹس • تربیت
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
+
 
 // ===================== STUDENT WELFARE FEEDBACK =====================
 function WelfareFeedback({students,addData}){
