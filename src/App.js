@@ -559,75 +559,158 @@ function Results({students,addData}){
 function Timetable(){
   const [tab,setTab]=useState("friday");
   const [season,setSeason]=useState("summer");
-  const timings={
-    summer:["08:30–09:05","09:05–09:40","09:40–10:10","10:10–10:40","11:30–12:00","12:00–12:30","12:30–01:00"],
-    winter:["09:00–09:35","09:35–10:10","10:10–10:40","10:40–11:10","12:00–12:30","12:30–01:00","01:00–01:30"]
+  const [editMode,setEditMode]=useState(false);
+  const [saving,setSaving]=useState(false);
+  const [toast,setToast]=useState("");
+
+  const defaultData={
+    timings:{
+      summer:["08:30–09:05","09:05–09:40","09:40–10:10","10:10–10:40","11:30–12:00","12:00–12:30","12:30–01:00"],
+      winter:["09:00–09:35","09:35–10:10","10:10–10:40","10:40–11:10","12:00–12:30","12:30–01:00","01:00–01:30"]
+    },
+    breakTime:{summer:"10:40–11:30",winter:"11:10–12:00"},
+    preTimes:{
+      summer:["08:30–09:20","09:20–10:10","10:10–11:00","11:50–12:25","12:25–01:00"],
+      winter:["09:00–09:50","09:50–10:35","10:35–11:10","12:00–12:45","12:45–01:30"]
+    },
+    preBreak:{summer:"11:00–11:50",winter:"11:10–12:00"},
+    senior:[
+      {n:"7ویں — آرکڈ",s:["سائنس","اردو","تاریخ","ریاضی","اسلامیات","انگریزی","جنرل نالج"]},
+      {n:"6ویں — للی",s:["اردو","انگریزی","ریاضی","فونکس","جنرل نالج","اسلامیات","تاریخ"]},
+      {n:"5ویں — آئرس",s:["اردو","انگریزی","ریاضی","فونکس","اردو رائٹنگ","انگریزی رائٹنگ","سائنس"]},
+      {n:"4تھی — جیسمین",s:["اردو","ریاضی","انگریزی","فونکس","اردو رائٹنگ","انگریزی رائٹنگ","اسلامیات"]}
+    ],
+    primary:[
+      {n:"3سری — وائلٹ",s:["ریاضی","جنرل نالج","انگریزی","اردو","قرآن","فونکس","اسلامیات"]},
+      {n:"2سری — ٹیولپ",s:["اردو","ریاضی","اسلامیات","فونکس","انگریزی","جنرل نالج","قرآن"]},
+      {n:"1لی — سن فلاور",s:["انگریزی","اردو","ریاضی","قرآن","فونکس","اسلامیات","جنرل نالج"]}
+    ],
+    pre:[
+      {n:"کے جی — کلور",s:["فونکس","ریاضی","قرآن","اردو","کے جی فونکس"]},
+      {n:"نرسری — لیونڈر",s:["اردو","قرآن","فونکس","انگریزی","ریاضی"]},
+      {n:"پلے گروپ — ڈیزی",s:["قرآن","اردو","انگریزی","ریاضی","فونکس"]}
+    ],
+    friday:[
+      {n:"Orchid (7th)",a:"اسلامی کردار سازی اور کیریئر گائیڈنس"},
+      {n:"Lily (6th)",a:"تاریخ اسلام اور عظیم شخصیات"},
+      {n:"Iris (5th)",a:"فقہ کی بنیادی باتیں اور نماز پریکٹیکل"},
+      {n:"Jasmine (4th)",a:"دعائیں اور روزانہ کے اذکار"},
+      {n:"Violet (3rd)",a:"قرآنی کہانیاں اور اخلاقی سبق"},
+      {n:"Tulip (2nd)",a:"سیرت النبی صلی اللہ علیہ وسلم کی کہانیاں"},
+      {n:"Sunflower (1st)",a:"انبیاء کی کہانیاں اور نشید"},
+      {n:"Clover (K.G)",a:"سنت سیکھنا اور وضو پریکٹیکل"},
+      {n:"Lavender (Nur)",a:"بنیادی اخلاقیات اور آداب"},
+      {n:"Daisy (P.G)",a:"اسلامی نظمیں اور تفریحی سرگرمی"}
+    ]
   };
-  const breakTime={summer:"10:40–11:30",winter:"11:10–12:00"};
-  const preTimes={
-    summer:["08:30–09:20","09:20–10:10","10:10–11:00","11:50–12:25","12:25–01:00"],
-    winter:["09:00–09:50","09:50–10:35","10:35–11:10","12:00–12:45","12:45–01:30"]
+
+  const [ttData,setTtData]=useState(defaultData);
+
+  useEffect(()=>{
+    const ref=doc(db,"settings","timetable");
+    return onSnapshot(ref,snap=>{
+      if(snap.exists()) setTtData({...defaultData,...snap.data()});
+    });
+  },[]);
+
+  const showToast=(msg)=>{ setToast(msg); setTimeout(()=>setToast(""),2500); };
+
+  const saveAll=async()=>{
+    setSaving(true);
+    try{
+      await setDoc(doc(db,"settings","timetable"),ttData);
+      showToast("✅ محفوظ ہو گیا!");
+      setEditMode(false);
+    }catch(e){ showToast("❌ error: "+e.message); }
+    setSaving(false);
   };
-  const preBreak={summer:"11:00–11:50",winter:"11:10–12:00"};
-  const senior=[
-    {n:"7ویں — آرکڈ",s:["سائنس","اردو","تاریخ","ریاضی","اسلامیات","انگریزی","جنرل نالج"]},
-    {n:"6ویں — للی",s:["اردو","انگریزی","ریاضی","فونکس","جنرل نالج","اسلامیات","تاریخ"]},
-    {n:"5ویں — آئرس",s:["اردو","انگریزی","ریاضی","فونکس","اردو رائٹنگ","انگریزی رائٹنگ","سائنس"]},
-    {n:"4تھی — جیسمین",s:["اردو","ریاضی","انگریزی","فونکس","اردو رائٹنگ","انگریزی رائٹنگ","اسلامیات"]}
-  ];
-  const primary=[
-    {n:"3سری — وائلٹ",s:["ریاضی","جنرل نالج","انگریزی","اردو","قرآن","فونکس","اسلامیات"]},
-    {n:"2سری — ٹیولپ",s:["اردو","ریاضی","اسلامیات","فونکس","انگریزی","جنرل نالج","قرآن"]},
-    {n:"1لی — سن فلاور",s:["انگریزی","اردو","ریاضی","قرآن","فونکس","اسلامیات","جنرل نالج"]}
-  ];
-  const pre=[
-    {n:"کے جی — کلور",s:["فونکس","ریاضی","قرآن","اردو","کے جی فونکس"]},
-    {n:"نرسری — لیونڈر",s:["اردو","قرآن","فونکس","انگریزی","ریاضی"]},
-    {n:"پلے گروپ — ڈیزی",s:["قرآن","اردو","انگریزی","ریاضی","فونکس"]}
-  ];
-  const friday=[
-    {n:"Orchid (7th)",a:"اسلامی کردار سازی اور کیریئر گائیڈنس"},
-    {n:"Lily (6th)",a:"تاریخ اسلام اور عظیم شخصیات"},
-    {n:"Iris (5th)",a:"فقہ کی بنیادی باتیں اور نماز پریکٹیکل"},
-    {n:"Jasmine (4th)",a:"دعائیں اور روزانہ کے اذکار"},
-    {n:"Violet (3rd)",a:"قرآنی کہانیاں اور اخلاقی سبق"},
-    {n:"Tulip (2nd)",a:"سیرت النبی صلی اللہ علیہ وسلم کی کہانیاں"},
-    {n:"Sunflower (1st)",a:"انبیاء کی کہانیاں اور نشید"},
-    {n:"Clover (K.G)",a:"سنت سیکھنا اور وضو پریکٹیکل"},
-    {n:"Lavender (Nur)",a:"بنیادی اخلاقیات اور آداب"},
-    {n:"Daisy (P.G)",a:"اسلامی نظمیں اور تفریحی سرگرمی"}
-  ];
+
+  const updSubject=(key,ci,pi,val)=>{
+    const newData={...ttData};
+    newData[key]=[...ttData[key]];
+    newData[key][ci]={...ttData[key][ci],s:[...ttData[key][ci].s]};
+    newData[key][ci].s[pi]=val;
+    setTtData(newData);
+  };
+
+  const updTime=(key,season2,idx,val)=>{
+    const newData={...ttData};
+    newData[key]={...ttData[key]};
+    newData[key][season2]=[...ttData[key][season2]];
+    newData[key][season2][idx]=val;
+    setTtData(newData);
+  };
+
+  const updBreak=(key,season2,val)=>{
+    const newData={...ttData};
+    newData[key]={...ttData[key],[season2]:val};
+    setTtData(newData);
+  };
+
+  const updFriday=(ci,field,val)=>{
+    const newData={...ttData,friday:[...ttData.friday]};
+    newData.friday[ci]={...newData.friday[ci],[field]:val};
+    setTtData(newData);
+  };
+
   const tabs=[["friday","🕌","جمعہ"],["senior","📚","سینئر"],["primary","✏️","پرائمری"],["pre","🎨","پری"]];
-  const getSections=()=>tab==="senior"?senior:tab==="primary"?primary:pre;
-  const getTimes=()=>tab==="pre"?preTimes[season]:timings[season];
-  const getBreak=()=>tab==="pre"?preBreak[season]:breakTime[season];
+  const getSections=()=>ttData[tab==="senior"?"senior":tab==="primary"?"primary":"pre"];
+  const getTimes=()=>tab==="pre"?ttData.preTimes[season]:ttData.timings[season];
+  const getBreak=()=>tab==="pre"?ttData.preBreak[season]:ttData.breakTime[season];
   const getBrkIdx=()=>tab==="pre"?2:3;
+  const getTimeKey=()=>tab==="pre"?"preTimes":"timings";
+  const getBreakKey=()=>tab==="pre"?"preBreak":"breakTime";
   const periodColors=["#dbeafe","#dcfce7","#fef3c7","#f3e8ff","#fee2e2","#ccfbf1","#fce7f3"];
   const periodBorder=[C.abuBakr,C.green,C.amber,C.purple,C.red,C.teal,"#ec4899"];
+  const inpStyle={background:"rgba(255,255,255,0.9)",border:"1.5px solid "+C.gold,borderRadius:"6px",padding:"3px 6px",fontSize:"0.6rem",textAlign:"center",width:"100%",fontFamily:"inherit",outline:"none"};
+
   return <div style={S.page}>
+    {toast&&<div style={{position:"fixed",top:"80px",left:"50%",transform:"translateX(-50%)",background:C.navy,color:C.white,padding:"8px 20px",borderRadius:"20px",fontSize:"0.7rem",zIndex:999,fontWeight:"700",boxShadow:"0 4px 20px rgba(0,0,0,0.3)"}}>{toast}</div>}
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
       <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>🗓️ ٹائم ٹیبل</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>امین اسلامک انسٹیٹیوٹ — سوات</div></div>
-      <div style={{display:"flex",gap:"6px"}}>
+      <div style={{display:"flex",gap:"6px",alignItems:"center"}}>
         <button onClick={()=>setSeason("summer")} style={{padding:"6px 12px",borderRadius:"8px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:season==="summer"?"700":"400",background:season==="summer"?C.gold:C.white,color:season==="summer"?C.white:"#888",fontFamily:"inherit"}}>☀️ گرما</button>
         <button onClick={()=>setSeason("winter")} style={{padding:"6px 12px",borderRadius:"8px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:season==="winter"?"700":"400",background:season==="winter"?C.abuBakr:C.white,color:season==="winter"?C.white:"#888",fontFamily:"inherit"}}>❄️ سرما</button>
+        {editMode
+          ?<><button onClick={saveAll} disabled={saving} style={{...S.saveBtn,padding:"6px 14px",fontSize:"0.62rem"}}>{saving?"محفوظ...":"💾 محفوظ کریں"}</button><button onClick={()=>setEditMode(false)} style={{...S.dangerBtn,padding:"6px 14px",fontSize:"0.62rem"}}>❌ منسوخ</button></>
+          :<button onClick={()=>setEditMode(true)} style={{...S.addBtn,padding:"6px 14px",fontSize:"0.62rem"}}>✏️ ترمیم</button>
+        }
       </div>
     </div>
     <div style={{display:"flex",gap:"8px",marginBottom:"20px",flexWrap:"wrap"}}>
       {tabs.map(([t,emoji,label])=><button key={t} onClick={()=>setTab(t)} style={{padding:"8px 16px",borderRadius:"12px",border:"none",cursor:"pointer",fontSize:"0.65rem",fontWeight:tab===t?"700":"400",background:tab===t?C.gold:C.white,color:tab===t?C.white:"#888",fontFamily:"inherit"}}>{emoji} {label}</button>)}
     </div>
+
+    {editMode&&tab!=="friday"&&<div style={{...S.card,marginBottom:"16px",background:"linear-gradient(135deg,"+C.goldLight+",#fdf8ee)",border:"2px solid "+C.gold+"30"}}>
+      <div style={{fontSize:"0.75rem",fontWeight:"700",color:C.navy,marginBottom:"12px"}}>⏰ اوقات تبدیل کریں — {season==="summer"?"☀️ گرما":"❄️ سرما"}</div>
+      <div style={{display:"flex",gap:"8px",flexWrap:"wrap",marginBottom:"10px"}}>
+        {getTimes().map((t,i)=><div key={i} style={{textAlign:"center"}}>
+          <div style={{fontSize:"0.5rem",color:"#888",marginBottom:"2px"}}>P{i+1}</div>
+          <input style={{...inpStyle,width:"90px",direction:"ltr"}} value={t} onChange={e=>updTime(getTimeKey(),season,i,e.target.value)}/>
+        </div>)}
+      </div>
+      <div style={{display:"flex",gap:"8px",alignItems:"center"}}>
+        <span style={{fontSize:"0.62rem",color:C.green,fontWeight:"700"}}>☕ وقفہ:</span>
+        <input style={{...inpStyle,width:"110px",direction:"ltr"}} value={getBreak()} onChange={e=>updBreak(getBreakKey(),season,e.target.value)}/>
+      </div>
+    </div>}
+
     {tab==="friday"&&<div style={{...S.card,border:"2px solid rgba(26,100,46,0.15)"}}>
       <div style={{textAlign:"center",paddingBottom:"16px",marginBottom:"16px",borderBottom:"2px solid rgba(26,100,46,0.12)"}}>
         <div style={{fontSize:"1.1rem",fontWeight:"800",color:C.green}}>✦ جمعہ تربیہ سیشن ✦</div>
         <div style={{fontSize:"0.6rem",color:"#888",marginTop:"4px"}}>11:00 AM - 12:00 PM</div>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px"}}>
-        {friday.map((item,i)=><div key={i} style={{background:"rgba(26,74,46,0.06)",borderRadius:"12px",padding:"12px",border:"1px solid rgba(26,100,46,0.15)"}}>
+        {ttData.friday.map((item,i)=><div key={i} style={{background:"rgba(26,74,46,0.06)",borderRadius:"12px",padding:"12px",border:"1px solid rgba(26,100,46,0.15)"}}>
           <div style={{fontSize:"0.58rem",fontWeight:"700",color:C.green,marginBottom:"4px"}}>{item.n}</div>
-          <div style={{fontSize:"0.7rem",fontWeight:"600",color:C.navy,lineHeight:"1.5"}}>{item.a}</div>
+          {editMode
+            ?<input style={inpStyle} value={item.a} onChange={e=>updFriday(i,"a",e.target.value)}/>
+            :<div style={{fontSize:"0.7rem",fontWeight:"600",color:C.navy,lineHeight:"1.5"}}>{item.a}</div>}
         </div>)}
       </div>
       <div style={{textAlign:"center",marginTop:"14px",fontSize:"0.62rem",color:"#888"}}>📌 جمعہ کے دن 12:00 بجے چھٹی</div>
     </div>}
+
     {tab!=="friday"&&getSections().map((cls,ci)=><div key={ci} style={{...S.card,marginBottom:"14px"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px",paddingBottom:"10px",borderBottom:"2px solid "+C.goldLight}}>
         <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy}}>{cls.n}</div>
@@ -638,15 +721,17 @@ function Timetable(){
           {cls.s.map((subj,i)=>{
             const items=[];
             if(i===getBrkIdx()+1){
-              items.push(<div key={"brk"+ci} style={{width:"64px",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"rgba(26,74,46,0.08)",padding:"8px 4px",minHeight:"90px",borderLeft:"1px solid rgba(26,100,46,0.2)",borderRight:"1px solid rgba(26,100,46,0.2)"}}>
+              items.push(<div key={"brk"+i} style={{width:"64px",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"rgba(26,74,46,0.08)",padding:"8px 4px",minHeight:"90px",borderLeft:"1px solid rgba(26,100,46,0.2)",borderRight:"1px solid rgba(26,100,46,0.2)"}}>
                 <div style={{fontSize:"1rem"}}>☕</div>
                 <div style={{fontSize:"0.55rem",fontWeight:"700",color:C.green}}>وقفہ</div>
                 <div style={{fontSize:"0.45rem",color:"#aaa",marginTop:"2px"}}>{getBreak()}</div>
               </div>);
             }
-            items.push(<div key={i} style={{width:"86px",flexShrink:0,padding:"10px 6px",textAlign:"center",borderLeft:"1px solid "+C.goldLight,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"90px",background:periodColors[i%periodColors.length]}}>
+            items.push(<div key={i} style={{width:"90px",flexShrink:0,padding:"10px 6px",textAlign:"center",borderLeft:"1px solid "+C.goldLight,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"90px",background:periodColors[i%periodColors.length]}}>
               <div style={{fontSize:"0.48rem",color:periodBorder[i%periodBorder.length],marginBottom:"4px",fontWeight:"800"}}>P{i+1}</div>
-              <div style={{fontSize:"0.68rem",fontWeight:"600",color:C.navy,lineHeight:"1.4",marginBottom:"6px"}}>{subj}</div>
+              {editMode
+                ?<input style={{...inpStyle,marginBottom:"6px",fontSize:"0.58rem"}} value={subj} onChange={e=>updSubject(tab==="senior"?"senior":tab==="primary"?"primary":"pre",ci,i,e.target.value)}/>
+                :<div style={{fontSize:"0.68rem",fontWeight:"600",color:C.navy,lineHeight:"1.4",marginBottom:"6px"}}>{subj}</div>}
               <div style={{fontSize:"0.48rem",background:"white",border:"1px solid "+C.gold+"40",color:C.goldDark,padding:"2px 5px",borderRadius:"4px",direction:"ltr",whiteSpace:"nowrap"}}>{getTimes()[i]||""}</div>
             </div>);
             return items;
