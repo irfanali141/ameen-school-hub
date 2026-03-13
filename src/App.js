@@ -1391,6 +1391,266 @@ function DirectorPortal({students,teachers,houses,fees,results,hvsLogs}){
   </div>;
 }
 
+// ===================== LESSON PLANS =====================
+function LessonPlans({teachers,addData}){
+  const [plans,setPlans]=useState([]); const [show,setShow]=useState(false);
+  const [f,setF]=useState({title:"",subject:"",grade:"",teacherId:"",date:"",duration:40,objectives:"",activities:"",materials:"",homework:""});
+  useEffect(()=>{ return onSnapshot(query(collection(db,"lesson_plans"),orderBy("createdAt","desc"),limit(50)),s=>setPlans(s.docs.map(d=>({id:d.id,...d.data()}))));  },[]);
+  const add=async()=>{ if(!f.title||!f.subject)return; await addData("lesson_plans",{...f,duration:Number(f.duration)}); setShow(false); setF({title:"",subject:"",grade:"",teacherId:"",date:"",duration:40,objectives:"",activities:"",materials:"",homework:""}); };
+  const subjects=["قرآن","تفسیر","حدیث","فقہ","عقیدہ","اردو","انگریزی","ریاضی","سائنس","نحو","صرف","تجوید"];
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>📅 سبق کا منصوبہ</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>Lesson Plans — مضامین اور اہداف</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نیا منصوبہ</button>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:"12px",marginBottom:"20px"}}>
+      {[{c:C.abuBakr,i:"📅",n:plans.length,l:"کل منصوبے"},{c:C.green,i:"📖",n:[...new Set(plans.map(p=>p.subject))].length,l:"مضامین"},{c:C.gold,i:"👨‍🏫",n:[...new Set(plans.map(p=>p.teacherId))].filter(Boolean).length,l:"اساتذہ"},{c:C.amber,i:"⏱️",n:plans.reduce((s,p)=>s+(p.duration||0),0),l:"کل منٹ"}].map((x,i)=><div key={i} style={{background:`linear-gradient(135deg,${x.c}12,${x.c}05)`,borderRadius:"16px",padding:"16px",border:`2px solid ${x.c}20`,textAlign:"center"}}><div style={{fontSize:"1.3rem"}}>{x.i}</div><div style={{fontSize:"1.4rem",fontWeight:"900",color:x.c}}>{x.n}</div><div style={{fontSize:"0.6rem",color:"#888"}}>{x.l}</div></div>)}
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`,border:`2px solid ${C.gold}30`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>عنوان *</label><input style={S.inpSm} value={f.title} onChange={e=>setF({...f,title:e.target.value})} placeholder="سبق کا عنوان..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>مضمون *</label><select style={S.inpSm} value={f.subject} onChange={e=>setF({...f,subject:e.target.value})}><option value="">-- منتخب کریں --</option>{subjects.map(s=><option key={s}>{s}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>جماعت</label><input style={S.inpSm} value={f.grade} onChange={e=>setF({...f,grade:e.target.value})} placeholder="8، 9..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>استاد</label><select style={S.inpSm} value={f.teacherId} onChange={e=>setF({...f,teacherId:e.target.value})}><option value="">-- منتخب کریں --</option>{teachers.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>تاریخ</label><input style={{...S.inpSm,direction:"ltr"}} type="date" value={f.date} onChange={e=>setF({...f,date:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>دورانیہ (منٹ)</label><input style={{...S.inpSm,direction:"ltr"}} type="number" value={f.duration} onChange={e=>setF({...f,duration:e.target.value})}/></div>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>اہداف</label><textarea style={{...S.inpSm,minHeight:"60px",resize:"vertical"}} value={f.objectives} onChange={e=>setF({...f,objectives:e.target.value})} placeholder="طالب علم کیا سیکھیں گے..."/></div>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>سرگرمیاں</label><textarea style={{...S.inpSm,minHeight:"60px",resize:"vertical"}} value={f.activities} onChange={e=>setF({...f,activities:e.target.value})} placeholder="کلاس میں کیا ہوگا..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>مواد</label><input style={S.inpSm} value={f.materials} onChange={e=>setF({...f,materials:e.target.value})} placeholder="کتاب، بورڈ..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>گھر کا کام</label><input style={S.inpSm} value={f.homework} onChange={e=>setF({...f,homework:e.target.value})} placeholder="ہوم ورک..."/></div>
+      </div>
+      <button style={S.saveBtn} onClick={add}>✅ منصوبہ محفوظ کریں</button>
+    </div>}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:"14px"}}>
+      {plans.map(p=>{ const t=teachers.find(x=>x.id===p.teacherId); return <div key={p.id} style={{...S.card,borderTop:`4px solid ${C.abuBakr}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:"8px"}}><div><div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy}}>{p.title}</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>{p.subject} • جماعت {p.grade}</div></div><span style={hBadge(C.abuBakr,"#dbeafe")}>⏱️ {p.duration}م</span></div>
+        {t&&<div style={{fontSize:"0.62rem",color:"#888",marginBottom:"6px"}}>👤 {t.name}</div>}
+        {p.objectives&&<div style={{background:"#f0fdf4",borderRadius:"8px",padding:"8px 12px",fontSize:"0.62rem",color:C.green,marginBottom:"6px"}}>🎯 {p.objectives.slice(0,80)}</div>}
+        {p.homework&&<div style={{fontSize:"0.6rem",color:C.amber,fontWeight:"600"}}>📝 {p.homework}</div>}
+      </div>; })}
+      {plans.length===0&&<div style={{...S.card,textAlign:"center",color:"#bbb",padding:"40px",gridColumn:"1/-1"}}><div style={{fontSize:"3rem",marginBottom:"12px"}}>📅</div>کوئی منصوبہ نہیں</div>}
+    </div>
+  </div>;
+}
+
+// ===================== CLASS ANALYTICS =====================
+function ClassAnalytics({students,results}){
+  const [selGrade,setSelGrade]=useState("all");
+  const grades=[...new Set(students.map(s=>s.grade).filter(Boolean))].sort();
+  const filtered=selGrade==="all"?students:students.filter(s=>s.grade===selGrade);
+  const getAvg=(s)=>{ const sR=results.filter(r=>r.studentId===s.id); return sR.length>0?Math.round(sR.reduce((a,r)=>a+(r.percentage||0),0)/sR.length):0; };
+  const overallAvg=filtered.length>0?Math.round(filtered.map(getAvg).reduce((a,b)=>a+b,0)/filtered.length):0;
+  const topStudents=[...filtered].map(s=>({...s,avg:getAvg(s)})).sort((a,b)=>b.avg-a.avg).slice(0,10);
+  const houseData=HOUSES.map(h=>{ const hs=filtered.filter(s=>s.houseId===h.id); const avg=hs.length>0?Math.round(hs.map(getAvg).reduce((a,b)=>a+b,0)/hs.length):0; return {...h,count:hs.length,avg}; });
+  const subjectData=results.reduce((acc,r)=>{ if(!r.subject)return acc; if(!acc[r.subject])acc[r.subject]={total:0,count:0}; acc[r.subject].total+=(r.percentage||0); acc[r.subject].count++; return acc; },{});
+  return <div style={S.page}>
+    <div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy,marginBottom:"6px"}}>📊 کلاس تجزیہ</div>
+    <div style={{display:"flex",gap:"8px",marginBottom:"20px",flexWrap:"wrap"}}>
+      {[["all","📊 سب"],...grades.map(g=>[g,`جماعت ${g}`])].map(([g,l])=><button key={g} onClick={()=>setSelGrade(g)} style={{padding:"6px 14px",borderRadius:"20px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:selGrade===g?"700":"400",background:selGrade===g?`linear-gradient(135deg,${C.gold},${C.goldDark})`:C.white,color:selGrade===g?C.white:"#888",fontFamily:"inherit"}}>{l}</button>)}
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:"12px",marginBottom:"20px"}}>
+      {[{c:C.navy,i:"👥",n:filtered.length,l:"طلبا"},{c:overallAvg>=70?C.green:C.amber,i:"📈",n:`${overallAvg}%`,l:"اوسط"},{c:C.gold,i:"🏆",n:filtered.filter(s=>getAvg(s)>=80).length,l:"A گریڈ"},{c:C.red,i:"⚠️",n:filtered.filter(s=>{ const a=getAvg(s); return a<50&&results.some(r=>r.studentId===s.id); }).length,l:"کمزور"}].map((x,i)=><div key={i} style={{background:`linear-gradient(135deg,${x.c}12,${x.c}05)`,borderRadius:"16px",padding:"16px",border:`2px solid ${x.c}20`,textAlign:"center"}}><div style={{fontSize:"1.3rem"}}>{x.i}</div><div style={{fontSize:"1.4rem",fontWeight:"900",color:x.c}}>{x.n}</div><div style={{fontSize:"0.6rem",color:"#888"}}>{x.l}</div></div>)}
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"20px",marginBottom:"20px"}}>
+      <div style={S.card}><div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy,marginBottom:"16px"}}>🏠 ہاؤس کارکردگی</div>
+        {houseData.map(h=><div key={h.id} style={{marginBottom:"14px"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:"4px"}}><span style={{fontSize:"0.72rem",fontWeight:"700",color:C.navy}}>{h.emoji} {h.nameEn}</span><span style={{fontSize:"0.68rem",fontWeight:"700",color:h.avg>=70?C.green:h.avg>=50?C.amber:C.red}}>{h.avg}%</span></div>{pBar(h.avg,100,h.avg>=70?C.green:h.avg>=50?C.amber:C.red)}<div style={{fontSize:"0.58rem",color:"#aaa",marginTop:"2px"}}>{h.count} طلبا</div></div>)}
+      </div>
+      <div style={S.card}><div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy,marginBottom:"16px"}}>🏆 ٹاپ طلبا</div>
+        {topStudents.map((s,i)=>{ const h=HOUSES.find(x=>x.id===s.houseId)||{}; return <div key={s.id} style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"10px",padding:"6px 10px",background:i===0?"linear-gradient(135deg,#fef3c7,#fff)":"#fafaf8",borderRadius:"10px"}}>
+          <div style={{width:"22px",height:"22px",borderRadius:"50%",background:i<3?`linear-gradient(135deg,${C.gold},${C.goldDark})`:"#eee",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.55rem",fontWeight:"900",color:i<3?C.white:"#aaa",flexShrink:0}}>{i===0?"👑":i+1}</div>
+          <span>{h.emoji||"👤"}</span><div style={{flex:1}}><div style={{fontSize:"0.68rem",fontWeight:"700",color:C.navy}}>{s.name}</div></div>
+          <span style={{fontSize:"0.72rem",fontWeight:"800",color:s.avg>=70?C.green:s.avg>=50?C.amber:C.red}}>{s.avg}%</span>
+        </div>; })}
+        {topStudents.length===0&&<div style={{textAlign:"center",color:"#bbb",padding:"20px"}}>کوئی ڈیٹا نہیں</div>}
+      </div>
+    </div>
+    <div style={S.card}><div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy,marginBottom:"16px"}}>📚 مضمون وار تجزیہ</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:"12px"}}>
+        {Object.entries(subjectData).map(([sub,data])=>{ const avg=Math.round(data.total/data.count); return <div key={sub} style={{background:"#fafaf8",borderRadius:"12px",padding:"12px"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:"6px"}}><span style={{fontSize:"0.72rem",fontWeight:"700",color:C.navy}}>{sub}</span><span style={{fontSize:"0.65rem",fontWeight:"700",color:avg>=70?C.green:avg>=50?C.amber:C.red}}>{avg}%</span></div>{pBar(avg,100,avg>=70?C.green:avg>=50?C.amber:C.red)}<div style={{fontSize:"0.58rem",color:"#aaa",marginTop:"4px"}}>{data.count} ریکارڈ</div></div>; })}
+        {Object.keys(subjectData).length===0&&<div style={{textAlign:"center",color:"#bbb",padding:"20px",gridColumn:"1/-1"}}>کوئی ڈیٹا نہیں</div>}
+      </div>
+    </div>
+  </div>;
+}
+
+// ===================== TRANSCRIPT REQUEST =====================
+function TranscriptRequest({students,addData}){
+  const [requests,setRequests]=useState([]); const [show,setShow]=useState(false);
+  const [f,setF]=useState({studentId:"",purpose:"university",institution:"",urgency:"normal",notes:""});
+  useEffect(()=>{ return onSnapshot(query(collection(db,"transcript_requests"),orderBy("createdAt","desc"),limit(50)),s=>setRequests(s.docs.map(d=>({id:d.id,...d.data()}))));  },[]);
+  const add=async()=>{ if(!f.studentId)return; await addData("transcript_requests",{...f,status:"pending"}); setShow(false); setF({studentId:"",purpose:"university",institution:"",urgency:"normal",notes:""}); };
+  const approve=async(id)=>{ await updateDoc(doc(db,"transcript_requests",id),{status:"approved"}); };
+  const purposes={university:{c:C.abuBakr,i:"🎓",l:"یونیورسٹی"},job:{c:C.green,i:"💼",l:"ملازمت"},scholarship:{c:C.gold,i:"🏆",l:"وظیفہ"},transfer:{c:C.amber,i:"🔄",l:"ٹرانسفر"},personal:{c:"#888",i:"📄",l:"ذاتی"}};
+  const urgencies={normal:{c:C.green,l:"معمول"},urgent:{c:C.amber,l:"فوری"},express:{c:C.red,l:"ایکسپریس"}};
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>📜 ٹرانسکرپٹ درخواست</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>سرکاری تعلیمی دستاویز</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نئی درخواست</button>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:"12px",marginBottom:"20px"}}>
+      {[{c:C.amber,i:"⏳",n:requests.filter(r=>r.status==="pending").length,l:"زیر التوا"},{c:C.green,i:"✅",n:requests.filter(r=>r.status==="approved").length,l:"منظور"},{c:C.red,i:"🚨",n:requests.filter(r=>r.urgency==="express").length,l:"ایکسپریس"},{c:C.abuBakr,i:"📜",n:requests.length,l:"کل"}].map((x,i)=><div key={i} style={{background:`linear-gradient(135deg,${x.c}12,${x.c}05)`,borderRadius:"16px",padding:"16px",border:`2px solid ${x.c}20`,textAlign:"center"}}><div style={{fontSize:"1.3rem"}}>{x.i}</div><div style={{fontSize:"1.4rem",fontWeight:"900",color:x.c}}>{x.n}</div><div style={{fontSize:"0.6rem",color:"#888"}}>{x.l}</div></div>)}
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`,border:`2px solid ${C.gold}30`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>طالب علم *</label><select style={S.inpSm} value={f.studentId} onChange={e=>setF({...f,studentId:e.target.value})}><option value="">-- منتخب کریں --</option>{students.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>مقصد</label><select style={S.inpSm} value={f.purpose} onChange={e=>setF({...f,purpose:e.target.value})}>{Object.entries(purposes).map(([k,v])=><option key={k} value={k}>{v.i} {v.l}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>ادارہ</label><input style={S.inpSm} value={f.institution} onChange={e=>setF({...f,institution:e.target.value})} placeholder="یونیورسٹی..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>عجلت</label><select style={S.inpSm} value={f.urgency} onChange={e=>setF({...f,urgency:e.target.value})}>{Object.entries(urgencies).map(([k,v])=><option key={k} value={k}>{v.l}</option>)}</select></div>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>نوٹس</label><textarea style={{...S.inpSm,minHeight:"60px",resize:"vertical"}} value={f.notes} onChange={e=>setF({...f,notes:e.target.value})} placeholder="اضافی معلومات..."/></div>
+      </div>
+      <button style={S.saveBtn} onClick={add}>✅ درخواست جمع کریں</button>
+    </div>}
+    <div style={{display:"flex",flexDirection:"column",gap:"12px"}}>
+      {requests.map(r=>{ const p=purposes[r.purpose]||purposes.personal; const u=urgencies[r.urgency]||urgencies.normal; const st=students.find(s=>s.id===r.studentId); return <div key={r.id} style={{...S.card,borderRight:`4px solid ${p.c}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"8px"}}>
+          <div><div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"4px"}}><span>{p.i}</span><span style={{fontSize:"0.82rem",fontWeight:"700",color:C.navy}}>{st?.name||"—"}</span></div>{r.institution&&<div style={{fontSize:"0.62rem",color:"#888"}}>🏫 {r.institution}</div>}</div>
+          <div style={{display:"flex",gap:"6px",flexWrap:"wrap",justifyContent:"flex-end"}}><span style={hBadge(p.c,p.c+"15")}>{p.l}</span><span style={hBadge(u.c,u.c+"15")}>{u.l}</span><span style={{padding:"3px 8px",borderRadius:"20px",fontSize:"0.55rem",fontWeight:"700",background:r.status==="approved"?"#dcfce7":"#fef3c7",color:r.status==="approved"?C.green:C.amber}}>{r.status==="approved"?"✅ منظور":"⏳ زیر التوا"}</span></div>
+        </div>
+        {r.status==="pending"&&<button onClick={()=>approve(r.id)} style={{...S.saveBtn,padding:"6px 14px",fontSize:"0.62rem",marginTop:"6px"}}>✅ منظور کریں</button>}
+      </div>; })}
+      {requests.length===0&&<div style={{...S.card,textAlign:"center",color:"#bbb",padding:"60px"}}>کوئی درخواست نہیں</div>}
+    </div>
+  </div>;
+}
+
+// ===================== TEACHER LEAVE REQUEST =====================
+function TeacherLeave({teachers,addData}){
+  const [leaves,setLeaves]=useState([]); const [show,setShow]=useState(false);
+  const [f,setF]=useState({teacherId:"",type:"sick",startDate:"",endDate:"",reason:"",substitute:""});
+  useEffect(()=>{ return onSnapshot(query(collection(db,"teacher_leaves"),orderBy("createdAt","desc"),limit(50)),s=>setLeaves(s.docs.map(d=>({id:d.id,...d.data()}))));  },[]);
+  const add=async()=>{ if(!f.teacherId||!f.startDate)return; await addData("teacher_leaves",{...f,status:"pending"}); setShow(false); setF({teacherId:"",type:"sick",startDate:"",endDate:"",reason:"",substitute:""}); };
+  const approve=async(id,status)=>{ await updateDoc(doc(db,"teacher_leaves",id),{status}); };
+  const types={sick:{c:C.red,bg:"#fee2e2",i:"🏥",l:"بیماری"},casual:{c:C.abuBakr,bg:"#dbeafe",i:"🏖️",l:"آرام"},emergency:{c:"#dc2626",bg:"#fee2e2",i:"🚨",l:"ہنگامی"},hajj:{c:C.gold,bg:C.goldLight,i:"🕋",l:"حج"},other:{c:"#888",bg:"#f3f4f6",i:"📋",l:"دیگر"}};
+  const pending=leaves.filter(l=>l.status==="pending");
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>🏖️ چھٹی درخواست</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>اساتذہ کی چھٹیاں — منظوری</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نئی درخواست</button>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:"12px",marginBottom:"20px"}}>
+      {[{c:C.amber,i:"⏳",n:pending.length,l:"زیر التوا"},{c:C.green,i:"✅",n:leaves.filter(l=>l.status==="approved").length,l:"منظور"},{c:C.red,i:"❌",n:leaves.filter(l=>l.status==="rejected").length,l:"مسترد"},{c:C.abuBakr,i:"📋",n:leaves.length,l:"کل"}].map((x,i)=><div key={i} style={{background:`linear-gradient(135deg,${x.c}12,${x.c}05)`,borderRadius:"16px",padding:"16px",border:`2px solid ${x.c}20`,textAlign:"center"}}><div style={{fontSize:"1.3rem"}}>{x.i}</div><div style={{fontSize:"1.4rem",fontWeight:"900",color:x.c}}>{x.n}</div><div style={{fontSize:"0.6rem",color:"#888"}}>{x.l}</div></div>)}
+    </div>
+    {pending.length>0&&<div style={{...S.card,marginBottom:"20px",background:"linear-gradient(135deg,#fef3c7,#fff)",border:`2px solid ${C.amber}20`}}>
+      <div style={{fontSize:"0.82rem",fontWeight:"700",color:C.amber,marginBottom:"12px"}}>⏳ منظوری درکار ({pending.length})</div>
+      {pending.map(l=>{ const t=teachers.find(x=>x.id===l.teacherId); const tp=types[l.type]||types.other; return <div key={l.id} style={{background:C.white,borderRadius:"12px",padding:"12px 16px",marginBottom:"10px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div><div style={{fontSize:"0.75rem",fontWeight:"700",color:C.navy}}>{tp.i} {t?.name||"—"}</div><div style={{fontSize:"0.6rem",color:"#888"}}>{tp.l} • {l.startDate}</div>{l.reason&&<div style={{fontSize:"0.6rem",color:"#555"}}>{l.reason.slice(0,50)}</div>}</div>
+        <div style={{display:"flex",gap:"6px"}}><button onClick={()=>approve(l.id,"approved")} style={{...S.saveBtn,padding:"6px 12px",fontSize:"0.6rem"}}>✅</button><button onClick={()=>approve(l.id,"rejected")} style={{...S.dangerBtn,padding:"6px 12px",fontSize:"0.6rem"}}>❌</button></div>
+      </div>; })}
+    </div>}
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`,border:`2px solid ${C.gold}30`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>استاد *</label><select style={S.inpSm} value={f.teacherId} onChange={e=>setF({...f,teacherId:e.target.value})}><option value="">-- منتخب کریں --</option>{teachers.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>قسم</label><select style={S.inpSm} value={f.type} onChange={e=>setF({...f,type:e.target.value})}>{Object.entries(types).map(([k,v])=><option key={k} value={k}>{v.i} {v.l}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>شروع *</label><input style={{...S.inpSm,direction:"ltr"}} type="date" value={f.startDate} onChange={e=>setF({...f,startDate:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>ختم</label><input style={{...S.inpSm,direction:"ltr"}} type="date" value={f.endDate} onChange={e=>setF({...f,endDate:e.target.value})}/></div>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>وجہ</label><textarea style={{...S.inpSm,minHeight:"60px",resize:"vertical"}} value={f.reason} onChange={e=>setF({...f,reason:e.target.value})} placeholder="چھٹی کی وجہ..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>متبادل استاد</label><input style={S.inpSm} value={f.substitute} onChange={e=>setF({...f,substitute:e.target.value})} placeholder="نام..."/></div>
+      </div>
+      <button style={S.saveBtn} onClick={add}>✅ درخواست جمع کریں</button>
+    </div>}
+    <div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+      <thead><tr><th style={S.th}>استاد</th><th style={S.th}>قسم</th><th style={S.th}>تاریخ</th><th style={S.th}>حال</th></tr></thead>
+      <tbody>{leaves.map(l=>{ const t=teachers.find(x=>x.id===l.teacherId); const tp=types[l.type]||types.other; return <tr key={l.id}><td style={{...S.td,fontWeight:"700"}}>{t?.name||"—"}</td><td style={S.td}><span style={hBadge(tp.c,tp.bg)}>{tp.i} {tp.l}</span></td><td style={{...S.td,fontFamily:"monospace",direction:"ltr",fontSize:"0.6rem"}}>{l.startDate}</td><td style={S.td}><span style={{padding:"3px 8px",borderRadius:"20px",fontSize:"0.55rem",fontWeight:"700",background:l.status==="approved"?"#dcfce7":l.status==="rejected"?"#fee2e2":"#fef3c7",color:l.status==="approved"?C.green:l.status==="rejected"?C.red:C.amber}}>{l.status==="approved"?"✅":l.status==="rejected"?"❌":"⏳"}</span></td></tr>; })}{leaves.length===0&&<tr><td colSpan={4} style={{...S.td,textAlign:"center",color:"#bbb",padding:"40px"}}>کوئی ریکارڈ نہیں</td></tr>}</tbody>
+    </table></div></div>
+  </div>;
+}
+
+// ===================== SALARY SLIPS =====================
+function SalarySlips({teachers,addData}){
+  const [slips,setSlips]=useState([]); const [show,setShow]=useState(false); const [selSlip,setSelSlip]=useState(null);
+  const [f,setF]=useState({teacherId:"",month:"",year:new Date().getFullYear(),basicSalary:0,houseRent:0,medicalAllowance:0,transport:0,bonus:0,deductions:0,tax:0});
+  useEffect(()=>{ return onSnapshot(query(collection(db,"salary_slips"),orderBy("createdAt","desc"),limit(50)),s=>setSlips(s.docs.map(d=>({id:d.id,...d.data()}))));  },[]);
+  const add=async()=>{
+    if(!f.teacherId||!f.month)return;
+    const gross=Number(f.basicSalary)+Number(f.houseRent)+Number(f.medicalAllowance)+Number(f.transport)+Number(f.bonus);
+    const net=gross-Number(f.deductions)-Number(f.tax);
+    await addData("salary_slips",{...f,gross,net,basicSalary:Number(f.basicSalary),houseRent:Number(f.houseRent),medicalAllowance:Number(f.medicalAllowance),transport:Number(f.transport),bonus:Number(f.bonus),deductions:Number(f.deductions),tax:Number(f.tax)});
+    setShow(false); setF({teacherId:"",month:"",year:new Date().getFullYear(),basicSalary:0,houseRent:0,medicalAllowance:0,transport:0,bonus:0,deductions:0,tax:0});
+  };
+  const months=["جنوری","فروری","مارچ","اپریل","مئی","جون","جولائی","اگست","ستمبر","اکتوبر","نومبر","دسمبر"];
+  if(selSlip){ const t=teachers.find(x=>x.id===selSlip.teacherId)||{}; return <div style={S.page}>
+    <div style={{display:"flex",gap:"10px",marginBottom:"20px"}}><button style={{...S.addBtn,background:"#eee",color:C.navy,boxShadow:"none"}} onClick={()=>setSelSlip(null)}>← واپس</button><button style={{...S.saveBtn,fontSize:"0.65rem"}} onClick={()=>window.print()}>🖨️ پرنٹ</button></div>
+    <div style={{background:C.white,borderRadius:"22px",overflow:"hidden",boxShadow:"0 8px 32px rgba(0,0,0,0.12)",maxWidth:"600px",margin:"0 auto"}}>
+      <div style={{background:`linear-gradient(135deg,${C.navyDark},${C.navyMid})`,padding:"24px",color:C.white,textAlign:"center"}}>
+        <div style={{fontSize:"1.2rem",fontWeight:"900",color:C.gold}}>امین اسکول ہب</div>
+        <div style={{fontSize:"0.65rem",opacity:0.7,marginBottom:"12px"}}>AMEEN ISLAMIC INSTITUTE • SWAT</div>
+        <div style={{background:"rgba(255,255,255,0.1)",borderRadius:"10px",padding:"10px"}}><div style={{fontSize:"0.82rem",fontWeight:"700",color:C.gold}}>تنخواہ سلپ — {selSlip.month} {selSlip.year}</div></div>
+      </div>
+      <div style={{padding:"20px 24px"}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px",marginBottom:"20px",background:"#fafaf8",borderRadius:"12px",padding:"14px"}}>
+          {[["نام",t.name||"—"],["عہدہ",t.subject||"استاد"],["مہینہ",`${selSlip.month} ${selSlip.year}`]].map(([l,v])=><div key={l}><div style={{fontSize:"0.58rem",color:"#888"}}>{l}</div><div style={{fontSize:"0.72rem",fontWeight:"700",color:C.navy}}>{v}</div></div>)}
+        </div>
+        {[["آمدنی",[[" بنیادی",selSlip.basicSalary],["مکان کرایہ",selSlip.houseRent],["طبی",selSlip.medicalAllowance],["ٹرانسپورٹ",selSlip.transport],["بونس",selSlip.bonus]],C.green,"مجموعی آمدنی",selSlip.gross],["کٹوتیاں",[["کٹوتیاں",selSlip.deductions],["ٹیکس",selSlip.tax]],C.red,"مجموعی کٹوتی",Number(selSlip.deductions)+Number(selSlip.tax)]].map(([title,items,color,totalLabel,total])=><div key={title} style={{marginBottom:"20px"}}>
+          <div style={{fontSize:"0.75rem",fontWeight:"700",color,marginBottom:"10px",borderBottom:`1px solid ${color}30`,paddingBottom:"6px"}}>{title}</div>
+          {items.filter(([,v])=>v>0).map(([l,v])=><div key={l} style={{display:"flex",justifyContent:"space-between",marginBottom:"6px",fontSize:"0.68rem"}}><span style={{color:"#555"}}>{l}</span><span style={{fontWeight:"600",color:C.navy}}>Rs. {Number(v).toLocaleString()}</span></div>)}
+          <div style={{display:"flex",justifyContent:"space-between",marginTop:"8px",paddingTop:"6px",borderTop:`2px solid ${color}30`,fontSize:"0.72rem",fontWeight:"800",color}}><span>{totalLabel}</span><span>Rs. {Number(total).toLocaleString()}</span></div>
+        </div>)}
+        <div style={{background:`linear-gradient(135deg,${C.gold},${C.goldDark})`,borderRadius:"14px",padding:"16px",textAlign:"center"}}><div style={{fontSize:"0.65rem",color:"rgba(255,255,255,0.8)",marginBottom:"4px"}}>خالص تنخواہ</div><div style={{fontSize:"2rem",fontWeight:"900",color:C.white}}>Rs. {Number(selSlip.net).toLocaleString()}</div></div>
+      </div>
+    </div>
+  </div>; }
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>💳 تنخواہ سلپ</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>ماہانہ تنخواہ کا ریکارڈ</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نئی سلپ</button>
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`,border:`2px solid ${C.gold}30`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>استاد *</label><select style={S.inpSm} value={f.teacherId} onChange={e=>setF({...f,teacherId:e.target.value})}><option value="">-- منتخب کریں --</option>{teachers.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>مہینہ *</label><select style={S.inpSm} value={f.month} onChange={e=>setF({...f,month:e.target.value})}><option value="">-- منتخب کریں --</option>{months.map(m=><option key={m}>{m}</option>)}</select></div>
+        {[["بنیادی","basicSalary"],["مکان","houseRent"],["طبی","medicalAllowance"],["ٹرانسپورٹ","transport"],["بونس","bonus"],["کٹوتیاں","deductions"],["ٹیکس","tax"]].map(([l,k])=><div key={k}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>{l} (Rs)</label><input style={{...S.inpSm,direction:"ltr"}} type="number" value={f[k]} onChange={e=>setF({...f,[k]:e.target.value})}/></div>)}
+      </div>
+      <div style={{background:C.white,borderRadius:"10px",padding:"12px",marginBottom:"12px",textAlign:"center"}}><div style={{fontSize:"0.62rem",color:"#888"}}>خالص تنخواہ</div><div style={{fontSize:"1.5rem",fontWeight:"900",color:C.gold}}>Rs. {(Number(f.basicSalary)+Number(f.houseRent)+Number(f.medicalAllowance)+Number(f.transport)+Number(f.bonus)-Number(f.deductions)-Number(f.tax)).toLocaleString()}</div></div>
+      <button style={S.saveBtn} onClick={add}>✅ سلپ بنائیں</button>
+    </div>}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:"14px"}}>
+      {slips.map(sl=>{ const t=teachers.find(x=>x.id===sl.teacherId); return <div key={sl.id} style={{...S.card,cursor:"pointer",borderTop:`4px solid ${C.gold}`}} onClick={()=>setSelSlip(sl)}><div style={{display:"flex",justifyContent:"space-between",marginBottom:"8px"}}><div><div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy}}>{t?.name||"—"}</div><div style={{fontSize:"0.62rem",color:"#888"}}>{sl.month} {sl.year}</div></div><span style={hBadge(C.gold,C.goldLight)}>💳</span></div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:"0.62rem",color:"#888"}}>خالص</span><span style={{fontSize:"1rem",fontWeight:"800",color:C.gold}}>Rs. {Number(sl.net).toLocaleString()}</span></div><div style={{fontSize:"0.6rem",color:C.abuBakr,marginTop:"8px"}}>👁️ سلپ دیکھیں ←</div></div>; })}
+      {slips.length===0&&<div style={{...S.card,textAlign:"center",color:"#bbb",padding:"40px",gridColumn:"1/-1"}}>کوئی سلپ نہیں</div>}
+    </div>
+  </div>;
+}
+
+// ===================== LEARNING MATERIALS =====================
+function LearningMaterials({teachers,addData}){
+  const [materials,setMaterials]=useState([]); const [show,setShow]=useState(false); const [filter,setFilter]=useState("all");
+  const [f,setF]=useState({title:"",subject:"",grade:"",type:"pdf",description:"",link:"",teacherId:""});
+  useEffect(()=>{ return onSnapshot(query(collection(db,"learning_materials"),orderBy("createdAt","desc"),limit(100)),s=>setMaterials(s.docs.map(d=>({id:d.id,...d.data()}))));  },[]);
+  const add=async()=>{ if(!f.title)return; await addData("learning_materials",{...f}); setShow(false); setF({title:"",subject:"",grade:"",type:"pdf",description:"",link:"",teacherId:""}); };
+  const types={pdf:{c:C.red,bg:"#fee2e2",i:"📄",l:"PDF"},video:{c:C.abuBakr,bg:"#dbeafe",i:"🎬",l:"ویڈیو"},audio:{c:C.purple,bg:"#ede9fe",i:"🎵",l:"آڈیو"},link:{c:C.teal,bg:"#ccfbf1",i:"🔗",l:"لنک"},quiz:{c:C.amber,bg:"#fef3c7",i:"❓",l:"کوئز"},assignment:{c:C.gold,bg:C.goldLight,i:"📝",l:"اسائنمنٹ"}};
+  const filtered=filter==="all"?materials:materials.filter(m=>m.type===filter);
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>📚 تعلیمی مواد</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>ڈاؤنلوڈ، ویڈیو، اسائنمنٹ</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نیا مواد</button>
+    </div>
+    <div style={{display:"flex",gap:"8px",marginBottom:"16px",flexWrap:"wrap"}}>
+      {[["all","📦 سب"],...Object.entries(types).map(([k,v])=>[k,`${v.i} ${v.l}`])].map(([t,l])=><button key={t} onClick={()=>setFilter(t)} style={{padding:"6px 12px",borderRadius:"20px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:filter===t?"700":"400",background:filter===t?`linear-gradient(135deg,${C.gold},${C.goldDark})`:C.white,color:filter===t?C.white:"#888",fontFamily:"inherit"}}>{l}</button>)}
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`,border:`2px solid ${C.gold}30`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>عنوان *</label><input style={S.inpSm} value={f.title} onChange={e=>setF({...f,title:e.target.value})} placeholder="مواد کا نام..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>قسم</label><select style={S.inpSm} value={f.type} onChange={e=>setF({...f,type:e.target.value})}>{Object.entries(types).map(([k,v])=><option key={k} value={k}>{v.i} {v.l}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>مضمون</label><input style={S.inpSm} value={f.subject} onChange={e=>setF({...f,subject:e.target.value})} placeholder="ریاضی..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>جماعت</label><input style={S.inpSm} value={f.grade} onChange={e=>setF({...f,grade:e.target.value})} placeholder="8..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>استاد</label><select style={S.inpSm} value={f.teacherId} onChange={e=>setF({...f,teacherId:e.target.value})}><option value="">-- منتخب کریں --</option>{teachers.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>لنک</label><input style={{...S.inpSm,direction:"ltr"}} value={f.link} onChange={e=>setF({...f,link:e.target.value})} placeholder="https://..."/></div>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>تفصیل</label><textarea style={{...S.inpSm,minHeight:"60px",resize:"vertical"}} value={f.description} onChange={e=>setF({...f,description:e.target.value})} placeholder="مختصر تفصیل..."/></div>
+      </div>
+      <button style={S.saveBtn} onClick={add}>✅ شامل کریں</button>
+    </div>}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:"14px"}}>
+      {filtered.map(m=>{ const tc=types[m.type]||types.link; const t=teachers.find(x=>x.id===m.teacherId); return <div key={m.id} style={{...S.card,borderTop:`4px solid ${tc.c}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"8px"}}><div style={{flex:1,display:"flex",alignItems:"center",gap:"6px"}}><span style={{fontSize:"1.1rem"}}>{tc.i}</span><span style={{fontSize:"0.8rem",fontWeight:"700",color:C.navy}}>{m.title}</span></div><span style={hBadge(tc.c,tc.bg)}>{tc.l}</span></div>
+        {m.subject&&<div style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px"}}>📖 {m.subject}{m.grade&&` • جماعت ${m.grade}`}</div>}
+        {t&&<div style={{fontSize:"0.62rem",color:"#888",marginBottom:"6px"}}>👤 {t.name}</div>}
+        {m.description&&<div style={{fontSize:"0.62rem",color:"#666",lineHeight:"1.5",marginBottom:"8px"}}>{m.description.slice(0,80)}</div>}
+        {m.link&&<a href={m.link} target="_blank" rel="noreferrer" style={{display:"inline-block",background:`linear-gradient(135deg,${tc.c},${tc.c}cc)`,color:C.white,padding:"6px 14px",borderRadius:"8px",fontSize:"0.62rem",fontWeight:"700",textDecoration:"none",direction:"ltr"}}>⬇️ کھولیں</a>}
+      </div>; })}
+      {filtered.length===0&&<div style={{...S.card,textAlign:"center",color:"#bbb",padding:"40px",gridColumn:"1/-1"}}>کوئی مواد نہیں</div>}
+    </div>
+  </div>;
+}
+
 // ===================== STUDENT REPORT CARD =====================
 function ReportCard({students,results,fees,addData}){
   const [selStudent,setSelStudent]=useState(null); const [q,setQ]=useState(""); const [term,setTerm]=useState("سالانہ 2026");
@@ -2217,6 +2477,9 @@ export default function App(){
     {id:"reportcard",label:"📋 رپورٹ کارڈ"},{id:"welfare",label:"💬 طالب علم فلاح"},
     {id:"pride",label:"💌 پرائیڈ میسج"},{id:"wifaq",label:"🕌 وفاق کمپلائنس"},
     {id:"ethics",label:"🌟 اخلاق مانیٹر"},
+    {id:"lessons",label:"📅 سبق منصوبہ"},{id:"analytics",label:"📊 کلاس تجزیہ"},
+    {id:"transcript",label:"📜 ٹرانسکرپٹ"},{id:"leave",label:"🏖️ چھٹی"},
+    {id:"slips",label:"💳 تنخواہ سلپ"},{id:"lmaterials",label:"📚 تعلیمی مواد"},
   ];
 
   const uName=DEMO.find(d=>d.email===user?.email)?.name||user?.email||"";
@@ -2286,6 +2549,12 @@ export default function App(){
       {page==="pride"&&<PrideMessages students={students} teachers={teachers} addData={addData}/>}
       {page==="wifaq"&&<WifaqCompliance addData={addData}/>}
       {page==="ethics"&&<TarbiyahEthics students={students} addData={addData}/>}
+      {page==="lessons"&&<LessonPlans teachers={teachers} addData={addData}/>}
+      {page==="analytics"&&<ClassAnalytics students={students} results={results}/>}
+      {page==="transcript"&&<TranscriptRequest students={students} addData={addData}/>}
+      {page==="leave"&&<TeacherLeave teachers={teachers} addData={addData}/>}
+      {page==="slips"&&<SalarySlips teachers={teachers} addData={addData}/>}
+      {page==="lmaterials"&&<LearningMaterials teachers={teachers} addData={addData}/>}
     </div>
   </div>;
 }
