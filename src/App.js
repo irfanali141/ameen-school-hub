@@ -606,9 +606,9 @@ function Timetable(){
       <div style={{fontSize:"0.6rem",color:"#888",marginTop:"4px",direction:"ltr"}}>11:00 AM – 12:00 PM | Dismissal @ 12:00 PM</div>
     </div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px"}}>
-      {TT.sections.friday.map((f,i)=><div key={i} style={{background:"rgba(26,74,46,0.06)",borderRadius:"12px",padding:"12px 14px",border:"1px solid rgba(26,100,46,0.15)"}}>
-        <div style={{fontSize:"0.58rem",fontWeight:"700",color:C.green,marginBottom:"4px",fontFamily:"monospace"}}>{f.n}</div>
-        <div style={{fontSize:"0.72rem",fontWeight:"600",color:C.navy,lineHeight:"1.5"}}>{f.a}</div>
+      {TT.sections.friday.map((fr,i)=><div key={i} style={{background:"rgba(26,74,46,0.06)",borderRadius:"12px",padding:"12px 14px",border:"1px solid rgba(26,100,46,0.15)"}}>
+        <div style={{fontSize:"0.58rem",fontWeight:"700",color:C.green,marginBottom:"4px",fontFamily:"monospace"}}>{fr.n}</div>
+        <div style={{fontSize:"0.72rem",fontWeight:"600",color:C.navy,lineHeight:"1.5"}}>{fr.a}</div>
       </div>)}
     </div>
     <div style={{textAlign:"center",marginTop:"16px",paddingTop:"12px",borderTop:"1px solid rgba(26,100,46,0.12)",fontSize:"0.62rem",color:"#888"}}>📌 جمعہ کے دن تمام کلاسیں 12:00 بجے چھٹی کریں گی</div>
