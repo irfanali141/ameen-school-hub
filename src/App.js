@@ -149,7 +149,7 @@ function Login({onLogin,err,loading}){
     </div>
   </div>;
 
-  return <div style={{minHeight:"100vh",background:"linear-gradient(180deg,#0f172a 0%,#1e293b 60%,#0f172a 100%)",overflowY:"auto",direction:"ltr"}}>
+  return <div style={{minHeight:"100vh",background:"linear-gradient(180deg,#0f172a 0%,#1e293b 60%,#0f172a 100%)",overflowY:"auto",direction:"ltr",unicodeBidi:"isolate"}}>
     <div style={{maxWidth:"860px",margin:"0 auto",padding:"0 20px 60px"}}>
       <div style={{textAlign:"center",padding:"40px 20px 24px"}}>
         <div style={{display:"flex",justifyContent:"center",marginBottom:"18px",filter:"drop-shadow(0 0 24px rgba(245,166,35,0.35))"}}>
