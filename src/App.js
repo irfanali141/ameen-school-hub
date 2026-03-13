@@ -107,21 +107,83 @@ function hBadge(color,light){ return {display:"inline-block",padding:"4px 12px",
 function pBar(val,max,color){ const pct=Math.min(100,Math.round((val/max)*100)); return <div style={{height:"6px",background:"#eee",borderRadius:"3px",overflow:"hidden",marginTop:"4px"}}><div style={{width:`${pct}%`,height:"100%",background:color,borderRadius:"3px",transition:"width 0.5s ease"}}/></div>; }
 
 // ===================== LOGIN =====================
+function AIILogo({size=90}){
+  return <svg width={size} height={size} viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="100" cy="100" r="98" fill="#1e3a6e" stroke="white" strokeWidth="2"/>
+    <circle cx="100" cy="100" r="90" fill="none" stroke="#f5a623" strokeWidth="3"/>
+    <circle cx="100" cy="100" r="84" fill="none" stroke="#f5a623" strokeWidth="1"/>
+    <path d="M 100 20 A 80 80 0 0 1 180 100" fill="none" stroke="none"/>
+    <text fontFamily="Arial,sans-serif" fontSize="13" fontWeight="900" fill="white" letterSpacing="2">
+      <textPath href="#topArc" startOffset="15%">AMEEN ISLAMIC INSTITUTE</textPath>
+    </text>
+    <defs>
+      <path id="topArc" d="M 22 100 A 78 78 0 0 1 178 100"/>
+      <path id="botArc" d="M 178 100 A 78 78 0 0 1 22 100"/>
+    </defs>
+    <text fontFamily="Arial,sans-serif" fontSize="13" fontWeight="900" fill="white" letterSpacing="2">
+      <textPath href="#botArc" startOffset="15%">ESTD. 2025</textPath>
+    </text>
+    <circle cx="100" cy="100" r="52" fill="#1e3a6e" stroke="white" strokeWidth="2"/>
+    <text x="72" y="92" fontFamily="Arial,sans-serif" fontSize="32" fontWeight="900" fill="#f5a623">A</text>
+    <text x="108" y="92" fontFamily="Arial,sans-serif" fontSize="32" fontWeight="900" fill="white">I</text>
+    <text x="126" y="92" fontFamily="Arial,sans-serif" fontSize="32" fontWeight="900" fill="white">I</text>
+    <circle cx="115" cy="110" r="5" fill="#f5a623"/>
+  </svg>;
+}
+
+function HouseBadge({house,size=130}){
+  const configs={
+    abuBakr:{color1:"#1e3a8a",color2:"#1d4ed8",name:"ABU BAKR HOUSE",badge:"TRUTH & LOYALTY",
+      icon:<><path d="M85 75 L100 65 L115 75 L115 95 L100 105 L85 95 Z" fill="none" stroke="white" strokeWidth="2.5"/><line x1="100" y1="65" x2="100" y2="105" stroke="white" strokeWidth="1.5"/><line x1="85" y1="80" x2="115" y2="80" stroke="white" strokeWidth="1.5"/><path d="M85 80 Q100 70 115 80" fill="none" stroke="white" strokeWidth="2"/><path d="M110 88 Q118 82 126 88 L120 98 Q115 92 110 98 Z" fill="white"/><path d="M74 88 Q82 82 90 88" fill="none" stroke="white" strokeWidth="2.5"/></>
+    },
+    umar:{color1:"#14532d",color2:"#15803d",name:"UMAR HOUSE",badge:"JUSTICE & DISCIPLINE",
+      icon:<><rect x="86" y="78" width="8" height="28" rx="1" fill="white"/><rect x="80" y="104" width="20" height="4" rx="1" fill="white"/><circle cx="90" cy="75" r="5" fill="white" opacity="0.9"/><path d="M108 78 L118 80 L116 90 L108 88 Z" fill="none" stroke="white" strokeWidth="2.5"/><circle cx="116" cy="82" r="10" fill="none" stroke="white" strokeWidth="2"/><line x1="110" y1="76" x2="122" y2="88" stroke="white" strokeWidth="1.5"/><line x1="110" y1="88" x2="122" y2="76" stroke="white" strokeWidth="1.5"/></>
+    },
+    uthman:{color1:"#713f12",color2:"#a16207",name:"UTHMAN HOUSE",badge:"MODESTY & GENEROSITY",
+      icon:<><path d="M88 70 Q82 65 78 72 Q74 80 82 85 Q88 88 92 82 Q98 90 100 85 Q104 78 98 72 Q94 67 88 70Z" fill="white" opacity="0.9"/><path d="M100 88 L110 80 L115 85 L120 78 L126 82" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"/><path d="M108 95 Q116 90 124 95 L122 105 Q116 100 108 105 Z" fill="white" opacity="0.85"/></>
+    },
+    ali:{color1:"#7f1d1d",color2:"#b91c1c",name:"ALI HOUSE",badge:"BRAVERY & KNOWLEDGE",
+      icon:<><path d="M82 108 L90 72 L94 80 L100 68 L106 80 L110 72 L118 108 Z" fill="none" stroke="white" strokeWidth="2.5" strokeLinejoin="round"/><path d="M86 100 L114 100" stroke="white" strokeWidth="2"/><rect x="108" y="78" width="16" height="22" rx="2" fill="none" stroke="white" strokeWidth="2"/><line x1="111" y1="84" x2="121" y2="84" stroke="white" strokeWidth="1.5"/><line x1="111" y1="89" x2="121" y2="89" stroke="white" strokeWidth="1.5"/><line x1="111" y1="94" x2="121" y2="94" stroke="white" strokeWidth="1.5"/></>
+    }
+  };
+  const c=configs[house]; if(!c) return null;
+  const r=size/2; const cx=r; const cy=r; const sc=size/200;
+  return <svg width={size} height={size} viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id={"g"+house} x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor={c.color1}/>
+        <stop offset="100%" stopColor={c.color2}/>
+      </linearGradient>
+      <path id={"ta"+house} d="M 24 100 A 76 76 0 0 1 176 100"/>
+      <path id={"ba"+house} d="M 170 116 A 76 76 0 0 1 30 116"/>
+    </defs>
+    <circle cx="100" cy="100" r="98" fill={`url(#g${house})`}/>
+    <circle cx="100" cy="100" r="94" fill="none" stroke="white" strokeWidth="2.5"/>
+    <circle cx="100" cy="100" r="88" fill="none" stroke="white" strokeWidth="1"/>
+    <text fontFamily="Arial,sans-serif" fontSize="11.5" fontWeight="900" fill="white" letterSpacing="2.5">
+      <textPath href={"#ta"+house} startOffset="12%">AMEEN ISLAMIC INSTITUTE</textPath>
+    </text>
+    <text fontFamily="Arial,sans-serif" fontSize="12" fontWeight="900" fill="white" letterSpacing="2">
+      <textPath href={"#ba"+house} startOffset="8%">{c.name}</textPath>
+    </text>
+    <circle cx="100" cy="100" r="50" fill="none" stroke="white" strokeWidth="2"/>
+    <circle cx="100" cy="100" r="46" fill="rgba(0,0,0,0.15)"/>
+    <g>{c.icon}</g>
+    <rect x="68" y="111" width="64" height="14" rx="3" fill="rgba(255,255,255,0.95)"/>
+    <text x="100" y="121.5" fontFamily="Arial,sans-serif" fontSize="7.5" fontWeight="900" fill={c.color1} textAnchor="middle" letterSpacing="0.5">{c.badge}</text>
+  </svg>;
+}
+
 function Login({onLogin,err,loading}){
   const [e,setE]=useState(""); const [p,setP]=useState("");
   const [showLogin,setShowLogin]=useState(false);
-  const houseInfo=[
-    {id:"abuBakr",nameEn:"Abu Bakr",nameUr:"ابو بکرؓ",slogan:"Truth & Loyalty",color:"#1e40af",light:"#dbeafe",icon:"⚖️🤝",badge:"TRUTH & LOYALTY"},
-    {id:"umar",nameEn:"Umar",nameUr:"عمرؓ",slogan:"Justice & Discipline",color:"#166534",light:"#dcfce7",icon:"⚖️🛡️",badge:"JUSTICE & DISCIPLINE"},
-    {id:"uthman",nameEn:"Uthman",nameUr:"عثمانؓ",slogan:"Modesty & Generosity",color:"#854d0e",light:"#fef3c7",icon:"🌙🤲",badge:"MODESTY & GENEROSITY"},
-    {id:"ali",nameEn:"Ali",nameUr:"علیؓ",slogan:"Bravery & Knowledge",color:"#991b1b",light:"#fee2e2",icon:"⚔️📖",badge:"BRAVERY & KNOWLEDGE"}
-  ];
+
   if(showLogin) return <div style={S.lp}>
     <div style={{position:"absolute",top:0,left:0,right:0,bottom:0,backgroundImage:"radial-gradient(circle at 20% 50%, rgba(183,134,11,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(30,64,175,0.1) 0%, transparent 40%)"}}/>
     <div style={S.lc}>
       <button onClick={()=>setShowLogin(false)} style={{background:"none",border:"none",color:C.gold,cursor:"pointer",fontSize:"0.7rem",marginBottom:"16px",textAlign:"right",display:"block",width:"100%"}}>← واپس جائیں</button>
       <div style={{textAlign:"center",marginBottom:"28px"}}>
-        <div style={S.seal}><span style={{fontSize:"2rem"}}>☪</span></div>
+        <div style={{margin:"0 auto 16px",display:"flex",justifyContent:"center"}}><AIILogo size={70}/></div>
         <div style={S.title}>امین اسکول ہب</div>
         <div style={{fontSize:"0.65rem",color:"#888",marginTop:"6px",fontFamily:"'Cinzel',serif",letterSpacing:"0.15em"}}>AMEEN ISLAMIC INSTITUTE</div>
         <div style={{fontSize:"0.6rem",color:C.gold,marginTop:"4px"}}>ایمان • نظم • برتری</div>
@@ -139,59 +201,50 @@ function Login({onLogin,err,loading}){
     </div>
   </div>;
 
-  return <div style={{minHeight:"100vh",background:"linear-gradient(180deg,#0f172a 0%,#1e293b 50%,#0f172a 100%)",overflowY:"auto",position:"relative"}}>
+  return <div style={{minHeight:"100vh",background:"linear-gradient(180deg,#0f172a 0%,#1e293b 60%,#0f172a 100%)",overflowY:"auto",position:"relative"}}>
     <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,backgroundImage:"radial-gradient(circle at 15% 25%,rgba(183,134,11,0.06) 0%,transparent 50%),radial-gradient(circle at 85% 75%,rgba(30,64,175,0.08) 0%,transparent 50%)",pointerEvents:"none",zIndex:0}}/>
-    <div style={{position:"relative",zIndex:1,maxWidth:"900px",margin:"0 auto",padding:"0 16px 60px"}}>
+    <div style={{position:"relative",zIndex:1,maxWidth:"860px",margin:"0 auto",padding:"0 16px 60px"}}>
 
-      {/* HEADER */}
-      <div style={{textAlign:"center",padding:"48px 20px 32px"}}>
-        <div style={{width:"90px",height:"90px",borderRadius:"50%",background:"linear-gradient(135deg,#b7860b,#7a5807)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px",boxShadow:"0 0 0 4px rgba(183,134,11,0.2),0 0 40px rgba(183,134,11,0.15)",position:"relative"}}>
-          <div style={{position:"absolute",inset:"4px",borderRadius:"50%",background:"#0f172a",display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <span style={{fontFamily:"'Cinzel',serif",fontSize:"1.4rem",fontWeight:"900",color:"#b7860b"}}>AII</span>
-          </div>
+      {/* HEADER — AII Logo SVG */}
+      <div style={{textAlign:"center",padding:"40px 20px 28px"}}>
+        <div style={{display:"flex",justifyContent:"center",marginBottom:"18px",filter:"drop-shadow(0 0 20px rgba(245,166,35,0.3))"}}>
+          <AIILogo size={110}/>
         </div>
-        <div style={{fontFamily:"'Amiri',serif",fontSize:"2rem",fontWeight:"700",color:"#e8b84b",marginBottom:"6px",textShadow:"0 2px 20px rgba(183,134,11,0.3)"}}>امین اسلامک انسٹیٹیوٹ</div>
-        <div style={{fontFamily:"'Cinzel',serif",fontSize:"0.75rem",color:"rgba(255,255,255,0.5)",letterSpacing:"0.2em",marginBottom:"8px"}}>AMEEN ISLAMIC INSTITUTE • SWAT</div>
-        <div style={{fontFamily:"'Cinzel',serif",fontSize:"0.65rem",color:"#b7860b",letterSpacing:"0.15em"}}>ESTD. 2025 • FAITH • DISCIPLINE • EXCELLENCE</div>
-        <div style={{width:"80px",height:"2px",background:"linear-gradient(90deg,transparent,#b7860b,transparent)",margin:"16px auto"}}/>
-        <div style={{fontSize:"0.8rem",color:"rgba(255,255,255,0.6)",fontFamily:"'Amiri',serif"}}>ہاؤس سسٹم — سیشن 2026-27</div>
+        <div style={{fontFamily:"'Amiri',serif",fontSize:"1.9rem",fontWeight:"700",color:"#e8b84b",marginBottom:"6px",textShadow:"0 2px 20px rgba(183,134,11,0.3)"}}>امین اسلامک انسٹیٹیوٹ</div>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:"0.72rem",color:"rgba(255,255,255,0.5)",letterSpacing:"0.2em",marginBottom:"6px"}}>AMEEN ISLAMIC INSTITUTE • SWAT</div>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:"0.6rem",color:"#f5a623",letterSpacing:"0.12em"}}>ESTD. 2025 • FAITH • DISCIPLINE • EXCELLENCE</div>
+        <div style={{width:"80px",height:"2px",background:"linear-gradient(90deg,transparent,#b7860b,transparent)",margin:"14px auto"}}/>
+        <div style={{fontSize:"0.78rem",color:"rgba(255,255,255,0.55)",fontFamily:"'Amiri',serif"}}>ہاؤس سسٹم — سیشن 2026-27</div>
       </div>
 
-      {/* HOUSE CARDS */}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"32px"}}>
-        {houseInfo.map((h,i)=><div key={h.id} style={{borderRadius:"20px",overflow:"hidden",border:`2px solid ${h.color}40`,background:`linear-gradient(135deg,${h.color}18,${h.color}08)`,backdropFilter:"blur(10px)",padding:"0"}}>
-          <div style={{background:`linear-gradient(135deg,${h.color},${h.color}cc)`,padding:"14px 16px",textAlign:"center"}}>
-            <div style={{width:"52px",height:"52px",borderRadius:"50%",background:"rgba(255,255,255,0.15)",border:"2px solid rgba(255,255,255,0.3)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 8px",fontSize:"1.3rem"}}>{h.icon}</div>
-            <div style={{fontFamily:"'Cinzel',serif",fontSize:"0.75rem",fontWeight:"900",color:"white",letterSpacing:"0.1em"}}>{h.nameEn.toUpperCase()} HOUSE</div>
-            <div style={{fontFamily:"'Amiri',serif",fontSize:"0.85rem",color:"rgba(255,255,255,0.85)",marginTop:"2px"}}>{h.nameUr} ہاؤس</div>
-          </div>
-          <div style={{padding:"12px 14px",textAlign:"center"}}>
-            <div style={{display:"inline-block",background:`${h.color}20`,border:`1px solid ${h.color}40`,borderRadius:"20px",padding:"4px 12px",fontSize:"0.52rem",fontWeight:"700",color:h.color,fontFamily:"'Cinzel',serif",letterSpacing:"0.08em"}}>{h.badge}</div>
-          </div>
+      {/* HOUSE BADGES SVG */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"20px",marginBottom:"28px",padding:"0 8px"}}>
+        {["abuBakr","umar","uthman","ali"].map(h=><div key={h} style={{display:"flex",justifyContent:"center",filter:"drop-shadow(0 6px 20px rgba(0,0,0,0.4))"}}>
+          <HouseBadge house={h} size={150}/>
         </div>)}
       </div>
 
       {/* THEME BANNER */}
-      <div style={{borderRadius:"20px",background:"linear-gradient(135deg,rgba(183,134,11,0.12),rgba(183,134,11,0.04))",border:"2px solid rgba(183,134,11,0.2)",padding:"20px",textAlign:"center",marginBottom:"24px"}}>
-        <div style={{fontSize:"0.62rem",fontFamily:"'Cinzel',serif",color:"rgba(255,255,255,0.4)",letterSpacing:"0.15em",marginBottom:"8px"}}>SESSION THEME 2026-27</div>
-        <div style={{fontSize:"1.2rem",fontFamily:"'Cinzel',serif",fontWeight:"900",color:"#e8b84b",letterSpacing:"0.1em"}}>FAITH • DISCIPLINE • EXCELLENCE</div>
-        <div style={{fontSize:"0.85rem",fontFamily:"'Amiri',serif",color:"rgba(255,255,255,0.6)",marginTop:"6px"}}>ایمان • نظم • برتری</div>
+      <div style={{borderRadius:"18px",background:"linear-gradient(135deg,rgba(183,134,11,0.12),rgba(183,134,11,0.04))",border:"2px solid rgba(183,134,11,0.25)",padding:"18px",textAlign:"center",marginBottom:"20px"}}>
+        <div style={{fontSize:"0.58rem",fontFamily:"'Cinzel',serif",color:"rgba(255,255,255,0.35)",letterSpacing:"0.18em",marginBottom:"6px"}}>SESSION THEME 2026-27</div>
+        <div style={{fontSize:"1.1rem",fontFamily:"'Cinzel',serif",fontWeight:"900",color:"#e8b84b",letterSpacing:"0.08em"}}>FAITH • DISCIPLINE • EXCELLENCE</div>
+        <div style={{fontSize:"0.82rem",fontFamily:"'Amiri',serif",color:"rgba(255,255,255,0.55)",marginTop:"5px"}}>ایمان • نظم • برتری</div>
       </div>
 
-      {/* STATS ROW */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"10px",marginBottom:"32px"}}>
+      {/* STATS */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"10px",marginBottom:"28px"}}>
         {[{n:"4",l:"Houses",u:"ہاؤس"},{n:"160",l:"HVS Points",u:"زیادہ سے زیادہ"},{n:"2026",l:"Session",u:"تعلیمی سال"}].map((s,i)=><div key={i} style={{borderRadius:"14px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",padding:"14px",textAlign:"center"}}>
           <div style={{fontSize:"1.5rem",fontWeight:"900",color:"#e8b84b",fontFamily:"'Cinzel',serif"}}>{s.n}</div>
-          <div style={{fontSize:"0.55rem",color:"rgba(255,255,255,0.5)",fontFamily:"'Cinzel',serif",letterSpacing:"0.08em",marginTop:"2px"}}>{s.l}</div>
-          <div style={{fontSize:"0.55rem",color:"rgba(183,134,11,0.6)",marginTop:"1px"}}>{s.u}</div>
+          <div style={{fontSize:"0.52rem",color:"rgba(255,255,255,0.45)",fontFamily:"'Cinzel',serif",letterSpacing:"0.08em",marginTop:"2px"}}>{s.l}</div>
+          <div style={{fontSize:"0.52rem",color:"rgba(183,134,11,0.6)",marginTop:"1px"}}>{s.u}</div>
         </div>)}
       </div>
 
       {/* LOGIN BUTTON */}
-      <button onClick={()=>setShowLogin(true)} style={{width:"100%",padding:"16px",borderRadius:"16px",border:"none",background:"linear-gradient(135deg,#b7860b,#7a5807)",color:"white",fontSize:"0.85rem",fontWeight:"700",cursor:"pointer",fontFamily:"'Amiri',serif",boxShadow:"0 8px 30px rgba(183,134,11,0.35)",letterSpacing:"0.05em"}}>
+      <button onClick={()=>setShowLogin(true)} style={{width:"100%",padding:"16px",borderRadius:"16px",border:"none",background:"linear-gradient(135deg,#b7860b,#7a5807)",color:"white",fontSize:"0.88rem",fontWeight:"700",cursor:"pointer",fontFamily:"'Amiri',serif",boxShadow:"0 8px 30px rgba(183,134,11,0.4)",letterSpacing:"0.05em"}}>
         🔐 اسکول ہب میں داخل ہوں
       </button>
-      <div style={{textAlign:"center",marginTop:"12px",fontSize:"0.58rem",color:"rgba(255,255,255,0.3)",fontFamily:"'Cinzel',serif",letterSpacing:"0.1em"}}>AMEEN SCHOOL HUB • STAFF & MANAGEMENT PORTAL</div>
+      <div style={{textAlign:"center",marginTop:"12px",fontSize:"0.55rem",color:"rgba(255,255,255,0.25)",fontFamily:"'Cinzel',serif",letterSpacing:"0.1em"}}>AMEEN SCHOOL HUB • STAFF & MANAGEMENT PORTAL</div>
     </div>
   </div>;
 }
