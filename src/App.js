@@ -109,25 +109,89 @@ function pBar(val,max,color){ const pct=Math.min(100,Math.round((val/max)*100));
 // ===================== LOGIN =====================
 function Login({onLogin,err,loading}){
   const [e,setE]=useState(""); const [p,setP]=useState("");
-  return <div style={S.lp}>
+  const [showLogin,setShowLogin]=useState(false);
+  const houseInfo=[
+    {id:"abuBakr",nameEn:"Abu Bakr",nameUr:"ابو بکرؓ",slogan:"Truth & Loyalty",color:"#1e40af",light:"#dbeafe",icon:"⚖️🤝",badge:"TRUTH & LOYALTY"},
+    {id:"umar",nameEn:"Umar",nameUr:"عمرؓ",slogan:"Justice & Discipline",color:"#166534",light:"#dcfce7",icon:"⚖️🛡️",badge:"JUSTICE & DISCIPLINE"},
+    {id:"uthman",nameEn:"Uthman",nameUr:"عثمانؓ",slogan:"Modesty & Generosity",color:"#854d0e",light:"#fef3c7",icon:"🌙🤲",badge:"MODESTY & GENEROSITY"},
+    {id:"ali",nameEn:"Ali",nameUr:"علیؓ",slogan:"Bravery & Knowledge",color:"#991b1b",light:"#fee2e2",icon:"⚔️📖",badge:"BRAVERY & KNOWLEDGE"}
+  ];
+  if(showLogin) return <div style={S.lp}>
     <div style={{position:"absolute",top:0,left:0,right:0,bottom:0,backgroundImage:"radial-gradient(circle at 20% 50%, rgba(183,134,11,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(30,64,175,0.1) 0%, transparent 40%)"}}/>
     <div style={S.lc}>
-      <div style={{textAlign:"center",marginBottom:"32px"}}>
+      <button onClick={()=>setShowLogin(false)} style={{background:"none",border:"none",color:C.gold,cursor:"pointer",fontSize:"0.7rem",marginBottom:"16px",textAlign:"right",display:"block",width:"100%"}}>← واپس جائیں</button>
+      <div style={{textAlign:"center",marginBottom:"28px"}}>
         <div style={S.seal}><span style={{fontSize:"2rem"}}>☪</span></div>
         <div style={S.title}>امین اسکول ہب</div>
         <div style={{fontSize:"0.65rem",color:"#888",marginTop:"6px",fontFamily:"'Cinzel',serif",letterSpacing:"0.15em"}}>AMEEN ISLAMIC INSTITUTE</div>
         <div style={{fontSize:"0.6rem",color:C.gold,marginTop:"4px"}}>ایمان • نظم • برتری</div>
       </div>
       <input style={S.inp} type="email" placeholder="Email" value={e} onChange={x=>setE(x.target.value)}/>
-      <input style={S.inp} type="password" placeholder="Password" value={p} onChange={x=>setP(x.target.value)}/>
+      <input style={S.inp} type="password" placeholder="Password" value={p} onChange={x=>setP(x.target.value)} onKeyDown={k=>k.key==="Enter"&&onLogin(e,p)}/>
       {err&&<div style={{color:C.red,fontSize:"0.68rem",textAlign:"center",marginBottom:"8px",padding:"8px",background:"#fee2e2",borderRadius:"8px"}}>{err}</div>}
       <button style={S.btn} onClick={()=>onLogin(e,p)} disabled={loading}>{loading?"لاگ ان ہو رہا ہے...":"🔐 لاگ ان"}</button>
       <div style={{background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`,borderRadius:"14px",padding:"16px",marginTop:"20px",border:`1px solid ${C.goldLight}`}}>
-        <div style={{fontSize:"0.62rem",color:C.goldDark,fontWeight:"700",marginBottom:"10px"}}>🔑 Demo Credentials — کلک کر کے لاگ ان:</div>
+        <div style={{fontSize:"0.62rem",color:C.goldDark,fontWeight:"700",marginBottom:"10px"}}>🔑 Demo — کلک کر کے لاگ ان:</div>
         {DEMO.map(u=><div key={u.email} style={{fontSize:"0.58rem",color:"#555",marginBottom:"6px",fontFamily:"monospace",direction:"ltr",cursor:"pointer",padding:"6px 10px",background:"rgba(255,255,255,0.7)",borderRadius:"8px",border:"1px solid rgba(183,134,11,0.1)"}} onClick={()=>{setE(u.email);setP(u.password);}}>
           [{u.role}] {u.email} / {u.password}
         </div>)}
       </div>
+    </div>
+  </div>;
+
+  return <div style={{minHeight:"100vh",background:"linear-gradient(180deg,#0f172a 0%,#1e293b 50%,#0f172a 100%)",overflowY:"auto",position:"relative"}}>
+    <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,backgroundImage:"radial-gradient(circle at 15% 25%,rgba(183,134,11,0.06) 0%,transparent 50%),radial-gradient(circle at 85% 75%,rgba(30,64,175,0.08) 0%,transparent 50%)",pointerEvents:"none",zIndex:0}}/>
+    <div style={{position:"relative",zIndex:1,maxWidth:"900px",margin:"0 auto",padding:"0 16px 60px"}}>
+
+      {/* HEADER */}
+      <div style={{textAlign:"center",padding:"48px 20px 32px"}}>
+        <div style={{width:"90px",height:"90px",borderRadius:"50%",background:"linear-gradient(135deg,#b7860b,#7a5807)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px",boxShadow:"0 0 0 4px rgba(183,134,11,0.2),0 0 40px rgba(183,134,11,0.15)",position:"relative"}}>
+          <div style={{position:"absolute",inset:"4px",borderRadius:"50%",background:"#0f172a",display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <span style={{fontFamily:"'Cinzel',serif",fontSize:"1.4rem",fontWeight:"900",color:"#b7860b"}}>AII</span>
+          </div>
+        </div>
+        <div style={{fontFamily:"'Amiri',serif",fontSize:"2rem",fontWeight:"700",color:"#e8b84b",marginBottom:"6px",textShadow:"0 2px 20px rgba(183,134,11,0.3)"}}>امین اسلامک انسٹیٹیوٹ</div>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:"0.75rem",color:"rgba(255,255,255,0.5)",letterSpacing:"0.2em",marginBottom:"8px"}}>AMEEN ISLAMIC INSTITUTE • SWAT</div>
+        <div style={{fontFamily:"'Cinzel',serif",fontSize:"0.65rem",color:"#b7860b",letterSpacing:"0.15em"}}>ESTD. 2025 • FAITH • DISCIPLINE • EXCELLENCE</div>
+        <div style={{width:"80px",height:"2px",background:"linear-gradient(90deg,transparent,#b7860b,transparent)",margin:"16px auto"}}/>
+        <div style={{fontSize:"0.8rem",color:"rgba(255,255,255,0.6)",fontFamily:"'Amiri',serif"}}>ہاؤس سسٹم — سیشن 2026-27</div>
+      </div>
+
+      {/* HOUSE CARDS */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"32px"}}>
+        {houseInfo.map((h,i)=><div key={h.id} style={{borderRadius:"20px",overflow:"hidden",border:`2px solid ${h.color}40`,background:`linear-gradient(135deg,${h.color}18,${h.color}08)`,backdropFilter:"blur(10px)",padding:"0"}}>
+          <div style={{background:`linear-gradient(135deg,${h.color},${h.color}cc)`,padding:"14px 16px",textAlign:"center"}}>
+            <div style={{width:"52px",height:"52px",borderRadius:"50%",background:"rgba(255,255,255,0.15)",border:"2px solid rgba(255,255,255,0.3)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 8px",fontSize:"1.3rem"}}>{h.icon}</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:"0.75rem",fontWeight:"900",color:"white",letterSpacing:"0.1em"}}>{h.nameEn.toUpperCase()} HOUSE</div>
+            <div style={{fontFamily:"'Amiri',serif",fontSize:"0.85rem",color:"rgba(255,255,255,0.85)",marginTop:"2px"}}>{h.nameUr} ہاؤس</div>
+          </div>
+          <div style={{padding:"12px 14px",textAlign:"center"}}>
+            <div style={{display:"inline-block",background:`${h.color}20`,border:`1px solid ${h.color}40`,borderRadius:"20px",padding:"4px 12px",fontSize:"0.52rem",fontWeight:"700",color:h.color,fontFamily:"'Cinzel',serif",letterSpacing:"0.08em"}}>{h.badge}</div>
+          </div>
+        </div>)}
+      </div>
+
+      {/* THEME BANNER */}
+      <div style={{borderRadius:"20px",background:"linear-gradient(135deg,rgba(183,134,11,0.12),rgba(183,134,11,0.04))",border:"2px solid rgba(183,134,11,0.2)",padding:"20px",textAlign:"center",marginBottom:"24px"}}>
+        <div style={{fontSize:"0.62rem",fontFamily:"'Cinzel',serif",color:"rgba(255,255,255,0.4)",letterSpacing:"0.15em",marginBottom:"8px"}}>SESSION THEME 2026-27</div>
+        <div style={{fontSize:"1.2rem",fontFamily:"'Cinzel',serif",fontWeight:"900",color:"#e8b84b",letterSpacing:"0.1em"}}>FAITH • DISCIPLINE • EXCELLENCE</div>
+        <div style={{fontSize:"0.85rem",fontFamily:"'Amiri',serif",color:"rgba(255,255,255,0.6)",marginTop:"6px"}}>ایمان • نظم • برتری</div>
+      </div>
+
+      {/* STATS ROW */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"10px",marginBottom:"32px"}}>
+        {[{n:"4",l:"Houses",u:"ہاؤس"},{n:"160",l:"HVS Points",u:"زیادہ سے زیادہ"},{n:"2026",l:"Session",u:"تعلیمی سال"}].map((s,i)=><div key={i} style={{borderRadius:"14px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",padding:"14px",textAlign:"center"}}>
+          <div style={{fontSize:"1.5rem",fontWeight:"900",color:"#e8b84b",fontFamily:"'Cinzel',serif"}}>{s.n}</div>
+          <div style={{fontSize:"0.55rem",color:"rgba(255,255,255,0.5)",fontFamily:"'Cinzel',serif",letterSpacing:"0.08em",marginTop:"2px"}}>{s.l}</div>
+          <div style={{fontSize:"0.55rem",color:"rgba(183,134,11,0.6)",marginTop:"1px"}}>{s.u}</div>
+        </div>)}
+      </div>
+
+      {/* LOGIN BUTTON */}
+      <button onClick={()=>setShowLogin(true)} style={{width:"100%",padding:"16px",borderRadius:"16px",border:"none",background:"linear-gradient(135deg,#b7860b,#7a5807)",color:"white",fontSize:"0.85rem",fontWeight:"700",cursor:"pointer",fontFamily:"'Amiri',serif",boxShadow:"0 8px 30px rgba(183,134,11,0.35)",letterSpacing:"0.05em"}}>
+        🔐 اسکول ہب میں داخل ہوں
+      </button>
+      <div style={{textAlign:"center",marginTop:"12px",fontSize:"0.58rem",color:"rgba(255,255,255,0.3)",fontFamily:"'Cinzel',serif",letterSpacing:"0.1em"}}>AMEEN SCHOOL HUB • STAFF & MANAGEMENT PORTAL</div>
     </div>
   </div>;
 }
