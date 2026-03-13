@@ -1391,6 +1391,238 @@ function DirectorPortal({students,teachers,houses,fees,results,hvsLogs}){
   </div>;
 }
 
+// ===================== STUDENT REPORT CARD =====================
+function ReportCard({students,results,fees,addData}){
+  const [selStudent,setSelStudent]=useState(null); const [q,setQ]=useState(""); const [term,setTerm]=useState("سالانہ 2026");
+  const filtered=students.filter(s=>s.name?.includes(q)||s.studentCode?.includes(q));
+  if(selStudent){
+    const h=HOUSES.find(x=>x.id===selStudent.houseId)||{};
+    const sResults=results.filter(r=>r.studentId===selStudent.id);
+    const sFees=fees.filter(f=>f.studentId===selStudent.id);
+    const paidFees=sFees.filter(f=>f.status==="paid").reduce((s,f)=>s+(f.amount||0),0);
+    const pendingFees=sFees.filter(f=>f.status==="pending").reduce((s,f)=>s+(f.amount||0),0);
+    const avgPct=sResults.length>0?Math.round(sResults.reduce((s,r)=>s+(r.percentage||0),0)/sResults.length):0;
+    const overallGrade=avgPct>=90?"A+":avgPct>=80?"A":avgPct>=70?"B":avgPct>=60?"C":avgPct>=50?"D":"F";
+    const totalObtained=sResults.reduce((s,r)=>s+(r.obtained||0),0);
+    const totalMarks=sResults.reduce((s,r)=>s+(r.total||100),0);
+    return <div style={S.page}>
+      <div style={{display:"flex",gap:"10px",marginBottom:"20px",flexWrap:"wrap"}}>
+        <button style={{...S.addBtn,background:"#eee",color:C.navy,boxShadow:"none"}} onClick={()=>setSelStudent(null)}>← واپس</button>
+        <button style={{...S.saveBtn,fontSize:"0.65rem"}} onClick={()=>window.print()}>🖨️ پرنٹ / PDF</button>
+      </div>
+      <div style={{background:C.white,borderRadius:"22px",overflow:"hidden",boxShadow:"0 8px 32px rgba(0,0,0,0.12)",maxWidth:"800px",margin:"0 auto"}}>
+        <div style={{background:`linear-gradient(135deg,${C.navyDark},${C.navyMid})`,padding:"24px",color:C.white,textAlign:"center"}}>
+          <div style={{fontSize:"1.4rem",fontWeight:"900",color:C.gold,marginBottom:"4px"}}>امین اسکول ہب</div>
+          <div style={{fontSize:"0.65rem",letterSpacing:"0.15em",opacity:0.7,marginBottom:"16px"}}>AMEEN ISLAMIC INSTITUTE • SWAT</div>
+          <div style={{background:"rgba(255,255,255,0.1)",borderRadius:"12px",padding:"12px",display:"inline-block"}}><div style={{fontSize:"0.85rem",fontWeight:"700",color:C.gold}}>رپورٹ کارڈ — {term}</div></div>
+        </div>
+        <div style={{padding:"20px 24px",borderBottom:`2px solid ${C.goldLight}`,display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px"}}>
+          {[["نام",selStudent.name],["والد کا نام",selStudent.fatherName||"—"],["داخلہ نمبر",selStudent.studentCode||"—"],["جماعت",selStudent.grade||"—"],["ہاؤس",`${h.emoji||""} ${h.nameEn||"—"}`],["سیکشن",selStudent.section||"A"]].map(([l,v])=><div key={l} style={{display:"flex",gap:"8px",alignItems:"center"}}><span style={{fontSize:"0.62rem",color:"#888",minWidth:"80px"}}>{l}:</span><span style={{fontSize:"0.72rem",fontWeight:"700",color:C.navy}}>{v}</span></div>)}
+        </div>
+        <div style={{padding:"20px 24px"}}>
+          <div style={{fontSize:"0.82rem",fontWeight:"700",color:C.navy,marginBottom:"14px",borderBottom:`2px solid ${C.goldLight}`,paddingBottom:"8px"}}>📊 نتائج</div>
+          <table style={{width:"100%",borderCollapse:"collapse",marginBottom:"20px"}}>
+            <thead><tr style={{background:`linear-gradient(135deg,${C.navy},${C.navyMid})`,color:C.white}}>{["مضمون","کل","حاصل","فیصد","گریڈ"].map(h=><th key={h} style={{padding:"10px 12px",fontSize:"0.65rem",textAlign:"right",fontWeight:"700"}}>{h}</th>)}</tr></thead>
+            <tbody>{sResults.map((r,i)=><tr key={r.id} style={{background:i%2===0?"#fafaf8":C.white}}>
+              <td style={{...S.td,fontWeight:"600"}}>{r.subject}</td><td style={S.td}>{r.total||100}</td>
+              <td style={{...S.td,fontWeight:"700",color:r.percentage>=50?C.navy:C.red}}>{r.obtained||0}</td>
+              <td style={S.td}><div style={{display:"flex",alignItems:"center",gap:"6px"}}><div style={{flex:1}}>{pBar(r.percentage||0,100,r.percentage>=70?C.green:r.percentage>=50?C.amber:C.red)}</div><span style={{fontSize:"0.6rem",fontWeight:"700",color:r.percentage>=70?C.green:r.percentage>=50?C.amber:C.red}}>{r.percentage}%</span></div></td>
+              <td style={S.td}><span style={{padding:"3px 10px",borderRadius:"20px",fontSize:"0.65rem",fontWeight:"800",background:r.grade==="A+"||r.grade==="A"?"#dcfce7":r.grade==="B"?"#dbeafe":"#fef3c7",color:r.grade==="A+"||r.grade==="A"?C.green:r.grade==="B"?C.abuBakr:C.amber}}>{r.grade||"—"}</span></td>
+            </tr>)}{sResults.length===0&&<tr><td colSpan={5} style={{...S.td,textAlign:"center",color:"#bbb",padding:"30px"}}>کوئی نتیجہ نہیں</td></tr>}</tbody>
+            {sResults.length>0&&<tfoot><tr style={{background:C.goldLight}}><td style={{...S.td,fontWeight:"800",color:C.navy}}>مجموعہ</td><td style={{...S.td,fontWeight:"800"}}>{totalMarks}</td><td style={{...S.td,fontWeight:"800"}}>{totalObtained}</td><td style={S.td}><span style={{fontWeight:"800",color:avgPct>=70?C.green:avgPct>=50?C.amber:C.red}}>{avgPct}%</span></td><td style={S.td}><span style={{padding:"4px 12px",borderRadius:"20px",fontSize:"0.72rem",fontWeight:"900",background:`linear-gradient(135deg,${C.gold},${C.goldDark})`,color:C.white}}>{overallGrade}</span></td></tr></tfoot>}
+          </table>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"14px",marginBottom:"20px"}}>
+            <div style={{background:"#fafaf8",borderRadius:"12px",padding:"14px",display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:"0.72rem",fontWeight:"700",color:C.navy,marginBottom:"4px"}}>💰 فیس</div><div style={{fontSize:"0.62rem",color:"#888"}}>ادا: Rs. {paidFees.toLocaleString()}</div></div><span style={{...hBadge(pendingFees>0?C.red:C.green,pendingFees>0?"#fee2e2":"#dcfce7"),fontSize:"0.62rem"}}>{pendingFees>0?`⚠️ Rs.${pendingFees.toLocaleString()} باقی`:"✅ کلیئر"}</span></div>
+            <div style={{background:"#fafaf8",borderRadius:"12px",padding:"14px",textAlign:"center"}}><div style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px"}}>مجموعی گریڈ</div><div style={{fontSize:"2rem",fontWeight:"900",color:C.gold}}>{overallGrade}</div></div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"20px",marginTop:"30px"}}>{["کلاس ٹیچر","پرنسپل","والدین"].map(r=><div key={r} style={{textAlign:"center"}}><div style={{borderTop:`2px solid #ddd`,paddingTop:"8px",fontSize:"0.6rem",color:"#888"}}>{r} کے دستخط</div></div>)}</div>
+        </div>
+      </div>
+    </div>;
+  }
+  return <div style={S.page}>
+    <div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy,marginBottom:"6px"}}>📋 رپورٹ کارڈ</div>
+    <div style={{fontSize:"0.62rem",color:"#888",marginBottom:"16px"}}>طالب علم تلاش کریں</div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:"10px",marginBottom:"20px"}}><input style={{...S.inpSm,fontSize:"0.8rem",padding:"14px 18px"}} placeholder="🔍 نام یا کوڈ..." value={q} onChange={e=>setQ(e.target.value)}/><input style={{...S.inpSm,direction:"ltr",minWidth:"140px"}} value={term} onChange={e=>setTerm(e.target.value)} placeholder="Term..."/></div>
+    {q&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:"14px"}}>
+      {filtered.map(s=>{ const h=HOUSES.find(x=>x.id===s.houseId)||{}; const sRes=results.filter(r=>r.studentId===s.id); const avg=sRes.length>0?Math.round(sRes.reduce((sum,r)=>sum+(r.percentage||0),0)/sRes.length):0; return <div key={s.id} onClick={()=>setSelStudent(s)} style={{...S.card,cursor:"pointer",borderRight:`4px solid ${h.color||C.gold}`}}>
+        <div style={{display:"flex",alignItems:"center",gap:"12px"}}><div style={{width:"48px",height:"48px",borderRadius:"50%",background:h.gradient||`linear-gradient(135deg,${C.gold},${C.goldDark})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.4rem"}}>{h.emoji||"🎓"}</div><div><div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy}}>{s.name}</div><div style={{fontSize:"0.62rem",color:"#888"}}>{s.grade} • {h.nameEn||"—"}</div>{sRes.length>0&&<div style={{fontSize:"0.65rem",fontWeight:"700",color:avg>=70?C.green:avg>=50?C.amber:C.red}}>اوسط: {avg}%</div>}</div></div>
+      </div>; })}
+      {filtered.length===0&&<div style={{...S.card,textAlign:"center",color:"#bbb",padding:"40px",gridColumn:"1/-1"}}>کوئی نتیجہ نہیں</div>}
+    </div>}
+    {!q&&<div style={{...S.card,textAlign:"center",padding:"60px"}}><div style={{fontSize:"3rem",marginBottom:"12px"}}>📋</div><div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy}}>رپورٹ کارڈ جنریٹر</div><div style={{fontSize:"0.65rem",color:"#888",marginTop:"8px"}}>اوپر نام لکھیں</div></div>}
+  </div>;
+}
+
+// ===================== STUDENT WELFARE FEEDBACK =====================
+function WelfareFeedback({students,addData}){
+  const [feedbacks,setFeedbacks]=useState([]); const [show,setShow]=useState(false);
+  const [f,setF]=useState({studentId:"",type:"academic",severity:"low",description:"",actionTaken:"",followUpDate:"",reportedBy:"",anonymous:false});
+  useEffect(()=>{ return onSnapshot(query(collection(db,"welfare_feedback"),orderBy("createdAt","desc"),limit(50)),s=>setFeedbacks(s.docs.map(d=>({id:d.id,...d.data()}))));  },[]);
+  const add=async()=>{ if(!f.studentId&&!f.anonymous)return; await addData("welfare_feedback",{...f}); setShow(false); setF({studentId:"",type:"academic",severity:"low",description:"",actionTaken:"",followUpDate:"",reportedBy:"",anonymous:false}); };
+  const types={academic:{c:C.abuBakr,bg:"#dbeafe",i:"📚",l:"تعلیمی"},behavioral:{c:C.amber,bg:"#fef3c7",i:"😤",l:"رویہ"},emotional:{c:C.purple,bg:"#ede9fe",i:"💭",l:"جذباتی"},health:{c:C.red,bg:"#fee2e2",i:"🏥",l:"صحت"},family:{c:C.green,bg:"#dcfce7",i:"👪",l:"خاندان"},bullying:{c:"#dc2626",bg:"#fee2e2",i:"⚠️",l:"ہراسانی"},suggestion:{c:C.gold,bg:C.goldLight,i:"💡",l:"تجویز"}};
+  const sevConfig={low:{c:C.green,l:"کم"},medium:{c:C.amber,l:"درمیانہ"},high:{c:C.red,l:"زیادہ"},critical:{c:"#dc2626",l:"نازک"}};
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>💬 طالب علم فلاح</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>فیڈ بیک، مشکلات، تجاویز</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نئی رپورٹ</button>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:"12px",marginBottom:"20px"}}>
+      {[{c:C.red,i:"⚠️",n:feedbacks.filter(f=>!f.resolved).length,l:"کھلی"},{c:C.amber,i:"😤",n:feedbacks.filter(f=>f.type==="behavioral").length,l:"رویہ"},{c:C.purple,i:"💭",n:feedbacks.filter(f=>f.type==="emotional").length,l:"جذباتی"},{c:C.gold,i:"💡",n:feedbacks.filter(f=>f.type==="suggestion").length,l:"تجاویز"}].map((x,i)=><div key={i} style={{background:`linear-gradient(135deg,${x.c}12,${x.c}05)`,borderRadius:"16px",padding:"16px",border:`2px solid ${x.c}20`,textAlign:"center"}}><div style={{fontSize:"1.3rem"}}>{x.i}</div><div style={{fontSize:"1.4rem",fontWeight:"900",color:x.c}}>{x.n}</div><div style={{fontSize:"0.6rem",color:"#888"}}>{x.l}</div></div>)}
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`,border:`2px solid ${C.gold}30`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>طالب علم</label><select style={S.inpSm} value={f.studentId} onChange={e=>setF({...f,studentId:e.target.value})} disabled={f.anonymous}><option value="">-- منتخب کریں --</option>{students.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+        <div style={{display:"flex",alignItems:"center",gap:"8px",paddingTop:"20px"}}><input type="checkbox" checked={f.anonymous} onChange={e=>setF({...f,anonymous:e.target.checked,studentId:""})} id="anon2"/><label htmlFor="anon2" style={{fontSize:"0.68rem",color:C.navy,cursor:"pointer"}}>گمنام رپورٹ</label></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>قسم</label><select style={S.inpSm} value={f.type} onChange={e=>setF({...f,type:e.target.value})}>{Object.entries(types).map(([k,v])=><option key={k} value={k}>{v.i} {v.l}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>شدت</label><select style={S.inpSm} value={f.severity} onChange={e=>setF({...f,severity:e.target.value})}>{Object.entries(sevConfig).map(([k,v])=><option key={k} value={k}>{v.l}</option>)}</select></div>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>تفصیل</label><textarea style={{...S.inpSm,minHeight:"80px",resize:"vertical"}} value={f.description} onChange={e=>setF({...f,description:e.target.value})} placeholder="مسئلے کی تفصیل..."/></div>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>کارروائی</label><textarea style={{...S.inpSm,minHeight:"60px",resize:"vertical"}} value={f.actionTaken} onChange={e=>setF({...f,actionTaken:e.target.value})} placeholder="کیا قدم اٹھایا..."/></div>
+      </div>
+      <button style={S.saveBtn} onClick={add}>✅ رپورٹ درج کریں</button>
+    </div>}
+    <div style={{display:"flex",flexDirection:"column",gap:"12px"}}>
+      {feedbacks.map(fb=>{ const tc=types[fb.type]||types.suggestion; const sc=sevConfig[fb.severity]||sevConfig.low; const st=students.find(s=>s.id===fb.studentId); return <div key={fb.id} style={{...S.card,borderRight:`4px solid ${tc.c}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"8px"}}><div style={{display:"flex",alignItems:"center",gap:"8px"}}><span style={{fontSize:"1rem"}}>{tc.i}</span><span style={{fontSize:"0.8rem",fontWeight:"700",color:C.navy}}>{fb.anonymous?"گمنام":st?.name||"—"}</span></div><div style={{display:"flex",gap:"6px"}}><span style={hBadge(tc.c,tc.bg)}>{tc.l}</span><span style={hBadge(sc.c,sc.c+"15")}>{sc.l}</span></div></div>
+        <div style={{fontSize:"0.68rem",color:"#555",lineHeight:"1.6",marginBottom:"8px"}}>{fb.description}</div>
+        {fb.actionTaken&&<div style={{background:"#f0fdf4",borderRadius:"8px",padding:"8px 12px",fontSize:"0.62rem",color:C.green}}>✅ {fb.actionTaken}</div>}
+      </div>; })}
+      {feedbacks.length===0&&<div style={{...S.card,textAlign:"center",color:"#bbb",padding:"60px"}}>کوئی فیڈ بیک نہیں</div>}
+    </div>
+  </div>;
+}
+
+// ===================== PRIDE MESSAGE PORTAL =====================
+function PrideMessages({students,teachers,addData}){
+  const [messages,setMessages]=useState([]); const [show,setShow]=useState(false);
+  const [f,setF]=useState({studentId:"",type:"pride",message:"",from:"",sendToParent:true,housePoints:0});
+  useEffect(()=>{ return onSnapshot(query(collection(db,"pride_messages"),orderBy("createdAt","desc"),limit(50)),s=>setMessages(s.docs.map(d=>({id:d.id,...d.data()}))));  },[]);
+  const add=async()=>{ if(!f.studentId||!f.message)return; await addData("pride_messages",{...f,housePoints:Number(f.housePoints)}); setShow(false); setF({studentId:"",type:"pride",message:"",from:"",sendToParent:true,housePoints:0}); };
+  const types={pride:{c:C.gold,bg:C.goldLight,i:"🌟",l:"فخر"},achievement:{c:C.green,bg:"#dcfce7",i:"🏆",l:"کامیابی"},improvement:{c:C.abuBakr,bg:"#dbeafe",i:"📈",l:"بہتری"},warning:{c:C.amber,bg:"#fef3c7",i:"⚠️",l:"انتباہ"},concern:{c:C.red,bg:"#fee2e2",i:"😟",l:"تشویش"},islamic:{c:C.purple,bg:"#ede9fe",i:"🕌",l:"اسلامی"}};
+  const selStudent=students.find(s=>s.id===f.studentId);
+  const getTemplate=(type)=>{ const n=selStudent?.name||"طالب علم"; return type==="pride"?`بسم اللہ الرحمن الرحیم\n\nمحترم والدین!\n\nآپ کے فرزند ${n} نے شاندار کارکردگی کا مظاہرہ کیا ہے۔ ادارہ آپ پر فخر محسوس کرتا ہے۔\n\nجزاکم اللہ خیراً\nامین اسکول ہب`:`بسم اللہ الرحمن الرحیم\n\nمحترم والدین!\n\n${n} نے آج قابل ذکر کامیابی حاصل کی ہے۔\n\nجزاکم اللہ خیراً`; };
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>💌 پرائیڈ میسج پورٹل</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>والدین کو پیغام — فخر، کامیابی، انتباہ</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نیا پیغام</button>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:"12px",marginBottom:"20px"}}>
+      {[{c:C.gold,i:"🌟",n:messages.filter(m=>m.type==="pride").length,l:"فخر"},{c:C.green,i:"🏆",n:messages.filter(m=>m.type==="achievement").length,l:"کامیابی"},{c:C.amber,i:"⚠️",n:messages.filter(m=>m.type==="warning").length,l:"انتباہ"},{c:C.abuBakr,i:"💌",n:messages.length,l:"کل"}].map((x,i)=><div key={i} style={{background:`linear-gradient(135deg,${x.c}12,${x.c}05)`,borderRadius:"16px",padding:"16px",border:`2px solid ${x.c}20`,textAlign:"center"}}><div style={{fontSize:"1.3rem"}}>{x.i}</div><div style={{fontSize:"1.4rem",fontWeight:"900",color:x.c}}>{x.n}</div><div style={{fontSize:"0.6rem",color:"#888"}}>{x.l}</div></div>)}
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`,border:`2px solid ${C.gold}30`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>طالب علم *</label><select style={S.inpSm} value={f.studentId} onChange={e=>setF({...f,studentId:e.target.value})}><option value="">-- منتخب کریں --</option>{students.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>قسم</label><select style={S.inpSm} value={f.type} onChange={e=>setF({...f,type:e.target.value})}>{Object.entries(types).map(([k,v])=><option key={k} value={k}>{v.i} {v.l}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>از</label><select style={S.inpSm} value={f.from} onChange={e=>setF({...f,from:e.target.value})}><option value="">-- منتخب کریں --</option>{teachers.map(t=><option key={t.id} value={t.name}>{t.name}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>ہاؤس پوائنٹس</label><input style={{...S.inpSm,direction:"ltr"}} type="number" value={f.housePoints} onChange={e=>setF({...f,housePoints:e.target.value})}/></div>
+        <div style={{gridColumn:"1/-1",display:"flex",gap:"8px"}}><button onClick={()=>setF({...f,message:getTemplate("pride")})} style={{...hBadge(C.gold,C.goldLight),cursor:"pointer",border:"none",padding:"6px 12px",borderRadius:"8px",fontSize:"0.6rem"}}>🌟 فخر ٹیمپلیٹ</button><button onClick={()=>setF({...f,message:getTemplate("achievement")})} style={{...hBadge(C.green,"#dcfce7"),cursor:"pointer",border:"none",padding:"6px 12px",borderRadius:"8px",fontSize:"0.6rem"}}>🏆 کامیابی ٹیمپلیٹ</button></div>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>پیغام *</label><textarea style={{...S.inpSm,minHeight:"120px",resize:"vertical",lineHeight:"1.8"}} value={f.message} onChange={e=>setF({...f,message:e.target.value})} placeholder="پیغام لکھیں..."/></div>
+      </div>
+      <button style={S.saveBtn} onClick={add}>💌 پیغام بھیجیں</button>
+    </div>}
+    <div style={{display:"flex",flexDirection:"column",gap:"14px"}}>
+      {messages.map(m=>{ const tc=types[m.type]||types.pride; const st=students.find(s=>s.id===m.studentId); return <div key={m.id} style={{...S.card,borderRight:`4px solid ${tc.c}`,background:`linear-gradient(135deg,${tc.bg},#fff)`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"10px"}}><div><div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"4px"}}><span style={{fontSize:"1.2rem"}}>{tc.i}</span><span style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy}}>{st?.name||"—"}</span></div>{m.from&&<div style={{fontSize:"0.6rem",color:"#888"}}>از: {m.from}</div>}</div><span style={hBadge(tc.c,tc.bg)}>{tc.l}</span></div>
+        <div style={{fontSize:"0.68rem",color:"#555",lineHeight:"1.8",whiteSpace:"pre-line"}}>{m.message}</div>
+        {m.housePoints>0&&<div style={{marginTop:"8px"}}><span style={hBadge(C.gold,C.goldLight)}>+{m.housePoints} ہاؤس پوائنٹس</span></div>}
+      </div>; })}
+      {messages.length===0&&<div style={{...S.card,textAlign:"center",color:"#bbb",padding:"60px"}}><div style={{fontSize:"3rem",marginBottom:"12px"}}>💌</div>کوئی پیغام نہیں</div>}
+    </div>
+  </div>;
+}
+
+// ===================== WIFAQ COMPLIANCE PORTAL =====================
+function WifaqCompliance({addData}){
+  const [records,setRecords]=useState([]); const [show,setShow]=useState(false);
+  const [f,setF]=useState({subject:"",class:"",teacher:"",syllabusCompleted:0,totalSyllabus:100,examDate:"",examType:"internal",status:"in_progress",notes:""});
+  useEffect(()=>{ return onSnapshot(query(collection(db,"wifaq_compliance"),orderBy("createdAt","desc"),limit(50)),s=>setRecords(s.docs.map(d=>({id:d.id,...d.data()}))));  },[]);
+  const add=async()=>{ if(!f.subject)return; await addData("wifaq_compliance",{...f,syllabusCompleted:Number(f.syllabusCompleted),totalSyllabus:Number(f.totalSyllabus)}); setShow(false); setF({subject:"",class:"",teacher:"",syllabusCompleted:0,totalSyllabus:100,examDate:"",examType:"internal",status:"in_progress",notes:""}); };
+  const subjects=["تفسیر","حدیث","فقہ","عقیدہ","نحو","صرف","بلاغت","منطق","فلسفہ","سیرت","تجوید","اردو","انگریزی","ریاضی"];
+  const statConfig={in_progress:{c:C.amber,l:"جاری"},completed:{c:C.green,l:"مکمل"},delayed:{c:C.red,l:"تاخیر"},pending:{c:"#888",l:"زیر التوا"}};
+  const overallPct=records.length>0?Math.round(records.reduce((s,r)=>s+Math.round((r.syllabusCompleted/r.totalSyllabus)*100),0)/records.length):0;
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>🕌 وفاق کمپلائنس</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>نصاب تکمیل — وفاق المدارس معیار</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نیا مضمون</button>
+    </div>
+    <div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.navyDark},${C.navyMid})`,color:C.white,textAlign:"center"}}>
+      <div style={{fontSize:"0.65rem",opacity:0.6,marginBottom:"8px"}}>مجموعی نصاب تکمیل</div>
+      <div style={{fontSize:"3rem",fontWeight:"900",color:C.gold}}>{overallPct}%</div>
+      <div style={{marginTop:"12px",background:"rgba(255,255,255,0.1)",borderRadius:"20px",height:"8px",overflow:"hidden"}}><div style={{height:"100%",background:`linear-gradient(90deg,${C.gold},${C.goldDark})`,width:`${overallPct}%`,borderRadius:"20px"}}/></div>
+      <div style={{fontSize:"0.6rem",opacity:0.6,marginTop:"8px"}}>{records.length} مضامین</div>
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>مضمون *</label><select style={S.inpSm} value={f.subject} onChange={e=>setF({...f,subject:e.target.value})}><option value="">-- منتخب کریں --</option>{subjects.map(s=><option key={s}>{s}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>جماعت</label><input style={S.inpSm} value={f.class} onChange={e=>setF({...f,class:e.target.value})} placeholder="ثانیہ، ثالثہ..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>استاد</label><input style={S.inpSm} value={f.teacher} onChange={e=>setF({...f,teacher:e.target.value})} placeholder="نام..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>حال</label><select style={S.inpSm} value={f.status} onChange={e=>setF({...f,status:e.target.value})}>{Object.entries(statConfig).map(([k,v])=><option key={k} value={k}>{v.l}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>مکمل دروس</label><input style={{...S.inpSm,direction:"ltr"}} type="number" value={f.syllabusCompleted} onChange={e=>setF({...f,syllabusCompleted:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>کل دروس</label><input style={{...S.inpSm,direction:"ltr"}} type="number" value={f.totalSyllabus} onChange={e=>setF({...f,totalSyllabus:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>امتحان تاریخ</label><input style={{...S.inpSm,direction:"ltr"}} type="date" value={f.examDate} onChange={e=>setF({...f,examDate:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>قسم</label><select style={S.inpSm} value={f.examType} onChange={e=>setF({...f,examType:e.target.value})}><option value="internal">اندرونی</option><option value="wifaq">وفاق</option><option value="board">بورڈ</option></select></div>
+      </div>
+      <button style={S.saveBtn} onClick={add}>✅ محفوظ کریں</button>
+    </div>}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:"14px"}}>
+      {records.map(r=>{ const sc=statConfig[r.status]||statConfig.in_progress; const pct=Math.round((r.syllabusCompleted/(r.totalSyllabus||1))*100); return <div key={r.id} style={{...S.card,borderTop:`4px solid ${sc.c}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:"8px"}}><div><div style={{fontSize:"0.82rem",fontWeight:"700",color:C.navy}}>🕌 {r.subject}</div><div style={{fontSize:"0.6rem",color:"#888",marginTop:"2px"}}>{r.class} • {r.teacher}</div></div><span style={hBadge(sc.c,sc.c+"15")}>{sc.l}</span></div>
+        <div style={{marginBottom:"6px"}}>{pBar(r.syllabusCompleted,r.totalSyllabus||1,pct>=80?C.green:pct>=50?C.amber:C.red)}</div>
+        <div style={{display:"flex",justifyContent:"space-between",fontSize:"0.62rem"}}><span style={{color:"#888"}}>{r.syllabusCompleted}/{r.totalSyllabus} دروس</span><span style={{fontWeight:"700",color:pct>=80?C.green:pct>=50?C.amber:C.red}}>{pct}%</span></div>
+        {r.examDate&&<div style={{fontSize:"0.58rem",color:C.gold,marginTop:"6px",fontFamily:"monospace",direction:"ltr"}}>امتحان: {r.examDate}</div>}
+      </div>; })}
+      {records.length===0&&<div style={{...S.card,textAlign:"center",color:"#bbb",padding:"40px",gridColumn:"1/-1"}}>کوئی ریکارڈ نہیں</div>}
+    </div>
+  </div>;
+}
+
+// ===================== TARBIYAH ETHICS MONITOR =====================
+function TarbiyahEthics({students,addData}){
+  const [logs,setLogs]=useState([]); const [show,setShow]=useState(false);
+  const [f,setF]=useState({studentId:"",date:new Date().toISOString().split("T")[0],category:"adab",description:"",points:5,type:"positive"});
+  useEffect(()=>{ return onSnapshot(query(collection(db,"ethics_logs"),orderBy("createdAt","desc"),limit(100)),s=>setLogs(s.docs.map(d=>({id:d.id,...d.data()}))));  },[]);
+  const add=async()=>{ if(!f.studentId)return; await addData("ethics_logs",{...f,points:Number(f.points)}); setShow(false); setF({studentId:"",date:new Date().toISOString().split("T")[0],category:"adab",description:"",points:5,type:"positive"}); };
+  const cats={adab:{c:C.gold,bg:C.goldLight,i:"🌟",l:"ادب"},prayer:{c:C.purple,bg:"#ede9fe",i:"🕌",l:"نماز"},quran:{c:C.green,bg:"#dcfce7",i:"📖",l:"قرآن"},honesty:{c:C.abuBakr,bg:"#dbeafe",i:"✨",l:"صداقت"},discipline:{c:C.navy,bg:"#e0e7ff",i:"⚡",l:"نظم"},helping:{c:C.teal,bg:"#ccfbf1",i:"🤝",l:"تعاون"},misconduct:{c:C.red,bg:"#fee2e2",i:"⚠️",l:"خلاف ورزی"}};
+  const studentPoints=students.map(s=>{ const sL=logs.filter(l=>l.studentId===s.id); const pos=sL.filter(l=>l.type==="positive").reduce((sum,l)=>sum+(l.points||0),0); const neg=sL.filter(l=>l.type==="negative").reduce((sum,l)=>sum+(l.points||0),0); return {...s,points:pos-neg,logs:sL.length}; }).sort((a,b)=>b.points-a.points);
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>🌟 تربیت اخلاق مانیٹر</div><div style={{fontSize:"0.62rem",color:"#888",marginTop:"2px"}}>کردار، ادب، اخلاق کا ریکارڈ</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نئی انٹری</button>
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`,border:`2px solid ${C.gold}30`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>طالب علم *</label><select style={S.inpSm} value={f.studentId} onChange={e=>setF({...f,studentId:e.target.value})}><option value="">-- منتخب کریں --</option>{students.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>قسم</label><select style={S.inpSm} value={f.type} onChange={e=>setF({...f,type:e.target.value})}><option value="positive">✅ مثبت</option><option value="negative">❌ منفی</option></select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>زمرہ</label><select style={S.inpSm} value={f.category} onChange={e=>setF({...f,category:e.target.value})}>{Object.entries(cats).map(([k,v])=><option key={k} value={k}>{v.i} {v.l}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>پوائنٹس</label><input style={{...S.inpSm,direction:"ltr"}} type="number" min="1" max="50" value={f.points} onChange={e=>setF({...f,points:e.target.value})}/></div>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>تفصیل</label><textarea style={{...S.inpSm,minHeight:"60px",resize:"vertical"}} value={f.description} onChange={e=>setF({...f,description:e.target.value})} placeholder="واقعے کی تفصیل..."/></div>
+      </div>
+      <button style={{...S.saveBtn,background:f.type==="positive"?`linear-gradient(135deg,${C.green},#15803d)`:`linear-gradient(135deg,${C.red},#991b1b)`}} onClick={add}>{f.type==="positive"?"✅ مثبت درج":"❌ منفی درج"}</button>
+    </div>}
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"20px"}}>
+      <div style={S.card}>
+        <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy,marginBottom:"16px"}}>🏆 اخلاق لیڈر بورڈ</div>
+        {studentPoints.slice(0,10).map((s,i)=>{ const h=HOUSES.find(x=>x.id===s.houseId)||{}; return <div key={s.id} style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"10px",padding:"8px 10px",background:i===0?"linear-gradient(135deg,#fef3c7,#fff)":"#fafaf8",borderRadius:"10px"}}>
+          <div style={{width:"26px",height:"26px",borderRadius:"50%",background:i===0?`linear-gradient(135deg,${C.gold},${C.goldDark})`:"#eee",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.6rem",fontWeight:"900",color:i===0?C.white:"#aaa",flexShrink:0}}>{i===0?"👑":i+1}</div>
+          <span style={{fontSize:"1rem"}}>{h.emoji||"👤"}</span>
+          <div style={{flex:1}}><div style={{fontSize:"0.7rem",fontWeight:"700",color:C.navy}}>{s.name}</div><div style={{fontSize:"0.55rem",color:"#888"}}>{s.logs} انٹری</div></div>
+          <span style={{fontSize:"0.82rem",fontWeight:"900",color:s.points>=0?C.green:C.red}}>{s.points>0?"+":""}{s.points}</span>
+        </div>; })}
+        {studentPoints.length===0&&<div style={{textAlign:"center",color:"#bbb",padding:"20px"}}>کوئی ڈیٹا نہیں</div>}
+      </div>
+      <div style={S.card}>
+        <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy,marginBottom:"16px"}}>📋 حالیہ انٹریاں</div>
+        {logs.slice(0,8).map(l=>{ const tc=cats[l.category]||cats.adab; const st=students.find(s=>s.id===l.studentId); return <div key={l.id} style={{display:"flex",gap:"10px",marginBottom:"10px",padding:"8px 10px",background:l.type==="positive"?"#f0fdf4":"#fff5f5",borderRadius:"10px"}}>
+          <span style={{fontSize:"1.1rem"}}>{tc.i}</span>
+          <div style={{flex:1}}><div style={{fontSize:"0.68rem",fontWeight:"700",color:C.navy}}>{st?.name||"—"}</div><div style={{fontSize:"0.58rem",color:"#888"}}>{l.description?.slice(0,50)}</div></div>
+          <span style={{fontSize:"0.7rem",fontWeight:"800",color:l.type==="positive"?C.green:C.red}}>{l.type==="positive"?"+":"-"}{l.points}</span>
+        </div>; })}
+        {logs.length===0&&<div style={{textAlign:"center",color:"#bbb",padding:"20px"}}>کوئی انٹری نہیں</div>}
+      </div>
+    </div>
+  </div>;
+}
+
 // ===================== ALUMNI PORTAL =====================
 function AlumniPortal({addData}){
   const [alumni,setAlumni]=useState([]); const [show,setShow]=useState(false);
@@ -1982,6 +2214,9 @@ export default function App(){
     {id:"alumni",label:"🎓 سابق طلبا"},{id:"visitors",label:"🔒 سیکیورٹی"},
     {id:"seating",label:"🪑 نشست بندی"},{id:"faculty_dev",label:"👩‍🏫 استاد ترقی"},
     {id:"curriculum",label:"📚 نصابی وسائل"},{id:"marks",label:"✏️ نمبرات"},
+    {id:"reportcard",label:"📋 رپورٹ کارڈ"},{id:"welfare",label:"💬 طالب علم فلاح"},
+    {id:"pride",label:"💌 پرائیڈ میسج"},{id:"wifaq",label:"🕌 وفاق کمپلائنس"},
+    {id:"ethics",label:"🌟 اخلاق مانیٹر"},
   ];
 
   const uName=DEMO.find(d=>d.email===user?.email)?.name||user?.email||"";
@@ -2046,6 +2281,11 @@ export default function App(){
       {page==="faculty_dev"&&<FacultyDevelopment teachers={teachers} addData={addData}/>}
       {page==="curriculum"&&<CurriculumHub teachers={teachers} addData={addData}/>}
       {page==="marks"&&<MarksEntry students={students} addData={addData}/>}
+      {page==="reportcard"&&<ReportCard students={students} results={results} fees={fees} addData={addData}/>}
+      {page==="welfare"&&<WelfareFeedback students={students} addData={addData}/>}
+      {page==="pride"&&<PrideMessages students={students} teachers={teachers} addData={addData}/>}
+      {page==="wifaq"&&<WifaqCompliance addData={addData}/>}
+      {page==="ethics"&&<TarbiyahEthics students={students} addData={addData}/>}
     </div>
   </div>;
 }
