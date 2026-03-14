@@ -1054,13 +1054,6 @@ function Attendance({students,addData,teachers}){
     </div>}
   </div>;
 }
-// =====================================================================
-// YAHAN TAK COPY KARO
-// App.js mein "function Attendance({" dhundho aur replace karo
-// Aur jahan Attendance use hota hai wahan teachers prop add karo:
-// {page==="attendance"&&<Attendance students={students} addData={addData} teachers={teachers}/>}
-// =====================================================================
-
 // ===================== FEE MANAGEMENT =====================
 function FeeManagement({students,addData}){
   const [fees,setFees]=useState([]); const [show,setShow]=useState(false); const [q,setQ]=useState(""); const [filterStatus,setFilterStatus]=useState("all");
