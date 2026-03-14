@@ -765,295 +765,117 @@ function HVSEntry({students,houses,addData,updateHousePoints}){
 // =====================================================================
 
 function Attendance({students,addData,teachers}){
-  const [mainTab, setMainTab] = useState("students"); // students | teachers
-  
-  // ===== STUDENTS ATTENDANCE =====
+  const [mainTab, setMainTab] = useState("students");
   const [sRecords, setSRecords] = useState([]);
   const [sDate, setSDate] = useState(new Date().toISOString().split("T")[0]);
   const [sAttendance, setSAttendance] = useState({});
   const [sSaved, setSSaved] = useState(false);
-  const [sTab, setSTab] = useState("mark"); // mark | history | report
-
-  useEffect(()=>{
-    return onSnapshot(query(collection(db,"attendance"),orderBy("createdAt","desc"),limit(500)),
-      s=>setSRecords(s.docs.map(d=>({id:d.id,...d.data()}))));
-  },[]);
-
+  const [sTab, setSTab] = useState("mark");
+  useEffect(()=>{ return onSnapshot(query(collection(db,"attendance"),orderBy("createdAt","desc"),limit(500)),s=>setSRecords(s.docs.map(d=>({id:d.id,...d.data()})))); },[]);
   const setSStatus=(sid,val)=>setSAttendance(prev=>({...prev,[sid]:val}));
-  const saveStudents=async()=>{
-    for(const s of students){
-      const status=sAttendance[s.id]||"present";
-      await addData("attendance",{studentId:s.id,studentName:s.name,date:sDate,status,houseId:s.houseId,grade:s.grade,type:"student"});
-    }
-    setSSaved(true); setTimeout(()=>setSSaved(false),3000);
-  };
-
+  const saveStudents=async()=>{ for(const s of students){ const status=sAttendance[s.id]||"present"; await addData("attendance",{studentId:s.id,studentName:s.name,date:sDate,status,houseId:s.houseId,grade:s.grade,type:"student"}); } setSSaved(true); setTimeout(()=>setSSaved(false),3000); };
   const sTodayRecords=sRecords.filter(r=>r.date===sDate&&r.type!=="teacher");
   const sPresentToday=sTodayRecords.filter(r=>r.status==="present").length;
   const sAbsentToday=sTodayRecords.filter(r=>r.status==="absent").length;
   const sLateToday=sTodayRecords.filter(r=>r.status==="late").length;
-
-  // Student monthly report
-  const getStudentReport=(sid)=>{
-    const recs=sRecords.filter(r=>r.studentId===sid&&r.type!=="teacher");
-    const present=recs.filter(r=>r.status==="present").length;
-    const absent=recs.filter(r=>r.status==="absent").length;
-    const late=recs.filter(r=>r.status==="late").length;
-    const total=recs.length;
-    const pct=total>0?Math.round((present/total)*100):0;
-    return {present,absent,late,total,pct};
-  };
-
-  // ===== TEACHERS ATTENDANCE =====
+  const getStudentReport=(sid)=>{ const recs=sRecords.filter(r=>r.studentId===sid&&r.type!=="teacher"); const present=recs.filter(r=>r.status==="present").length; const absent=recs.filter(r=>r.status==="absent").length; const late=recs.filter(r=>r.status==="late").length; const total=recs.length; const pct=total>0?Math.round((present/total)*100):0; return {present,absent,late,total,pct}; };
   const [tRecords, setTRecords] = useState([]);
   const [tDate, setTDate] = useState(new Date().toISOString().split("T")[0]);
   const [tAttendance, setTAttendance] = useState({});
   const [tSaved, setTSaved] = useState(false);
-  const [tTab, setTTab] = useState("mark"); // mark | history | report
-
-  useEffect(()=>{
-    return onSnapshot(query(collection(db,"teacher_attendance"),orderBy("createdAt","desc"),limit(500)),
-      s=>setTRecords(s.docs.map(d=>({id:d.id,...d.data()}))));
-  },[]);
-
+  const [tTab, setTTab] = useState("mark");
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
+  useEffect(()=>{ return onSnapshot(query(collection(db,"teacher_attendance"),orderBy("createdAt","desc"),limit(500)),s=>setTRecords(s.docs.map(d=>({id:d.id,...d.data()})))); },[]);
   const setTStatus=(tid,val)=>setTAttendance(prev=>({...prev,[tid]:val}));
-  const saveTeachers=async()=>{
-    for(const t of teachers){
-      const status=tAttendance[t.id]||"present";
-      await addData("teacher_attendance",{teacherId:t.id,teacherName:t.name,subject:t.subject||"",date:tDate,status,type:"teacher"});
-    }
-    setTSaved(true); setTimeout(()=>setTSaved(false),3000);
-  };
-
+  const saveTeachers=async()=>{ for(const t of teachers){ const status=tAttendance[t.id]||"present"; await addData("teacher_attendance",{teacherId:t.id,teacherName:t.name,subject:t.subject||"",date:tDate,status,type:"teacher"}); } setTSaved(true); setTimeout(()=>setTSaved(false),3000); };
   const tTodayRecords=tRecords.filter(r=>r.date===tDate);
   const tPresentToday=tTodayRecords.filter(r=>r.status==="present").length;
   const tAbsentToday=tTodayRecords.filter(r=>r.status==="absent").length;
   const tLateToday=tTodayRecords.filter(r=>r.status==="late").length;
   const tLeaveToday=tTodayRecords.filter(r=>r.status==="leave").length;
-
-  // Teacher report
-  const getTeacherReport=(tid)=>{
-    const recs=tRecords.filter(r=>r.teacherId===tid);
-    const present=recs.filter(r=>r.status==="present").length;
-    const absent=recs.filter(r=>r.status==="absent").length;
-    const late=recs.filter(r=>r.status==="late").length;
-    const leave=recs.filter(r=>r.status==="leave").length;
-    const total=recs.length;
-    const pct=total>0?Math.round((present/total)*100):0;
-    return {present,absent,late,leave,total,pct};
-  };
-
-  // Late history for teacher
-  const getTeacherLateHistory=(tid)=>{
-    return tRecords.filter(r=>r.teacherId===tid&&r.status==="late").slice(0,10);
-  };
-
-  const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const getTeacherReport=(tid)=>{ const recs=tRecords.filter(r=>r.teacherId===tid); const present=recs.filter(r=>r.status==="present").length; const absent=recs.filter(r=>r.status==="absent").length; const late=recs.filter(r=>r.status==="late").length; const leave=recs.filter(r=>r.status==="leave").length; const total=recs.length; const pct=total>0?Math.round((present/total)*100):0; return {present,absent,late,leave,total,pct}; };
+  const getTeacherLateHistory=(tid)=>tRecords.filter(r=>r.teacherId===tid&&r.status==="late").slice(0,10);
 
   return <div style={S.page}>
     <div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy,marginBottom:"16px"}}>✅ حاضری</div>
-
-    {/* Main Tabs — Students / Teachers */}
     <div style={{display:"flex",gap:"8px",marginBottom:"16px"}}>
-      {[["students","🎓 طلبا حاضری"],["teachers","👨‍🏫 اساتذہ حاضری"]].map(([t,l])=>
-        <button key={t} onClick={()=>setMainTab(t)} style={{padding:"10px 20px",borderRadius:"12px",border:"none",cursor:"pointer",fontSize:"0.72rem",fontWeight:mainTab===t?"800":"400",background:mainTab===t?`linear-gradient(135deg,${C.navy},${C.navyMid})`:C.white,color:mainTab===t?C.white:"#888",fontFamily:"inherit",boxShadow:mainTab===t?"0 4px 12px rgba(0,0,0,0.2)":"none"}}>{l}</button>
-      )}
+      {[["students","🎓 طلبا حاضری"],["teachers","👨‍🏫 اساتذہ حاضری"]].map(([t,l])=><button key={t} onClick={()=>setMainTab(t)} style={{padding:"10px 20px",borderRadius:"12px",border:"none",cursor:"pointer",fontSize:"0.72rem",fontWeight:mainTab===t?"800":"400",background:mainTab===t?`linear-gradient(135deg,${C.navy},${C.navyMid})`:C.white,color:mainTab===t?C.white:"#888",fontFamily:"inherit",boxShadow:mainTab===t?"0 4px 12px rgba(0,0,0,0.2)":"none"}}>{l}</button>)}
     </div>
 
-    {/* ============ STUDENTS TAB ============ */}
     {mainTab==="students"&&<div>
-      {/* Stats */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"10px",marginBottom:"14px"}}>
-        {[{c:C.green,i:"✅",n:sPresentToday,l:"حاضر"},{c:C.red,i:"❌",n:sAbsentToday,l:"غیر حاضر"},{c:C.amber,i:"⏰",n:sLateToday,l:"دیر سے"}].map((x,i)=>
-          <div key={i} style={{background:`${x.c}10`,borderRadius:"14px",padding:"14px",border:`2px solid ${x.c}25`,textAlign:"center"}}>
-            <div style={{fontSize:"1.2rem"}}>{x.i}</div>
-            <div style={{fontSize:"1.4rem",fontWeight:"900",color:x.c}}>{x.n}</div>
-            <div style={{fontSize:"0.6rem",color:"#888"}}>{x.l}</div>
-          </div>
-        )}
+        {[{c:C.green,i:"✅",n:sPresentToday,l:"حاضر"},{c:C.red,i:"❌",n:sAbsentToday,l:"غیر حاضر"},{c:C.amber,i:"⏰",n:sLateToday,l:"دیر سے"}].map((x,i)=><div key={i} style={{background:`${x.c}10`,borderRadius:"14px",padding:"14px",border:`2px solid ${x.c}25`,textAlign:"center"}}><div style={{fontSize:"1.2rem"}}>{x.i}</div><div style={{fontSize:"1.4rem",fontWeight:"900",color:x.c}}>{x.n}</div><div style={{fontSize:"0.6rem",color:"#888"}}>{x.l}</div></div>)}
       </div>
-
       {sSaved&&<div style={{background:"#dcfce7",border:`2px solid ${C.green}`,borderRadius:"14px",padding:"14px",marginBottom:"14px",textAlign:"center",fontSize:"0.78rem",fontWeight:"700",color:C.green}}>✅ طلبا حاضری محفوظ!</div>}
-
-      {/* Sub Tabs */}
       <div style={{display:"flex",gap:"8px",marginBottom:"14px"}}>
-        {[["mark","✏️ لگائیں"],["history","📋 تاریخ"],["report","📊 رپورٹ"]].map(([t,l])=>
-          <button key={t} onClick={()=>setSTab(t)} style={{padding:"8px 14px",borderRadius:"10px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:sTab===t?"700":"400",background:sTab===t?`linear-gradient(135deg,${C.gold},${C.goldDark})`:C.white,color:sTab===t?C.white:"#888",fontFamily:"inherit"}}>{l}</button>
-        )}
+        {[["mark","✏️ لگائیں"],["history","📋 تاریخ"],["report","📊 رپورٹ"]].map(([t,l])=><button key={t} onClick={()=>setSTab(t)} style={{padding:"8px 14px",borderRadius:"10px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:sTab===t?"700":"400",background:sTab===t?`linear-gradient(135deg,${C.gold},${C.goldDark})`:C.white,color:sTab===t?C.white:"#888",fontFamily:"inherit"}}>{l}</button>)}
       </div>
-
-      {/* Mark Attendance */}
       {sTab==="mark"&&<div style={S.card}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px"}}>
-          <div style={{fontSize:"0.78rem",fontWeight:"700",color:C.navy}}>{students.length} طلبا</div>
-          <input style={{...S.inpSm,width:"160px",direction:"ltr"}} type="date" value={sDate} onChange={e=>setSDate(e.target.value)}/>
-        </div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px"}}><div style={{fontSize:"0.78rem",fontWeight:"700",color:C.navy}}>{students.length} طلبا</div><input style={{...S.inpSm,width:"160px",direction:"ltr"}} type="date" value={sDate} onChange={e=>setSDate(e.target.value)}/></div>
         {students.map(s=>{ const status=sAttendance[s.id]||"present"; const h=HOUSES.find(x=>x.id===s.houseId)||{}; return <div key={s.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:`1px solid ${C.goldLight}`}}>
-          <div>
-            <div style={{fontSize:"0.72rem",fontWeight:"700",color:C.navy}}>{s.name}</div>
-            <div style={{fontSize:"0.58rem",color:"#aaa"}}>{s.grade} • <span style={{color:h.color||C.gold}}>{h.nameEn}</span></div>
-          </div>
-          <div style={{display:"flex",gap:"6px"}}>
-            {[["present","✅","حاضر",C.green],["late","⏰","دیر",C.amber],["absent","❌","غیر",C.red]].map(([v,icon,l,c])=>
-              <button key={v} onClick={()=>setSStatus(s.id,v)} style={{padding:"5px 8px",borderRadius:"8px",border:`1px solid ${status===v?c:C.goldLight}`,background:status===v?c+"20":C.white,color:status===v?c:"#bbb",fontSize:"0.58rem",cursor:"pointer",fontFamily:"inherit",fontWeight:status===v?"700":"400"}}>{icon} {l}</button>
-            )}
-          </div>
+          <div><div style={{fontSize:"0.72rem",fontWeight:"700",color:C.navy}}>{s.name}</div><div style={{fontSize:"0.58rem",color:"#aaa"}}>{s.grade} • <span style={{color:h.color||C.gold}}>{h.nameEn}</span></div></div>
+          <div style={{display:"flex",gap:"6px"}}>{[["present","✅","حاضر",C.green],["late","⏰","دیر",C.amber],["absent","❌","غیر",C.red]].map(([v,icon,l,c])=><button key={v} onClick={()=>setSStatus(s.id,v)} style={{padding:"5px 8px",borderRadius:"8px",border:`1px solid ${status===v?c:C.goldLight}`,background:status===v?c+"20":C.white,color:status===v?c:"#bbb",fontSize:"0.58rem",cursor:"pointer",fontFamily:"inherit",fontWeight:status===v?"700":"400"}}>{icon} {l}</button>)}</div>
         </div>; })}
         <button style={{...S.saveBtn,width:"100%",marginTop:"16px"}} onClick={saveStudents}>✅ سب محفوظ کریں</button>
       </div>}
-
-      {/* History */}
       {sTab==="history"&&<div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
         <thead><tr><th style={S.th}>نام</th><th style={S.th}>تاریخ</th><th style={S.th}>جماعت</th><th style={S.th}>حال</th></tr></thead>
-        <tbody>{sRecords.filter(r=>r.type!=="teacher").slice(0,50).map(r=><tr key={r.id}>
-          <td style={{...S.td,fontWeight:"700"}}>{r.studentName||"—"}</td>
-          <td style={{...S.td,direction:"ltr",fontFamily:"monospace",fontSize:"0.6rem"}}>{r.date}</td>
-          <td style={S.td}>{r.grade||"—"}</td>
-          <td style={S.td}><span style={{padding:"3px 8px",borderRadius:"20px",fontSize:"0.55rem",fontWeight:"700",background:r.status==="present"?"#dcfce7":r.status==="late"?"#fef3c7":"#fee2e2",color:r.status==="present"?C.green:r.status==="late"?C.amber:C.red}}>{r.status==="present"?"حاضر":r.status==="late"?"دیر":"غیر حاضر"}</span></td>
-        </tr>)}
+        <tbody>{sRecords.filter(r=>r.type!=="teacher").slice(0,50).map(r=><tr key={r.id}><td style={{...S.td,fontWeight:"700"}}>{r.studentName||"—"}</td><td style={{...S.td,direction:"ltr",fontFamily:"monospace",fontSize:"0.6rem"}}>{r.date}</td><td style={S.td}>{r.grade||"—"}</td><td style={S.td}><span style={{padding:"3px 8px",borderRadius:"20px",fontSize:"0.55rem",fontWeight:"700",background:r.status==="present"?"#dcfce7":r.status==="late"?"#fef3c7":"#fee2e2",color:r.status==="present"?C.green:r.status==="late"?C.amber:C.red}}>{r.status==="present"?"حاضر":r.status==="late"?"دیر":"غیر حاضر"}</span></td></tr>)}
         {sRecords.length===0&&<tr><td colSpan={4} style={{...S.td,textAlign:"center",color:"#bbb",padding:"40px"}}>کوئی ریکارڈ نہیں</td></tr>}
         </tbody>
       </table></div></div>}
-
-      {/* Student Report */}
       {sTab==="report"&&<div style={S.card}>
-<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px"}}>
-<div style={{fontSize:"0.78rem",fontWeight:"700",color:C.navy}}>📊 طلبا حاضری رپورٹ</div>
-<PrintBtn onClick={()=>printStudentAttendance(students,sRecords)} label="حاضری رپورٹ PDF"/>
-</div><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
-        <thead><tr><th style={S.th}>نام</th><th style={S.th}>جماعت</th><th style={S.th}>حاضر</th><th style={S.th}>غیر حاضر</th><th style={S.th}>دیر</th><th style={S.th}>فیصد</th></tr></thead>
-        <tbody>{students.map(s=>{ const r=getStudentReport(s.id); return <tr key={s.id}>
-          <td style={{...S.td,fontWeight:"700"}}>{s.name}</td>
-          <td style={S.td}>{s.grade}</td>
-          <td style={{...S.td,color:C.green,fontWeight:"700"}}>{r.present}</td>
-          <td style={{...S.td,color:C.red,fontWeight:"700"}}>{r.absent}</td>
-          <td style={{...S.td,color:C.amber,fontWeight:"700"}}>{r.late}</td>
-          <td style={S.td}>
-            <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
-              <span style={{fontWeight:"800",color:r.pct>=75?C.green:r.pct>=50?C.amber:C.red}}>{r.pct}%</span>
-              {pBar(r.pct,100,r.pct>=75?C.green:r.pct>=50?C.amber:C.red)}
-            </div>
-          </td>
-        </tr>; })}
-        </tbody>
-      </table></div></div>}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px"}}><div style={{fontSize:"0.78rem",fontWeight:"700",color:C.navy}}>📊 طلبا حاضری رپورٹ</div><PrintBtn onClick={()=>printStudentAttendance(students,sRecords)} label="حاضری رپورٹ PDF"/></div>
+        <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+          <thead><tr><th style={S.th}>نام</th><th style={S.th}>جماعت</th><th style={S.th}>حاضر</th><th style={S.th}>غیر حاضر</th><th style={S.th}>دیر</th><th style={S.th}>فیصد</th></tr></thead>
+          <tbody>{students.map(s=>{ const r=getStudentReport(s.id); return <tr key={s.id}><td style={{...S.td,fontWeight:"700"}}>{s.name}</td><td style={S.td}>{s.grade}</td><td style={{...S.td,color:C.green,fontWeight:"700"}}>{r.present}</td><td style={{...S.td,color:C.red,fontWeight:"700"}}>{r.absent}</td><td style={{...S.td,color:C.amber,fontWeight:"700"}}>{r.late}</td><td style={S.td}><span style={{fontWeight:"800",color:r.pct>=75?C.green:r.pct>=50?C.amber:C.red}}>{r.pct}%</span></td></tr>; })}
+          </tbody>
+        </table></div>
+      </div>}
     </div>}
 
-    {/* ============ TEACHERS TAB ============ */}
     {mainTab==="teachers"&&<div>
-      {/* Stats */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:"10px",marginBottom:"14px"}}>
-        {[{c:C.green,i:"✅",n:tPresentToday,l:"حاضر"},{c:C.red,i:"❌",n:tAbsentToday,l:"غیر حاضر"},{c:C.amber,i:"⏰",n:tLateToday,l:"دیر سے"},{c:C.purple,i:"🏖️",n:tLeaveToday,l:"چھٹی"}].map((x,i)=>
-          <div key={i} style={{background:`${x.c}10`,borderRadius:"14px",padding:"14px",border:`2px solid ${x.c}25`,textAlign:"center"}}>
-            <div style={{fontSize:"1.1rem"}}>{x.i}</div>
-            <div style={{fontSize:"1.3rem",fontWeight:"900",color:x.c}}>{x.n}</div>
-            <div style={{fontSize:"0.58rem",color:"#888"}}>{x.l}</div>
-          </div>
-        )}
+        {[{c:C.green,i:"✅",n:tPresentToday,l:"حاضر"},{c:C.red,i:"❌",n:tAbsentToday,l:"غیر حاضر"},{c:C.amber,i:"⏰",n:tLateToday,l:"دیر سے"},{c:C.purple,i:"🏖️",n:tLeaveToday,l:"چھٹی"}].map((x,i)=><div key={i} style={{background:`${x.c}10`,borderRadius:"14px",padding:"14px",border:`2px solid ${x.c}25`,textAlign:"center"}}><div style={{fontSize:"1.1rem"}}>{x.i}</div><div style={{fontSize:"1.3rem",fontWeight:"900",color:x.c}}>{x.n}</div><div style={{fontSize:"0.58rem",color:"#888"}}>{x.l}</div></div>)}
       </div>
-
       {tSaved&&<div style={{background:"#dcfce7",border:`2px solid ${C.green}`,borderRadius:"14px",padding:"14px",marginBottom:"14px",textAlign:"center",fontSize:"0.78rem",fontWeight:"700",color:C.green}}>✅ اساتذہ حاضری محفوظ!</div>}
-
-      {/* Sub Tabs */}
       <div style={{display:"flex",gap:"8px",marginBottom:"14px",flexWrap:"wrap"}}>
-        {[["mark","✏️ لگائیں"],["history","📋 تاریخ"],["report","📊 رپورٹ"],["late","⏰ دیر کی تاریخ"]].map(([t,l])=>
-          <button key={t} onClick={()=>setTTab(t)} style={{padding:"8px 14px",borderRadius:"10px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:tTab===t?"700":"400",background:tTab===t?`linear-gradient(135deg,${C.gold},${C.goldDark})`:C.white,color:tTab===t?C.white:"#888",fontFamily:"inherit"}}>{l}</button>
-        )}
+        {[["mark","✏️ لگائیں"],["history","📋 تاریخ"],["report","📊 رپورٹ"],["late","⏰ دیر کی تاریخ"]].map(([t,l])=><button key={t} onClick={()=>setTTab(t)} style={{padding:"8px 14px",borderRadius:"10px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:tTab===t?"700":"400",background:tTab===t?`linear-gradient(135deg,${C.gold},${C.goldDark})`:C.white,color:tTab===t?C.white:"#888",fontFamily:"inherit"}}>{l}</button>)}
       </div>
-
-      {/* Mark Teacher Attendance */}
       {tTab==="mark"&&<div style={S.card}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px"}}>
-          <div style={{fontSize:"0.78rem",fontWeight:"700",color:C.navy}}>{teachers.length} اساتذہ</div>
-          <input style={{...S.inpSm,width:"160px",direction:"ltr"}} type="date" value={tDate} onChange={e=>setTDate(e.target.value)}/>
-        </div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px"}}><div style={{fontSize:"0.78rem",fontWeight:"700",color:C.navy}}>{teachers.length} اساتذہ</div><input style={{...S.inpSm,width:"160px",direction:"ltr"}} type="date" value={tDate} onChange={e=>setTDate(e.target.value)}/></div>
         {teachers.map(t=>{ const status=tAttendance[t.id]||"present"; return <div key={t.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:`1px solid ${C.goldLight}`}}>
-          <div>
-            <div style={{fontSize:"0.72rem",fontWeight:"700",color:C.navy}}>{t.name}</div>
-            <div style={{fontSize:"0.58rem",color:"#aaa"}}>{t.subject||"—"} • {t.grade||"—"}</div>
-          </div>
-          <div style={{display:"flex",gap:"5px",flexWrap:"wrap",justifyContent:"flex-end"}}>
-            {[["present","✅","حاضر",C.green],["late","⏰","دیر",C.amber],["absent","❌","غیر حاضر",C.red],["leave","🏖️","چھٹی",C.purple]].map(([v,icon,l,c])=>
-              <button key={v} onClick={()=>setTStatus(t.id,v)} style={{padding:"5px 8px",borderRadius:"8px",border:`1px solid ${status===v?c:C.goldLight}`,background:status===v?c+"20":C.white,color:status===v?c:"#bbb",fontSize:"0.55rem",cursor:"pointer",fontFamily:"inherit",fontWeight:status===v?"700":"400"}}>{icon} {l}</button>
-            )}
-          </div>
+          <div><div style={{fontSize:"0.72rem",fontWeight:"700",color:C.navy}}>{t.name}</div><div style={{fontSize:"0.58rem",color:"#aaa"}}>{t.subject||"—"} • {t.grade||"—"}</div></div>
+          <div style={{display:"flex",gap:"5px",flexWrap:"wrap",justifyContent:"flex-end"}}>{[["present","✅","حاضر",C.green],["late","⏰","دیر",C.amber],["absent","❌","غیر حاضر",C.red],["leave","🏖️","چھٹی",C.purple]].map(([v,icon,l,c])=><button key={v} onClick={()=>setTStatus(t.id,v)} style={{padding:"5px 8px",borderRadius:"8px",border:`1px solid ${status===v?c:C.goldLight}`,background:status===v?c+"20":C.white,color:status===v?c:"#bbb",fontSize:"0.55rem",cursor:"pointer",fontFamily:"inherit",fontWeight:status===v?"700":"400"}}>{icon} {l}</button>)}</div>
         </div>; })}
         <button style={{...S.saveBtn,width:"100%",marginTop:"16px"}} onClick={saveTeachers}>✅ سب محفوظ کریں</button>
       </div>}
-
-      {/* Teacher History */}
       {tTab==="history"&&<div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
         <thead><tr><th style={S.th}>نام</th><th style={S.th}>مضمون</th><th style={S.th}>تاریخ</th><th style={S.th}>حال</th></tr></thead>
-        <tbody>{tRecords.slice(0,50).map(r=><tr key={r.id}>
-          <td style={{...S.td,fontWeight:"700"}}>{r.teacherName||"—"}</td>
-          <td style={S.td}>{r.subject||"—"}</td>
-          <td style={{...S.td,direction:"ltr",fontFamily:"monospace",fontSize:"0.6rem"}}>{r.date}</td>
-          <td style={S.td}><span style={{padding:"3px 8px",borderRadius:"20px",fontSize:"0.55rem",fontWeight:"700",
-            background:r.status==="present"?"#dcfce7":r.status==="late"?"#fef3c7":r.status==="leave"?"#ede9fe":"#fee2e2",
-            color:r.status==="present"?C.green:r.status==="late"?C.amber:r.status==="leave"?C.purple:C.red
-          }}>{r.status==="present"?"حاضر":r.status==="late"?"دیر":r.status==="leave"?"چھٹی":"غیر حاضر"}</span></td>
-        </tr>)}
+        <tbody>{tRecords.slice(0,50).map(r=><tr key={r.id}><td style={{...S.td,fontWeight:"700"}}>{r.teacherName||"—"}</td><td style={S.td}>{r.subject||"—"}</td><td style={{...S.td,direction:"ltr",fontFamily:"monospace",fontSize:"0.6rem"}}>{r.date}</td><td style={S.td}><span style={{padding:"3px 8px",borderRadius:"20px",fontSize:"0.55rem",fontWeight:"700",background:r.status==="present"?"#dcfce7":r.status==="late"?"#fef3c7":r.status==="leave"?"#ede9fe":"#fee2e2",color:r.status==="present"?C.green:r.status==="late"?C.amber:r.status==="leave"?C.purple:C.red}}>{r.status==="present"?"حاضر":r.status==="late"?"دیر":r.status==="leave"?"چھٹی":"غیر حاضر"}</span></td></tr>)}
         {tRecords.length===0&&<tr><td colSpan={4} style={{...S.td,textAlign:"center",color:"#bbb",padding:"40px"}}>کوئی ریکارڈ نہیں</td></tr>}
         </tbody>
       </table></div></div>}
-
-      {/* Teacher Report */}
-      {tTab==="report"&&<div style={S.card}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px"}}><div style={{fontSize:"0.78rem",fontWeight:"700",color:C.navy}}>📊 اساتذہ حاضری رپورٹ</div><PrintBtn onClick={()=>printTeacherAttendance(teachers,tRecords)} label="اساتذہ رپورٹ PDF"/></div><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
-        <thead><tr><th style={S.th}>نام</th><th style={S.th}>مضمون</th><th style={S.th}>حاضر</th><th style={S.th}>غیر حاضر</th><th style={S.th}>دیر</th><th style={S.th}>چھٹی</th><th style={S.th}>فیصد</th></tr></thead>
-        <tbody>{teachers.map(t=>{ const r=getTeacherReport(t.id); return <tr key={t.id} style={{cursor:"pointer"}} onClick={()=>setSelectedTeacher(selectedTeacher===t.id?null:t.id)}>
-          <td style={{...S.td,fontWeight:"700"}}>{t.name}</td>
-          <td style={S.td}>{t.subject||"—"}</td>
-          <td style={{...S.td,color:C.green,fontWeight:"700"}}>{r.present}</td>
-          <td style={{...S.td,color:C.red,fontWeight:"700"}}>{r.absent}</td>
-          <td style={{...S.td,color:C.amber,fontWeight:"700"}}>{r.late}</td>
-          <td style={{...S.td,color:C.purple,fontWeight:"700"}}>{r.leave}</td>
-          <td style={S.td}>
-            <span style={{fontWeight:"800",color:r.pct>=75?C.green:r.pct>=50?C.amber:C.red}}>{r.pct}%</span>
-          </td>
-        </tr>; })}
-        </tbody>
-      </table></div>
-      {/* Selected Teacher Detail */}
-      {selectedTeacher&&(()=>{ const t=teachers.find(x=>x.id===selectedTeacher); const r=getTeacherReport(selectedTeacher); return <div style={{marginTop:"16px",background:`${C.navy}08`,borderRadius:"14px",padding:"16px",border:`2px solid ${C.navy}15`}}>
-        <div style={{fontSize:"0.78rem",fontWeight:"700",color:C.navy,marginBottom:"12px"}}>📊 {t?.name} — تفصیلی رپورٹ</div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(100px,1fr))",gap:"8px"}}>
-          {[{c:C.green,n:r.present,l:"حاضر"},{c:C.red,n:r.absent,l:"غیر حاضر"},{c:C.amber,n:r.late,l:"دیر"},{c:C.purple,n:r.leave,l:"چھٹی"},{c:C.navy,n:r.total,l:"کل دن"},{c:r.pct>=75?C.green:C.red,n:`${r.pct}%`,l:"حاضری فیصد"}].map((x,i)=>
-            <div key={i} style={{background:`${x.c}10`,borderRadius:"10px",padding:"10px",textAlign:"center",border:`1px solid ${x.c}20`}}>
-              <div style={{fontSize:"1.1rem",fontWeight:"900",color:x.c}}>{x.n}</div>
-              <div style={{fontSize:"0.55rem",color:"#888"}}>{x.l}</div>
-            </div>
-          )}
-        </div>
-      </div>; })()}
-      </table></div>}
-
-      {/* Late History */}
+      {tTab==="report"&&<div style={S.card}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px"}}><div style={{fontSize:"0.78rem",fontWeight:"700",color:C.navy}}>📊 اساتذہ حاضری رپورٹ</div><PrintBtn onClick={()=>printTeacherAttendance(teachers,tRecords)} label="اساتذہ رپورٹ PDF"/></div>
+        <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+          <thead><tr><th style={S.th}>نام</th><th style={S.th}>مضمون</th><th style={S.th}>حاضر</th><th style={S.th}>غیر حاضر</th><th style={S.th}>دیر</th><th style={S.th}>چھٹی</th><th style={S.th}>فیصد</th></tr></thead>
+          <tbody>{teachers.map(t=>{ const r=getTeacherReport(t.id); return <tr key={t.id} style={{cursor:"pointer"}} onClick={()=>setSelectedTeacher(selectedTeacher===t.id?null:t.id)}><td style={{...S.td,fontWeight:"700"}}>{t.name}</td><td style={S.td}>{t.subject||"—"}</td><td style={{...S.td,color:C.green,fontWeight:"700"}}>{r.present}</td><td style={{...S.td,color:C.red,fontWeight:"700"}}>{r.absent}</td><td style={{...S.td,color:C.amber,fontWeight:"700"}}>{r.late}</td><td style={{...S.td,color:C.purple,fontWeight:"700"}}>{r.leave}</td><td style={S.td}><span style={{fontWeight:"800",color:r.pct>=75?C.green:r.pct>=50?C.amber:C.red}}>{r.pct}%</span></td></tr>; })}
+          </tbody>
+        </table></div>
+        {selectedTeacher&&(()=>{ const t=teachers.find(x=>x.id===selectedTeacher); const r=getTeacherReport(selectedTeacher); return <div style={{marginTop:"16px",background:`${C.navy}08`,borderRadius:"14px",padding:"16px",border:`2px solid ${C.navy}15`}}><div style={{fontSize:"0.78rem",fontWeight:"700",color:C.navy,marginBottom:"12px"}}>📊 {t?.name} — تفصیلی رپورٹ</div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(100px,1fr))",gap:"8px"}}>{[{c:C.green,n:r.present,l:"حاضر"},{c:C.red,n:r.absent,l:"غیر حاضر"},{c:C.amber,n:r.late,l:"دیر"},{c:C.purple,n:r.leave,l:"چھٹی"},{c:C.navy,n:r.total,l:"کل دن"},{c:r.pct>=75?C.green:C.red,n:`${r.pct}%`,l:"حاضری فیصد"}].map((x,i)=><div key={i} style={{background:`${x.c}10`,borderRadius:"10px",padding:"10px",textAlign:"center",border:`1px solid ${x.c}20`}}><div style={{fontSize:"1.1rem",fontWeight:"900",color:x.c}}>{x.n}</div><div style={{fontSize:"0.55rem",color:"#888"}}>{x.l}</div></div>)}</div></div>; })()}
+      </div>}
       {tTab==="late"&&<div>
         <div style={{fontSize:"0.72rem",color:"#888",marginBottom:"12px"}}>استاد پر click کریں دیر کی تاریخ دیکھنے کے لیے</div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:"12px",marginBottom:"16px"}}>
-          {teachers.map(t=>{ const lateCount=tRecords.filter(r=>r.teacherId===t.id&&r.status==="late").length; return <div key={t.id} onClick={()=>setSelectedTeacher(selectedTeacher===t.id?null:t.id)} style={{...S.card,padding:"14px",cursor:"pointer",borderRight:`4px solid ${lateCount>5?C.red:lateCount>2?C.amber:C.green}`,background:selectedTeacher===t.id?`${C.amber}10`:C.white}}>
-            <div style={{fontWeight:"700",color:C.navy,marginBottom:"4px"}}>{t.name}</div>
-            <div style={{fontSize:"0.58rem",color:"#888",marginBottom:"8px"}}>{t.subject||"—"}</div>
-            <div style={{fontSize:"1.4rem",fontWeight:"900",color:lateCount>5?C.red:lateCount>2?C.amber:C.green}}>{lateCount}</div>
-            <div style={{fontSize:"0.55rem",color:"#aaa"}}>بار دیر سے آئے</div>
-          </div>; })}
+          {teachers.map(t=>{ const lateCount=tRecords.filter(r=>r.teacherId===t.id&&r.status==="late").length; return <div key={t.id} onClick={()=>setSelectedTeacher(selectedTeacher===t.id?null:t.id)} style={{...S.card,padding:"14px",cursor:"pointer",borderRight:`4px solid ${lateCount>5?C.red:lateCount>2?C.amber:C.green}`,background:selectedTeacher===t.id?`${C.amber}10`:C.white}}><div style={{fontWeight:"700",color:C.navy,marginBottom:"4px"}}>{t.name}</div><div style={{fontSize:"0.58rem",color:"#888",marginBottom:"8px"}}>{t.subject||"—"}</div><div style={{fontSize:"1.4rem",fontWeight:"900",color:lateCount>5?C.red:lateCount>2?C.amber:C.green}}>{lateCount}</div><div style={{fontSize:"0.55rem",color:"#aaa"}}>بار دیر سے آئے</div></div>; })}
         </div>
-        {selectedTeacher&&<div style={S.card}>
-          <div style={{fontSize:"0.78rem",fontWeight:"700",color:C.amber,marginBottom:"12px"}}>⏰ {teachers.find(t=>t.id===selectedTeacher)?.name} — دیر کی تاریخ</div>
-          {getTeacherLateHistory(selectedTeacher).length===0
-            ? <div style={{textAlign:"center",color:"#bbb",padding:"30px"}}>کوئی دیر نہیں — شاباش! 🎉</div>
-            : <div style={{display:"flex",flexDirection:"column",gap:"8px"}}>
-                {getTeacherLateHistory(selectedTeacher).map((r,i)=><div key={r.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",background:`${C.amber}08`,borderRadius:"10px",border:`1px solid ${C.amber}20`}}>
-                  <span style={{fontSize:"0.65rem",fontWeight:"700",color:C.amber}}>⏰ {i+1}. {r.date}</span>
-                  <span style={{fontSize:"0.6rem",color:"#888"}}>{r.teacherName}</span>
-                </div>)}
-              </div>
-          }
-        </div>}
+        {selectedTeacher&&<div style={S.card}><div style={{fontSize:"0.78rem",fontWeight:"700",color:C.amber,marginBottom:"12px"}}>⏰ {teachers.find(t=>t.id===selectedTeacher)?.name} — دیر کی تاریخ</div>{getTeacherLateHistory(selectedTeacher).length===0?<div style={{textAlign:"center",color:"#bbb",padding:"30px"}}>کوئی دیر نہیں — شاباش! 🎉</div>:<div style={{display:"flex",flexDirection:"column",gap:"8px"}}>{getTeacherLateHistory(selectedTeacher).map((r,i)=><div key={r.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",background:`${C.amber}08`,borderRadius:"10px",border:`1px solid ${C.amber}20`}}><span style={{fontSize:"0.65rem",fontWeight:"700",color:C.amber}}>⏰ {i+1}. {r.date}</span><span style={{fontSize:"0.6rem",color:"#888"}}>{r.teacherName}</span></div>)}</div>}</div>}
       </div>}
     </div>}
- </div>;
- }
+  </div>;
+}
+
 // ===================== FEE MANAGEMENT =====================
 function FeeManagement({students,addData}){
   const [fees,setFees]=useState([]); const [show,setShow]=useState(false); const [q,setQ]=useState(""); const [filterStatus,setFilterStatus]=useState("all");
