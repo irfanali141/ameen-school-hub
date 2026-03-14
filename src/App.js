@@ -1025,7 +1025,7 @@ function Attendance({students,addData,teachers}){
           )}
         </div>
       </div>; })()}
-      </div>}
+      </table></div></div>}
 
       {/* Late History */}
       {tTab==="late"&&<div>
