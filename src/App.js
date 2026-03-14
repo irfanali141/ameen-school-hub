@@ -708,7 +708,7 @@ function AIILogo({size=120}){
 
 function HouseBadge({house,size=165}){
   return <div style={{direction:"ltr",display:"inline-block"}}>
-    <img src={BADGE_IMGS[house]} style={{width:size,height:size,borderRadius:"50%",objectFit:"cover",filter:"drop-shadow(0 8px 24px rgba(0,0,0,0.5))",transform:"scaleX(-1)",display:"block"}} alt={house}/>
+    <img src={BADGE_IMGS[house]} style={{width:size,height:size,borderRadius:"50%",objectFit:"cover",filter:"drop-shadow(0 8px 24px rgba(0,0,0,0.5))",transform:"scaleX(1)",display:"block"}} alt={house}/>
   </div>;
 }
 
