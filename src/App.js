@@ -3066,7 +3066,7 @@ function ExamSeating({students,addData}){
     <div style={{overflowX:"auto"}}><div style={{display:"grid",gridTemplateColumns:`repeat(${sel.cols},1fr)`,gap:"6px",minWidth:`${sel.cols*80}px`}}>
       {(sel.seats||[]).map((seat,i)=><div key={i} style={{background:seat.studentId?"linear-gradient(135deg,#dbeafe,#eff6ff)":"#f9fafb",borderRadius:"8px",padding:"8px 6px",textAlign:"center",border:`1px solid ${seat.studentId?C.abuBakr+"40":"#e5e7eb"}`,minHeight:"64px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
         <div style={{fontSize:"0.55rem",color:"#aaa",marginBottom:"2px"}}>{seat.seatNo}</div>
-        {seat.studentName?<><div style={{fontSize:"0.58rem",fontWeight:"700",color:C.navy,lineHeight:"1.3"}}>{seat.studentName.split(" ")[0]}</div><div style={{fontSize:"0.5rem",color:C.abuBakr,fontFamily:"monospace",direction:"ltr"}}>{seat.studentCode}</div></>:<div style={{fontSize:"0.6rem",color:"#ddd"}}>خالی</div>}
+        {seat.studentName?<div><div style={{fontSize:"0.58rem",fontWeight:"700",color:C.navy,lineHeight:"1.3"}}>{seat.studentName.split(" ")[0]}</div><div style={{fontSize:"0.5rem",color:C.abuBakr,fontFamily:"monospace",direction:"ltr"}}>{seat.studentCode}</div></div>:<div style={{fontSize:"0.6rem",color:"#ddd"}}>خالی</div>}
       </div>)}
     </div></div>
   </div>; }
@@ -3246,7 +3246,7 @@ function MarksEntry({students,addData}){
       {exams.map(ex=>{ const tc=types[ex.type]||types.monthly; const exMarks=marks.filter(m=>m.examId===ex.id); const avg=exMarks.length>0?Math.round(exMarks.reduce((s,m)=>s+(m.percentage||0),0)/exMarks.length):0; return <div key={ex.id} style={{...S.card,cursor:"pointer",borderTop:`4px solid ${tc.c}`}} onClick={()=>{setSelExam(ex);setTab("entry");}}>
         <div style={{display:"flex",justifyContent:"space-between",marginBottom:"8px"}}><div style={{fontSize:"0.82rem",fontWeight:"700",color:C.navy}}>{ex.title}</div><span style={hBadge(tc.c,tc.c+"15")}>{tc.l}</span></div>
         <div style={{fontSize:"0.62rem",color:"#888",marginBottom:"8px"}}>{ex.subject} • جماعت {ex.grade}</div>
-        {exMarks.length>0&&<><div style={{display:"flex",justifyContent:"space-between",marginBottom:"4px"}}><span style={{fontSize:"0.6rem",color:"#888"}}>اوسط</span><span style={{fontSize:"0.68rem",fontWeight:"700",color:avg>=70?C.green:avg>=50?C.amber:C.red}}>{avg}%</span></div>{pBar(avg,100,avg>=70?C.green:avg>=50?C.amber:C.red)}</>}
+        {exMarks.length>0&&<div><div style={{display:"flex",justifyContent:"space-between",marginBottom:"4px"}}><span style={{fontSize:"0.6rem",color:"#888"}}>اوسط</span><span style={{fontSize:"0.68rem",fontWeight:"700",color:avg>=70?C.green:avg>=50?C.amber:C.red}}>{avg}%</span></div>{pBar(avg,100,avg>=70?C.green:avg>=50?C.amber:C.red)}</div>}
         <div style={{fontSize:"0.6rem",color:C.abuBakr,marginTop:"8px"}}>{exMarks.length} طلبا • نمبرات درج کریں ←</div>
       </div>; })}
       {exams.length===0&&<div style={{...S.card,textAlign:"center",color:"#bbb",padding:"40px",gridColumn:"1/-1"}}>کوئی امتحان نہیں</div>}
