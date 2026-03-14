@@ -186,21 +186,6 @@ function Login({onLogin,err,loading}){
     </div>
   </div>;
 }
-        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>ترجیح</label><select style={S.inpSm} value={f.priority} onChange={e=>setF({...f,priority:e.target.value})}><option value="normal">عام</option><option value="high">اہم</option><option value="urgent">فوری</option></select></div>
-        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>پیغام *</label><textarea style={{...S.inpSm,minHeight:"80px",resize:"vertical"}} value={f.message} onChange={e=>setF({...f,message:e.target.value})} placeholder="پیغام یہاں لکھیں..."/></div>
-      </div>
-      <button style={S.saveBtn} onClick={send}>📤 بھیجیں</button>
-    </div>}
-    <div style={{display:"flex",flexDirection:"column",gap:"14px"}}>
-      {notifs.map(n=>{ const pc=priorityC[n.priority]||C.abuBakr; return <div key={n.id} style={{...S.card,borderRight:`4px solid ${pc}`,padding:"18px 20px"}}>
-        <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy,marginBottom:"6px"}}>{notifTypes[n.type]||"📢"} {n.title}</div>
-        <div style={{fontSize:"0.68rem",color:"#666",lineHeight:"1.6"}}>{n.message}</div>
-      </div>; })}
-      {notifs.length===0&&<div style={{...S.card,textAlign:"center",color:"#bbb",padding:"60px"}}>ابھی کوئی اطلاع نہیں</div>}
-    </div>
-  </div>;
-}
-
 // ===================== EVENTS =====================
 function Events({addData,houses,updateHousePoints}){
   const [events,setEvents]=useState([]); const [show,setShow]=useState(false);
