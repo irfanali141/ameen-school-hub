@@ -2817,6 +2817,7 @@ export default function App(){
   const [user,setUser]=useState(null); const [loading,setLoading]=useState(true);
   const [err,setErr]=useState(""); const [lLoading,setLL]=useState(false);
   const [page,setPage]=useState("dashboard");
+  const [openGroup, setOpenGroup] = useState(null);
   const [students,setStudents]=useState([]); const [teachers,setTeachers]=useState([]);
   const [houses,setHouses]=useState([]); const [hvs,setHvs]=useState([]);
   const [fees,setFees]=useState([]); const [results,setResults]=useState([]);
@@ -2836,7 +2837,86 @@ export default function App(){
   const logout=()=>signOut(auth);
   const addData=async(col,data)=>{ try{ await fbAddDoc(collection(db,col),{...data,createdAt:serverTimestamp()}); }catch(e){ console.error("addData:",e.message); } };
   const updateHousePoints=async(houseId,pts)=>{ try{ const ref=doc(db,"houses",houseId); const hd=houses.find(h=>h.id===houseId); await setDoc(ref,{id:houseId,points:(hd?.points||0)+pts,hvs_total:(hd?.hvs_total||0)+pts,hvs_weeks:(hd?.hvs_weeks||0)+1,updatedAt:serverTimestamp()},{merge:true}); }catch(e){ console.error("updatePts:",e.message); } };
-
+const NAV_GROUPS = [
+  {
+    id: "main", label: "🏠 مرکزی", color: "#1e40af",
+    pages: [
+      {id:"dashboard", label:"📊 ڈیش بورڈ"},
+      {id:"attendance", label:"✅ حاضری"},
+      {id:"timetable", label:"🗓️ ٹائم ٹیبل"},
+      {id:"notifications", label:"📱 اطلاعات"},
+      {id:"noticeboard", label:"📌 نوٹس"},
+      {id:"events", label:"🎭 ایونٹس"},
+    ]
+  },
+  {
+    id: "talba", label: "🎓 طلبا", color: "#166534",
+    pages: [
+      {id:"students", label:"🎓 طلبا"},
+      {id:"hifz", label:"📖 حفظ"},
+      {id:"results", label:"📊 نتائج"},
+      {id:"marks", label:"✏️ نمبرات"},
+      {id:"reportcard", label:"📋 رپورٹ کارڈ"},
+      {id:"dmc", label:"🎓 DMC"},
+      {id:"transcript", label:"📜 ٹرانسکرپٹ"},
+      {id:"welfare", label:"💬 طالب فلاح"},
+      {id:"hpri", label:"⚠️ HPRI"},
+      {id:"health", label:"🏥 صحت"},
+      {id:"hostel", label:"🏠 ہوسٹل"},
+      {id:"transport", label:"🚌 ٹرانسپورٹ"},
+    ]
+  },
+  {
+    id: "house", label: "🏆 ہاؤس", color: "#854d0e",
+    pages: [
+      {id:"houses", label:"🏠 ہاؤس"},
+      {id:"hvs", label:"🏅 HVS"},
+      {id:"superhouse", label:"🏆 سپر ہاؤس"},
+      {id:"tarbiyah", label:"🌟 تربیت"},
+      {id:"ethics", label:"🌟 اخلاق"},
+      {id:"pride", label:"💌 پرائیڈ"},
+    ]
+  },
+  {
+    id: "asatza", label: "👨‍🏫 اساتذہ", color: "#7c3aed",
+    pages: [
+      {id:"teachers", label:"👨‍🏫 اساتذہ"},
+      {id:"salary", label:"💼 تنخواہ"},
+      {id:"slips", label:"💳 تنخواہ سلپ"},
+      {id:"leave", label:"🏖️ چھٹی"},
+      {id:"staffperf", label:"📊 اسٹاف"},
+      {id:"faculty_dev", label:"👩‍🏫 استاد ترقی"},
+      {id:"lessons", label:"📅 سبق منصوبہ"},
+      {id:"curriculum", label:"📚 نصابی وسائل"},
+      {id:"lmaterials", label:"📚 تعلیمی مواد"},
+    ]
+  },
+  {
+    id: "taleem", label: "📚 تعلیم", color: "#0d9488",
+    pages: [
+      {id:"exams", label:"📝 امتحان"},
+      {id:"seating", label:"🪑 نشست بندی"},
+      {id:"analytics", label:"📊 تجزیہ"},
+      {id:"library", label:"📚 لائبریری"},
+      {id:"madrasa", label:"🕌 درس نظامی"},
+      {id:"wifaq", label:"🕌 وفاق"},
+      {id:"fees", label:"💰 فیس"},
+    ]
+  },
+  {
+    id: "idara", label: "🏛️ ادارہ", color: "#991b1b",
+    pages: [
+      {id:"director", label:"👨‍💼 ڈائریکٹر"},
+      {id:"registrar", label:"📋 رجسٹرار"},
+      {id:"parents", label:"👪 والدین"},
+      {id:"alumni", label:"🎓 سابق طلبا"},
+      {id:"visitors", label:"🔒 سیکیورٹی"},
+      {id:"meetings", label:"📝 میٹنگ"},
+      {id:"assets", label:"🏗️ اثاثے"},
+      {id:"donations", label:"🤲 عطیات"},
+    ]
+  },
+];
   const PAGES=[
     {id:"dashboard",label:"📊 ڈیش بورڈ"},{id:"hvs",label:"🏅 HVS"},{id:"students",label:"🎓 طلبا"},
     {id:"teachers",label:"👨‍🏫 اساتذہ"},{id:"hifz",label:"📖 حفظ"},{id:"houses",label:"🏠 ہاؤس"},
@@ -2880,12 +2960,20 @@ export default function App(){
         <button style={{background:"rgba(255,255,255,0.08)",color:"rgba(255,255,255,0.7)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:"10px",padding:"7px 14px",fontSize:"0.62rem",cursor:"pointer",fontFamily:"inherit"}} onClick={logout}>لاگ آؤٹ</button>
       </div>
     </div>
-    <div style={S.nav}>
-      {PAGES.map(p=><button key={p.id} style={{padding:"13px 14px",border:"none",background:"none",color:page===p.id?C.gold:"#999",fontWeight:page===p.id?"800":"400",fontSize:"0.65rem",cursor:"pointer",borderBottom:page===p.id?`3px solid ${C.gold}`:"3px solid transparent",fontFamily:"inherit",whiteSpace:"nowrap",transition:"color 0.2s",position:"relative"}} onClick={()=>setPage(p.id)}>
-        {p.label}
-        {p.id==="fees"&&pendingFeesCount>0&&<span style={{position:"absolute",top:"6px",right:"6px",width:"8px",height:"8px",background:C.red,borderRadius:"50%"}}/>}
-      </button>)}
-    </div>
+  <div style={{background:C.white,borderBottom:`3px solid ${C.goldLight}`,display:"flex",overflowX:"auto",padding:"0 8px",boxShadow:"0 2px 8px rgba(0,0,0,0.05)",position:"sticky",top:"64px",zIndex:99}} onClick={e=>e.stopPropagation()}>
+  {NAV_GROUPS.map(grp=>{
+    const isOpen=openGroup===grp.id;
+    const isActive=grp.pages.some(p=>p.id===page);
+    return <div key={grp.id} style={{position:"relative"}}>
+      <button onClick={()=>setOpenGroup(isOpen?null:grp.id)} style={{padding:"13px 16px",border:"none",background:"none",color:isActive?grp.color:"#999",fontWeight:isActive?"800":"500",fontSize:"0.65rem",cursor:"pointer",borderBottom:isActive?`3px solid ${grp.color}`:"3px solid transparent",fontFamily:"inherit",whiteSpace:"nowrap",transition:"color 0.2s",display:"flex",alignItems:"center",gap:"4px"}}>
+        {grp.label}<span style={{fontSize:"0.5rem",opacity:0.6}}>{isOpen?"▲":"▼"}</span>
+      </button>
+      {isOpen&&<div style={{position:"absolute",top:"100%",right:0,background:C.white,borderRadius:"14px",boxShadow:"0 8px 32px rgba(0,0,0,0.15)",border:`2px solid ${grp.color}20`,minWidth:"160px",zIndex:200,padding:"8px",display:"flex",flexDirection:"column",gap:"2px"}}>
+        {grp.pages.map(p=><button key={p.id} onClick={()=>{setPage(p.id);setOpenGroup(null);}} style={{padding:"9px 14px",border:"none",background:page===p.id?`${grp.color}15`:C.white,color:page===p.id?grp.color:"#555",fontWeight:page===p.id?"700":"400",fontSize:"0.65rem",cursor:"pointer",borderRadius:"10px",fontFamily:"inherit",textAlign:"right",whiteSpace:"nowrap"}}>{p.label}</button>)}
+      </div>}
+    </div>;
+  })}
+</div>
     <div>
       {page==="dashboard"&&<Dashboard students={students} teachers={teachers} houses={houses} hvsLogs={hvs} fees={fees} results={results}/>}
       {page==="hvs"&&<HVSEntry students={students} houses={houses} addData={addData} updateHousePoints={updateHousePoints}/>}
