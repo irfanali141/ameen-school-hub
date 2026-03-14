@@ -612,49 +612,324 @@ function Notifications({students,addData}){
 }
 
 // ===================== TIMETABLE =====================
-function Timetable(){
-  const [grade,setGrade]=useState("Grade 7"); const [day,setDay]=useState("Monday");
-  const grades=Object.keys(TIMETABLE);
-  const schedule=TIMETABLE[grade]||{};
-  const periods=schedule[day]||[];
-  return <div style={S.page}>
-    <div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy,marginBottom:"16px"}}>🗓️ ٹائم ٹیبل</div>
-    {/* Selectors */}
-    <div style={{...S.card,marginBottom:"16px"}}>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px"}}>
+// =====================================================================
+// NEW DYNAMIC TIMETABLE — App.js mein purana Timetable() replace karo
+// =====================================================================
+
+function Timetable() {
+  const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const DAYS_UR = { Monday:"پیر", Tuesday:"منگل", Wednesday:"بدھ", Thursday:"جمعرات", Friday:"جمعہ", Saturday:"ہفتہ" };
+
+  const DEFAULT_CLASSES = [
+    "Play Group","Nursery","KG","Grade 1","Grade 2","Grade 3",
+    "Grade 4","Grade 5","Grade 6","Grade 7","Grade 8","Grade 9",
+    "Grade 10 (Matric)","F.A/F.Sc Part 1","F.A/F.Sc Part 2"
+  ];
+
+  const DEFAULT_SUBJECTS = [
+    "قرآن کریم","حفظ","اسلامیات","عربی","اردو","English",
+    "Mathematics","Science","Physics","Chemistry","Biology",
+    "Computer","Social Studies","Pakistan Studies","History",
+    "Geography","PE/کھیل","Art","Assembly","Break","دعا و اختتام"
+  ];
+
+  const DEFAULT_TIMES = [
+    "7:30","8:15","9:00","9:45","10:30","11:15","12:00","12:45","1:30"
+  ];
+
+  // State
+  const [classes, setClasses] = useState(DEFAULT_CLASSES);
+  const [subjects, setSubjects] = useState(DEFAULT_SUBJECTS);
+  const [times, setTimes] = useState(DEFAULT_TIMES);
+  const [schedule, setSchedule] = useState({}); // {className: {day: [{time, subject}]}}
+  const [selectedClass, setSelectedClass] = useState("Grade 6");
+  const [selectedDay, setSelectedDay] = useState("Monday");
+  const [tab, setTab] = useState("view"); // view | edit | manage
+
+  // New class/subject inputs
+  const [newClass, setNewClass] = useState("");
+  const [newSubject, setNewSubject] = useState("");
+  const [newTime, setNewTime] = useState("");
+
+  // Edit period
+  const [editPeriods, setEditPeriods] = useState([]);
+
+  // Load schedule for selected class+day into editPeriods
+  const loadEdit = () => {
+    const existing = schedule[selectedClass]?.[selectedDay] || [];
+    if (existing.length > 0) {
+      setEditPeriods([...existing]);
+    } else {
+      setEditPeriods([{ time: times[0], subject: subjects[0] }]);
+    }
+    setTab("edit");
+  };
+
+  // Save edited periods
+  const saveSchedule = () => {
+    const filtered = editPeriods.filter(p => p.subject && p.time);
+    setSchedule(prev => ({
+      ...prev,
+      [selectedClass]: {
+        ...(prev[selectedClass] || {}),
+        [selectedDay]: filtered
+      }
+    }));
+    setTab("view");
+  };
+
+  // Add period row
+  const addPeriod = () => {
+    setEditPeriods(prev => [...prev, { time: times[0] || "8:00", subject: subjects[0] || "" }]);
+  };
+
+  // Remove period row
+  const removePeriod = (i) => {
+    setEditPeriods(prev => prev.filter((_, idx) => idx !== i));
+  };
+
+  // Update period
+  const updatePeriod = (i, field, val) => {
+    setEditPeriods(prev => prev.map((p, idx) => idx === i ? { ...p, [field]: val } : p));
+  };
+
+  // Get periods for view
+  const getPeriods = (cls, day) => schedule[cls]?.[day] || [];
+  const currentPeriods = getPeriods(selectedClass, selectedDay);
+
+  // Count filled days for a class
+  const filledDays = (cls) => DAYS.filter(d => (schedule[cls]?.[d]||[]).length > 0).length;
+
+  // Add new class
+  const addClass = () => {
+    if (!newClass.trim() || classes.includes(newClass.trim())) return;
+    setClasses(prev => [...prev, newClass.trim()]);
+    setNewClass("");
+  };
+
+  // Add new subject
+  const addSubject = () => {
+    if (!newSubject.trim() || subjects.includes(newSubject.trim())) return;
+    setSubjects(prev => [...prev, newSubject.trim()]);
+    setNewSubject("");
+  };
+
+  // Add new time
+  const addTime = () => {
+    if (!newTime.trim() || times.includes(newTime.trim())) return;
+    setTimes(prev => [...prev, newTime.trim()].sort());
+    setNewTime("");
+  };
+
+  // Remove class
+  const removeClass = (cls) => {
+    setClasses(prev => prev.filter(c => c !== cls));
+    if (selectedClass === cls) setSelectedClass(classes[0] || "");
+  };
+
+  // Remove subject
+  const removeSubject = (sub) => {
+    setSubjects(prev => prev.filter(s => s !== sub));
+  };
+
+  return (
+    <div style={S.page}>
+      {/* Header */}
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"16px" }}>
         <div>
-          <label style={{fontSize:"0.62rem",color:"#888",marginBottom:"6px",display:"block"}}>جماعت</label>
-          <div style={{display:"flex",gap:"6px",flexWrap:"wrap"}}>{grades.map(g=><button key={g} onClick={()=>setGrade(g)} style={{padding:"7px 12px",borderRadius:"10px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:grade===g?"700":"400",background:grade===g?`linear-gradient(135deg,${C.gold},${C.goldDark})`:C.white,color:grade===g?C.white:"#888",fontFamily:"inherit",border:`1px solid ${grade===g?C.gold:C.goldLight}`}}>{g}</button>)}</div>
+          <div style={{ fontSize:"1.1rem", fontWeight:"700", color:C.navy }}>🗓️ ٹائم ٹیبل</div>
+          <div style={{ fontSize:"0.62rem", color:"#888" }}>{classes.length} کلاسیں • {subjects.length} مضامین</div>
         </div>
-        <div>
-          <label style={{fontSize:"0.62rem",color:"#888",marginBottom:"6px",display:"block"}}>دن</label>
-          <div style={{display:"flex",gap:"6px",flexWrap:"wrap"}}>{DAYS.map(d=><button key={d} onClick={()=>setDay(d)} style={{padding:"7px 12px",borderRadius:"10px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:day===d?"700":"400",background:day===d?`linear-gradient(135deg,${C.navy},${C.navyMid})`:C.white,color:day===d?C.white:"#888",fontFamily:"inherit",border:`1px solid ${day===d?C.navy:C.goldLight}`}}>{DAYS_UR[d]||d}</button>)}</div>
+        <div style={{ display:"flex", gap:"8px" }}>
+          {[["view","👁️ دیکھیں"],["edit","✏️ ترتیب دیں"],["manage","⚙️ انتظام"]].map(([t,l]) =>
+            <button key={t} onClick={() => setTab(t)} style={{ padding:"8px 14px", borderRadius:"10px", border:"none", cursor:"pointer", fontSize:"0.62rem", fontWeight:tab===t?"700":"400", background:tab===t?`linear-gradient(135deg,${C.gold},${C.goldDark})`:C.white, color:tab===t?C.white:"#888", fontFamily:"inherit" }}>{l}</button>
+          )}
         </div>
       </div>
+
+      {/* Class Selector */}
+      <div style={{ ...S.card, marginBottom:"14px", padding:"14px" }}>
+        <div style={{ fontSize:"0.65rem", color:"#888", marginBottom:"8px", fontWeight:"700" }}>📚 کلاس منتخب کریں</div>
+        <div style={{ display:"flex", flexWrap:"wrap", gap:"6px" }}>
+          {classes.map(cls => (
+            <button key={cls} onClick={() => setSelectedClass(cls)} style={{
+              padding:"6px 12px", borderRadius:"20px", border:`1px solid ${selectedClass===cls?C.gold:C.goldLight}`,
+              background:selectedClass===cls?`linear-gradient(135deg,${C.gold},${C.goldDark})`:C.white,
+              color:selectedClass===cls?C.white:C.navy, fontSize:"0.62rem", cursor:"pointer", fontFamily:"inherit",
+              fontWeight:selectedClass===cls?"700":"400"
+            }}>
+              {cls}
+              {filledDays(cls) > 0 && <span style={{ marginRight:"4px", fontSize:"0.5rem", opacity:0.8 }}>({filledDays(cls)}d)</span>}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Day Selector */}
+      <div style={{ display:"flex", gap:"6px", marginBottom:"14px", flexWrap:"wrap" }}>
+        {DAYS.map(d => (
+          <button key={d} onClick={() => setSelectedDay(d)} style={{
+            padding:"8px 14px", borderRadius:"10px", border:"none", cursor:"pointer", fontSize:"0.65rem",
+            fontWeight:selectedDay===d?"700":"400",
+            background:selectedDay===d?`linear-gradient(135deg,${C.navy},${C.navyMid})`:C.white,
+            color:selectedDay===d?C.white:"#888", fontFamily:"inherit",
+            border:`1px solid ${selectedDay===d?C.navy:C.goldLight}`
+          }}>{DAYS_UR[d]}</button>
+        ))}
+      </div>
+
+      {/* ======= VIEW TAB ======= */}
+      {tab==="view" && (
+        <div>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"12px" }}>
+            <div style={{ fontSize:"0.78rem", fontWeight:"700", color:C.navy }}>
+              {selectedClass} — {DAYS_UR[selectedDay]}
+            </div>
+            <button onClick={loadEdit} style={{ ...S.addBtn, padding:"8px 16px", fontSize:"0.62rem" }}>✏️ ترتیب دیں</button>
+          </div>
+
+          {/* Periods */}
+          {currentPeriods.length === 0 ? (
+            <div style={{ ...S.card, textAlign:"center", padding:"60px", color:"#bbb" }}>
+              <div style={{ fontSize:"2rem", marginBottom:"8px" }}>📅</div>
+              <div style={{ fontSize:"0.72rem" }}>ابھی کوئی پیریڈ نہیں</div>
+              <button onClick={loadEdit} style={{ ...S.addBtn, marginTop:"16px", fontSize:"0.62rem" }}>+ پیریڈ شامل کریں</button>
+            </div>
+          ) : (
+            <div style={{ display:"flex", flexDirection:"column", gap:"8px" }}>
+              {currentPeriods.map((p, i) => {
+                const isBreak = p.subject.includes("Break") || p.subject.includes("بریک") || p.subject.includes("دعا") || p.subject.includes("Assembly");
+                return (
+                  <div key={i} style={{
+                    display:"flex", alignItems:"center", gap:"14px",
+                    background:isBreak?`linear-gradient(135deg,${C.gold}15,${C.gold}05)`:`linear-gradient(135deg,${C.white},#fafafa)`,
+                    borderRadius:"12px", padding:"12px 16px",
+                    border:`1px solid ${isBreak?C.gold+"40":C.goldLight}`,
+                    boxShadow:"0 2px 8px rgba(0,0,0,0.04)"
+                  }}>
+                    <div style={{ width:"32px", height:"32px", borderRadius:"50%", background:isBreak?C.gold:C.abuBakr, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"0.65rem", fontWeight:"800", color:C.white, flexShrink:0 }}>{i+1}</div>
+                    <div style={{ background:isBreak?C.gold+"20":C.navy+"10", borderRadius:"8px", padding:"4px 10px", fontSize:"0.6rem", fontWeight:"700", color:isBreak?C.goldDark:C.navy, direction:"ltr", minWidth:"50px", textAlign:"center" }}>{p.time}</div>
+                    <div style={{ fontSize:"0.75rem", fontWeight:isBreak?"700":"600", color:isBreak?C.goldDark:C.navy }}>{p.subject}</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Full Week Table */}
+          <div style={{ ...S.card, marginTop:"20px" }}>
+            <div style={{ fontSize:"0.78rem", fontWeight:"700", color:C.navy, marginBottom:"14px" }}>{selectedClass} — مکمل ہفتہ</div>
+            <div style={{ overflowX:"auto" }}>
+              <table style={{ width:"100%", borderCollapse:"collapse", minWidth:"500px" }}>
+                <thead>
+                  <tr>
+                    <th style={{ ...S.th, background:C.navyDark, color:C.gold }}>پیریڈ</th>
+                    {DAYS.map(d => <th key={d} style={{ ...S.th, background:C.navyDark, color:C.gold }}>{DAYS_UR[d]}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[0,1,2,3,4,5,6,7].map(i => (
+                    <tr key={i} style={{ background:i%2===0?"#fafafa":C.white }}>
+                      <td style={{ ...S.th, color:C.gold, background:`${C.gold}10`, fontWeight:"800" }}>{i+1}</td>
+                      {DAYS.map(d => {
+                        const p = (schedule[selectedClass]?.[d]||[])[i];
+                        return <td key={d} style={{ ...S.td, fontSize:"0.58rem", textAlign:"center" }}>{p ? `${p.subject} (${p.time})` : "—"}</td>;
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======= EDIT TAB ======= */}
+      {tab==="edit" && (
+        <div style={{ ...S.card }}>
+          <div style={{ fontSize:"0.85rem", fontWeight:"700", color:C.navy, marginBottom:"16px" }}>
+            ✏️ {selectedClass} — {DAYS_UR[selectedDay]} — پیریڈ ترتیب دیں
+          </div>
+          {editPeriods.map((p, i) => (
+            <div key={i} style={{ display:"flex", gap:"8px", alignItems:"center", marginBottom:"10px" }}>
+              <div style={{ width:"28px", height:"28px", borderRadius:"50%", background:C.gold, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"0.6rem", fontWeight:"800", color:C.white, flexShrink:0 }}>{i+1}</div>
+              {/* Time selector */}
+              <select value={p.time} onChange={e => updatePeriod(i,"time",e.target.value)} style={{ ...S.inpSm, width:"90px", direction:"ltr", fontSize:"0.65rem" }}>
+                {times.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+              {/* Subject selector */}
+              <select value={p.subject} onChange={e => updatePeriod(i,"subject",e.target.value)} style={{ ...S.inpSm, flex:1, fontSize:"0.65rem" }}>
+                {subjects.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+              <button onClick={() => removePeriod(i)} style={{ background:"#fee2e2", color:C.red, border:"none", borderRadius:"8px", padding:"6px 10px", cursor:"pointer", fontSize:"0.7rem", flexShrink:0 }}>✕</button>
+            </div>
+          ))}
+          <div style={{ display:"flex", gap:"10px", marginTop:"14px" }}>
+            <button onClick={addPeriod} style={{ ...S.addBtn, flex:1 }}>+ پیریڈ شامل کریں</button>
+            <button onClick={saveSchedule} style={{ ...S.saveBtn, flex:1 }}>✅ محفوظ کریں</button>
+          </div>
+        </div>
+      )}
+
+      {/* ======= MANAGE TAB ======= */}
+      {tab==="manage" && (
+        <div style={{ display:"flex", flexDirection:"column", gap:"14px" }}>
+          {/* Add Class */}
+          <div style={{ ...S.card }}>
+            <div style={{ fontSize:"0.78rem", fontWeight:"700", color:C.navy, marginBottom:"12px" }}>📚 کلاسیں</div>
+            <div style={{ display:"flex", gap:"8px", marginBottom:"12px" }}>
+              <input style={{ ...S.inpSm, flex:1 }} value={newClass} onChange={e=>setNewClass(e.target.value)} placeholder="نئی کلاس کا نام... مثلاً Grade 11"/>
+              <button onClick={addClass} style={{ ...S.saveBtn, padding:"8px 16px" }}>+ شامل</button>
+            </div>
+            <div style={{ display:"flex", flexWrap:"wrap", gap:"6px" }}>
+              {classes.map(cls => (
+                <div key={cls} style={{ display:"flex", alignItems:"center", gap:"4px", background:`${C.abuBakr}10`, borderRadius:"20px", padding:"4px 10px", border:`1px solid ${C.abuBakr}30` }}>
+                  <span style={{ fontSize:"0.62rem", color:C.abuBakr, fontWeight:"600" }}>{cls}</span>
+                  <button onClick={() => removeClass(cls)} style={{ background:"none", border:"none", color:C.red, cursor:"pointer", fontSize:"0.6rem", padding:"0 2px" }}>✕</button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Add Subject */}
+          <div style={{ ...S.card }}>
+            <div style={{ fontSize:"0.78rem", fontWeight:"700", color:C.navy, marginBottom:"12px" }}>📖 مضامین</div>
+            <div style={{ display:"flex", gap:"8px", marginBottom:"12px" }}>
+              <input style={{ ...S.inpSm, flex:1 }} value={newSubject} onChange={e=>setNewSubject(e.target.value)} placeholder="نیا مضمون... مثلاً Arabic Grammar"/>
+              <button onClick={addSubject} style={{ ...S.saveBtn, padding:"8px 16px" }}>+ شامل</button>
+            </div>
+            <div style={{ display:"flex", flexWrap:"wrap", gap:"6px" }}>
+              {subjects.map(sub => (
+                <div key={sub} style={{ display:"flex", alignItems:"center", gap:"4px", background:`${C.teal}10`, borderRadius:"20px", padding:"4px 10px", border:`1px solid ${C.teal}30` }}>
+                  <span style={{ fontSize:"0.62rem", color:C.teal, fontWeight:"600" }}>{sub}</span>
+                  <button onClick={() => removeSubject(sub)} style={{ background:"none", border:"none", color:C.red, cursor:"pointer", fontSize:"0.6rem", padding:"0 2px" }}>✕</button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Add Time */}
+          <div style={{ ...S.card }}>
+            <div style={{ fontSize:"0.78rem", fontWeight:"700", color:C.navy, marginBottom:"12px" }}>⏰ اوقات</div>
+            <div style={{ display:"flex", gap:"8px", marginBottom:"12px" }}>
+              <input style={{ ...S.inpSm, flex:1, direction:"ltr" }} value={newTime} onChange={e=>setNewTime(e.target.value)} placeholder="نیا وقت... مثلاً 2:00"/>
+              <button onClick={addTime} style={{ ...S.saveBtn, padding:"8px 16px" }}>+ شامل</button>
+            </div>
+            <div style={{ display:"flex", flexWrap:"wrap", gap:"6px" }}>
+              {times.map(t => (
+                <span key={t} style={{ background:`${C.gold}15`, borderRadius:"20px", padding:"4px 12px", fontSize:"0.62rem", color:C.goldDark, fontWeight:"600", border:`1px solid ${C.gold}30` }}>{t}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-    {/* Schedule */}
-    <div style={{...S.card,background:`linear-gradient(135deg,${C.navyDark},${C.navyMid})`,padding:"24px"}}>
-      <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.gold,marginBottom:"20px",textAlign:"center"}}>{grade} — {DAYS_UR[day]||day}</div>
-      {periods.length===0&&<div style={{textAlign:"center",color:"rgba(255,255,255,0.4)",padding:"40px"}}>کوئی پیریڈ نہیں</div>}
-      {periods.map((p,i)=>{ const isBreak=p.toLowerCase().includes("break")||p.toLowerCase().includes("dua"); return <div key={i} style={{display:"flex",alignItems:"center",gap:"14px",marginBottom:"12px",background:isBreak?"rgba(183,134,11,0.15)":"rgba(255,255,255,0.05)",borderRadius:"12px",padding:"12px 16px",border:`1px solid ${isBreak?"rgba(183,134,11,0.4)":"rgba(255,255,255,0.08)"}`}}>
-        <div style={{width:"28px",height:"28px",borderRadius:"50%",background:isBreak?C.gold:C.abuBakr,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.65rem",fontWeight:"800",color:C.white,flexShrink:0}}>{i+1}</div>
-        <div style={{fontSize:"0.75rem",fontWeight:isBreak?"700":"600",color:isBreak?C.gold:"rgba(255,255,255,0.9)"}}>{isBreak?"☕ "+p:p}</div>
-      </div>; })}
-    </div>
-    {/* Full Week View */}
-    <div style={{...S.card,marginTop:"16px"}}>
-      <div style={{fontSize:"0.78rem",fontWeight:"700",color:C.navy,marginBottom:"14px"}}>{grade} — مکمل ہفتہ</div>
-      <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse",minWidth:"600px"}}>
-        <thead><tr><th style={{...S.th,background:C.navyDark,color:C.gold}}>پیریڈ</th>{DAYS.map(d=><th key={d} style={{...S.th,background:C.navyDark,color:C.gold}}>{DAYS_UR[d]}</th>)}</tr></thead>
-        <tbody>{[0,1,2,3,4,5,6].map(i=><tr key={i} style={{background:i%2===0?"#fafafa":C.white}}>
-          <td style={{...S.th,color:C.gold,fontWeight:"800",background:`${C.gold}10`}}>{i+1}</td>
-          {DAYS.map(d=><td key={d} style={{...S.td,fontSize:"0.58rem",textAlign:"center"}}>{(TIMETABLE[grade]?.[d]||[])[i]||"—"}</td>)}
-        </tr>)}
-        </tbody>
-      </table></div>
-    </div>
-  </div>;
+  );
 }
+// =====================================================================
+// YAHAN TAK COPY KARO
+// App.js mein purana "function Timetable(){" dhundho aur replace karo
+// =====================================================================
 
 // =====================================================================
 // YAHAN TAK COPY KARO — App.js mein seedDB() function se PEHLE paste karo
