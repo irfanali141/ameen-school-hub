@@ -916,7 +916,11 @@ function Attendance({students,addData,teachers}){
       </table></div></div>}
 
       {/* Student Report */}
-      {sTab==="report"&&<div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+      {sTab==="report"&&<div style={S.card}>
+<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px"}}>
+<div style={{fontSize:"0.78rem",fontWeight:"700",color:C.navy}}>📊 طلبا حاضری رپورٹ</div>
+<PrintBtn onClick={()=>printStudentAttendance(students,sRecords)} label="حاضری رپورٹ PDF"/>
+</div><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
         <thead><tr><th style={S.th}>نام</th><th style={S.th}>جماعت</th><th style={S.th}>حاضر</th><th style={S.th}>غیر حاضر</th><th style={S.th}>دیر</th><th style={S.th}>فیصد</th></tr></thead>
         <tbody>{students.map(s=>{ const r=getStudentReport(s.id); return <tr key={s.id}>
           <td style={{...S.td,fontWeight:"700"}}>{s.name}</td>
@@ -994,7 +998,7 @@ function Attendance({students,addData,teachers}){
       </table></div></div>}
 
       {/* Teacher Report */}
-      {tTab==="report"&&<div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+      {tTab==="report"&&<div style={S.card}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px"}}><div style={{fontSize:"0.78rem",fontWeight:"700",color:C.navy}}>📊 اساتذہ حاضری رپورٹ</div><PrintBtn onClick={()=>printTeacherAttendance(teachers,tRecords)} label="اساتذہ رپورٹ PDF"/></div><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
         <thead><tr><th style={S.th}>نام</th><th style={S.th}>مضمون</th><th style={S.th}>حاضر</th><th style={S.th}>غیر حاضر</th><th style={S.th}>دیر</th><th style={S.th}>چھٹی</th><th style={S.th}>فیصد</th></tr></thead>
         <tbody>{teachers.map(t=>{ const r=getTeacherReport(t.id); return <tr key={t.id} style={{cursor:"pointer"}} onClick={()=>setSelectedTeacher(selectedTeacher===t.id?null:t.id)}>
           <td style={{...S.td,fontWeight:"700"}}>{t.name}</td>
@@ -1144,7 +1148,7 @@ function Results({students,addData}){
     <div style={{display:"flex",gap:"8px",marginBottom:"14px",flexWrap:"wrap"}}>
       {[["all","سب"],...grades.map(g=>[g,g])].map(([v,l])=><button key={v} onClick={()=>setFilterGrade(v)} style={{padding:"8px 14px",borderRadius:"10px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:filterGrade===v?"700":"400",background:filterGrade===v?`linear-gradient(135deg,${C.gold},${C.goldDark})`:C.white,color:filterGrade===v?C.white:"#888",fontFamily:"inherit"}}>{l}</button>)}
     </div>
-    <div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+   <div style={S.card}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px"}}><div style={{fontSize:"0.78rem",fontWeight:"700",color:C.navy}}>📊 نتائج</div><PrintBtn onClick={()=>{if(filtered.length>0){const st=students.find(s=>s.id===filtered[0]?.studentId);printResultCard(st,filtered);}}} label="رزلٹ کارڈ PDF"/></div><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
       <thead><tr><th style={S.th}>نام</th><th style={S.th}>امتحان</th><th style={S.th}>مضمون</th><th style={S.th}>نمبر</th><th style={S.th}>فیصد</th><th style={S.th}>گریڈ</th></tr></thead>
       <tbody>{filtered.map(r=>{ const st=students.find(s=>s.id===r.studentId); const pct=r.percentage||0; return <tr key={r.id}>
         <td style={{...S.td,fontWeight:"700"}}>{st?.name||"—"}</td>
@@ -2596,7 +2600,7 @@ function SalarySlips({teachers,addData}){
   };
   const months=["جنوری","فروری","مارچ","اپریل","مئی","جون","جولائی","اگست","ستمبر","اکتوبر","نومبر","دسمبر"];
   if(selSlip){ const t=teachers.find(x=>x.id===selSlip.teacherId)||{}; return <div style={S.page}>
-    <div style={{display:"flex",gap:"10px",marginBottom:"20px"}}><button style={{...S.addBtn,background:"#eee",color:C.navy,boxShadow:"none"}} onClick={()=>setSelSlip(null)}>← واپس</button><button style={{...S.saveBtn,fontSize:"0.65rem"}} onClick={()=>window.print()}>🖨️ پرنٹ</button></div>
+  <div style={{display:"flex",gap:"10px",marginBottom:"20px",justifyContent:"space-between",alignItems:"center"}}><button style={{...S.addBtn,background:"#eee",color:C.navy,boxShadow:"none"}} onClick={()=>setSelSlip(null)}>← واپس</button><PrintBtn onClick={()=>{const t=teachers.find(x=>x.id===selSlip.teacherId)||{};printSalarySlip(t,selSlip);}} label="تنخواہ سلپ PDF"/></div><button style={{...S.addBtn,background:"#eee",color:C.navy,boxShadow:"none"}} onClick={()=>setSelSlip(null)}>← واپس</button><button style={{...S.saveBtn,fontSize:"0.65rem"}} onClick={()=>window.print()}>🖨️ پرنٹ</button></div>
     <div style={{background:C.white,borderRadius:"22px",overflow:"hidden",boxShadow:"0 8px 32px rgba(0,0,0,0.12)",maxWidth:"600px",margin:"0 auto"}}>
       <div style={{background:`linear-gradient(135deg,${C.navyDark},${C.navyMid})`,padding:"24px",color:C.white,textAlign:"center"}}>
         <div style={{fontSize:"1.2rem",fontWeight:"900",color:C.gold}}>امین اسکول ہب</div>
@@ -3559,7 +3563,7 @@ function SuperHouseDashboard({houses,hvsLogs,students}){
       </div>
     </div>}
     <div style={S.card}>
-      <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy,marginBottom:"16px"}}>📊 ہاؤس موازنہ</div>
+     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}><div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy}}>📊 ہاؤس موازنہ</div><PrintBtn onClick={()=>printHVSReport(houses,hvsLogs,students)} label="HVS رپورٹ PDF"/></div>
       <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
         <thead><tr><th style={S.th}>ہاؤس</th><th style={S.th}>درجہ</th><th style={S.th}>پوائنٹس</th><th style={S.th}>طلبا</th><th style={S.th}>اوسط HVS</th><th style={S.th}>بہترین</th></tr></thead>
         <tbody>{houseStats.map((h,i)=>{ const info=HOUSES.find(x=>x.id===h.id)||{}; return <tr key={h.id} style={{background:i===0?`${info.color}08`:undefined}}>
