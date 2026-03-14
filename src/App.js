@@ -2416,7 +2416,7 @@ function SalarySlips({teachers,addData}){
   };
   const months=["جنوری","فروری","مارچ","اپریل","مئی","جون","جولائی","اگست","ستمبر","اکتوبر","نومبر","دسمبر"];
   if(selSlip){ const t=teachers.find(x=>x.id===selSlip.teacherId)||{}; return <div style={S.page}>
-  <div style={{display:"flex",gap:"10px",marginBottom:"20px",justifyContent:"space-between",alignItems:"center"}}><button style={{...S.addBtn,background:"#eee",color:C.navy,boxShadow:"none"}} onClick={()=>setSelSlip(null)}>← واپس</button><PrintBtn onClick={()=>{const t=teachers.find(x=>x.id===selSlip.teacherId)||{};printSalarySlip(t,selSlip);}} label="تنخواہ سلپ PDF"/></div><button style={{...S.addBtn,background:"#eee",color:C.navy,boxShadow:"none"}} onClick={()=>setSelSlip(null)}>← واپس</button><button style={{...S.saveBtn,fontSize:"0.65rem"}} onClick={()=>window.print()}>🖨️ پرنٹ</button></div>
+  <div style={{display:"flex",gap:"10px",marginBottom:"20px",justifyContent:"space-between",alignItems:"center"}}><button style={{...S.addBtn,background:"#eee",color:C.navy,boxShadow:"none"}} onClick={()=>setSelSlip(null)}>← واپس</button><PrintBtn onClick={()=>{const t=teachers.find(x=>x.id===selSlip.teacherId)||{};printSalarySlip(t,selSlip);}} label="تنخواہ سلپ PDF"/></div>
     <div style={{background:C.white,borderRadius:"22px",overflow:"hidden",boxShadow:"0 8px 32px rgba(0,0,0,0.12)",maxWidth:"600px",margin:"0 auto"}}>
       <div style={{background:`linear-gradient(135deg,${C.navyDark},${C.navyMid})`,padding:"24px",color:C.white,textAlign:"center"}}>
         <div style={{fontSize:"1.2rem",fontWeight:"900",color:C.gold}}>امین اسکول ہب</div>
