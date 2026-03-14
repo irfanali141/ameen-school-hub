@@ -2871,7 +2871,7 @@ export default function App(){
   return <div style={S.app}>
     <div style={S.hdr}>
       <div style={{display:"flex",alignItems:"center",gap:"14px"}}>
-        <div style={{...S.seal,width:"44px",height:"44px",margin:0}}><span style={{fontSize:"1.1rem"}}>☪</span></div>
+        <AIILogo size={44}/>
         <div><div style={{color:C.gold,fontSize:"1rem",fontWeight:"800"}}>امین اسکول ہب</div><div style={{color:"rgba(255,255,255,0.4)",fontSize:"0.5rem",fontFamily:"'Cinzel',serif",letterSpacing:"0.1em"}}>AMEEN ISLAMIC INSTITUTE • SWAT</div></div>
       </div>
       <div style={{display:"flex",alignItems:"center",gap:"14px"}}>
