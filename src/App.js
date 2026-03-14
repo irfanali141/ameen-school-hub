@@ -1052,8 +1052,8 @@ function Attendance({students,addData,teachers}){
         </div>}
       </div>}
     </div>}
-  </div>;
-}
+ </div>;
+ }
 // ===================== FEE MANAGEMENT =====================
 function FeeManagement({students,addData}){
   const [fees,setFees]=useState([]); const [show,setShow]=useState(false); const [q,setQ]=useState(""); const [filterStatus,setFilterStatus]=useState("all");
