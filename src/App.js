@@ -72,6 +72,593 @@ const TIMETABLE = {
 
 const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday"];
 const DAYS_UR = { Monday:"پیر", Tuesday:"منگل", Wednesday:"بدھ", Thursday:"جمعرات", Friday:"جمعہ" };
+// =====================================================================
+// MISSING COMPONENTS — AmeenSchoolHub
+// In file ko App.js mein paste karo — seedDB() function ke UPAR
+// =====================================================================
+
+// ===================== DASHBOARD =====================
+function Dashboard({students,teachers,houses,hvsLogs,fees,results}){
+  const totalStudents=students.length;
+  const totalTeachers=teachers.length;
+  const totalHouses=houses.length;
+  const pendingFees=fees.filter(f=>f.status==="pending").length;
+  const totalFeesPaid=fees.filter(f=>f.status==="paid").reduce((s,f)=>s+(f.amount||0),0);
+  const activeStudents=students.filter(s=>s.enrollmentStatus==="active").length;
+  const houseRanked=[...houses].sort((a,b)=>(b.points||0)-(a.points||0));
+  const topHouse=houseRanked[0];
+  const topHouseInfo=HOUSES.find(h=>h.id===topHouse?.id)||{};
+  const recentFees=fees.slice(0,5);
+  const recentResults=results.slice(0,5);
+
+  const stats=[
+    {c:C.abuBakr,i:"🎓",n:totalStudents,l:"کل طلبا",sub:`${activeStudents} فعال`},
+    {c:C.umar,i:"👨‍🏫",n:totalTeachers,l:"اساتذہ",sub:"فعال"},
+    {c:C.gold,i:"💰",n:pendingFees,l:"باقی فیس",sub:`Rs.${totalFeesPaid.toLocaleString()} وصول`},
+    {c:C.green,i:"📊",n:results.length,l:"نتائج",sub:"کل اندراجات"},
+  ];
+
+  return <div style={S.page}>
+    <div style={{marginBottom:"20px"}}>
+      <div style={{fontSize:"1.2rem",fontWeight:"800",color:C.navy}}>📊 ڈیش بورڈ</div>
+      <div style={{fontSize:"0.65rem",color:"#888",marginTop:"2px"}}>امین اسلامک انسٹی ٹیوٹ — سوات</div>
+    </div>
+
+    {/* Stats Cards */}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:"12px",marginBottom:"20px"}}>
+      {stats.map((x,i)=><div key={i} style={{background:`linear-gradient(135deg,${x.c}15,${x.c}05)`,borderRadius:"16px",padding:"16px",border:`2px solid ${x.c}25`,textAlign:"center"}}>
+        <div style={{fontSize:"1.5rem"}}>{x.i}</div>
+        <div style={{fontSize:"1.6rem",fontWeight:"900",color:x.c}}>{x.n}</div>
+        <div style={{fontSize:"0.62rem",color:C.navy,fontWeight:"700"}}>{x.l}</div>
+        <div style={{fontSize:"0.55rem",color:"#aaa"}}>{x.sub}</div>
+      </div>)}
+    </div>
+
+    {/* House Leaderboard */}
+    <div style={{...S.card,marginBottom:"16px"}}>
+      <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy,marginBottom:"14px"}}>🏆 ہاؤس لیڈربورڈ</div>
+      {houseRanked.map((h,i)=>{ const info=HOUSES.find(x=>x.id===h.id)||{}; const pct=Math.min(100,Math.round(((h.points||0)/500)*100)); return <div key={h.id} style={{marginBottom:"12px"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"4px"}}>
+          <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
+            <span style={{fontSize:"1rem"}}>{i===0?"👑":i===1?"🥈":i===2?"🥉":"4️⃣"}</span>
+            <span style={{fontSize:"0.72rem",fontWeight:"700",color:info.color||C.navy}}>{info.emoji} {info.nameEn}</span>
+          </div>
+          <span style={{fontSize:"0.72rem",fontWeight:"900",color:info.color||C.navy}}>{h.points||0} pts</span>
+        </div>
+        {pBar(h.points||0,500,info.color||C.gold)}
+      </div>; })}
+    </div>
+
+    {/* Recent Activity */}
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"14px"}}>
+      <div style={S.card}>
+        <div style={{fontSize:"0.78rem",fontWeight:"700",color:C.navy,marginBottom:"12px"}}>💰 حالیہ فیس</div>
+        {recentFees.length===0&&<div style={{color:"#bbb",fontSize:"0.65rem",textAlign:"center",padding:"20px"}}>کوئی ریکارڈ نہیں</div>}
+        {recentFees.map(f=>{ const st=students.find(s=>s.id===f.studentId); return <div key={f.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:`1px solid ${C.goldLight}`}}>
+          <div style={{fontSize:"0.62rem",fontWeight:"700",color:C.navy}}>{st?.name||"—"}</div>
+          <span style={{fontSize:"0.6rem",padding:"3px 8px",borderRadius:"20px",fontWeight:"700",background:f.status==="paid"?"#dcfce7":"#fef3c7",color:f.status==="paid"?C.green:C.amber}}>Rs.{(f.amount||0).toLocaleString()}</span>
+        </div>; })}
+      </div>
+      <div style={S.card}>
+        <div style={{fontSize:"0.78rem",fontWeight:"700",color:C.navy,marginBottom:"12px"}}>📊 حالیہ نتائج</div>
+        {recentResults.length===0&&<div style={{color:"#bbb",fontSize:"0.65rem",textAlign:"center",padding:"20px"}}>کوئی ریکارڈ نہیں</div>}
+        {recentResults.map(r=>{ const st=students.find(s=>s.id===r.studentId); return <div key={r.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:`1px solid ${C.goldLight}`}}>
+          <div style={{fontSize:"0.62rem",fontWeight:"700",color:C.navy}}>{st?.name||"—"}</div>
+          <span style={{fontSize:"0.72rem",fontWeight:"900",color:C.abuBakr}}>{r.totalMarks||0}%</span>
+        </div>; })}
+      </div>
+    </div>
+  </div>;
+}
+
+// ===================== STUDENTS =====================
+function Students({students,addData}){
+  const [show,setShow]=useState(false); const [q,setQ]=useState(""); const [filter,setFilter]=useState("all");
+  const [f,setF]=useState({name:"",fatherName:"",grade:"Grade 7",section:"Orchid",houseId:"abuBakr",studentCode:"",canteenBalance:0,talent:"",phone:"",enrollmentStatus:"active"});
+  const add=async()=>{ if(!f.name)return; await addData("students",{...f,canteenBalance:Number(f.canteenBalance)}); setShow(false); setF({name:"",fatherName:"",grade:"Grade 7",section:"Orchid",houseId:"abuBakr",studentCode:"",canteenBalance:0,talent:"",phone:"",enrollmentStatus:"active"}); };
+  const filtered=students.filter(s=>{
+    const matchQ=s.name?.includes(q)||s.studentCode?.includes(q)||s.fatherName?.includes(q);
+    const matchF=filter==="all"||(filter==="active"&&s.enrollmentStatus==="active")||(filter==="inactive"&&s.enrollmentStatus!=="active");
+    return matchQ&&matchF;
+  });
+  const grades=["Grade 6","Grade 7","Grade 8","Grade 9","Grade 10"];
+  const sections=["Orchid","Lily","Jasmine","Rose","Tulip"];
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>🎓 طلبا</div><div style={{fontSize:"0.62rem",color:"#888"}}>{students.length} کل طلبا</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نیا طالب علم</button>
+    </div>
+    {/* Stats */}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(120px,1fr))",gap:"10px",marginBottom:"16px"}}>
+      {HOUSES.map(h=>{ const cnt=students.filter(s=>s.houseId===h.id).length; return <div key={h.id} style={{background:`${h.color}10`,borderRadius:"12px",padding:"12px",border:`1px solid ${h.color}25`,textAlign:"center"}}><div style={{fontSize:"1.2rem"}}>{h.emoji}</div><div style={{fontSize:"1rem",fontWeight:"900",color:h.color}}>{cnt}</div><div style={{fontSize:"0.55rem",color:"#888"}}>{h.nameEn}</div></div>; })}
+    </div>
+    {/* Add Form */}
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`}}>
+      <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy,marginBottom:"14px"}}>نیا طالب علم</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>نام *</label><input style={S.inpSm} value={f.name} onChange={e=>setF({...f,name:e.target.value})} placeholder="طالب علم کا نام..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>والد کا نام</label><input style={S.inpSm} value={f.fatherName} onChange={e=>setF({...f,fatherName:e.target.value})} placeholder="والد کا نام..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>جماعت</label><select style={S.inpSm} value={f.grade} onChange={e=>setF({...f,grade:e.target.value})}>{grades.map(g=><option key={g}>{g}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>سیکشن</label><select style={S.inpSm} value={f.section} onChange={e=>setF({...f,section:e.target.value})}>{sections.map(s=><option key={s}>{s}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>ہاؤس</label><select style={S.inpSm} value={f.houseId} onChange={e=>setF({...f,houseId:e.target.value})}>{HOUSES.map(h=><option key={h.id} value={h.id}>{h.emoji} {h.nameEn}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>کوڈ</label><input style={{...S.inpSm,direction:"ltr"}} value={f.studentCode} onChange={e=>setF({...f,studentCode:e.target.value})} placeholder="AII-2026-009"/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>صلاحیت</label><input style={S.inpSm} value={f.talent} onChange={e=>setF({...f,talent:e.target.value})} placeholder="تقریر، کرکٹ..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>فون</label><input style={{...S.inpSm,direction:"ltr"}} value={f.phone} onChange={e=>setF({...f,phone:e.target.value})} placeholder="0300-1234567"/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>کینٹین بیلنس</label><input style={{...S.inpSm,direction:"ltr"}} type="number" value={f.canteenBalance} onChange={e=>setF({...f,canteenBalance:e.target.value})}/></div>
+      </div>
+      <button style={S.saveBtn} onClick={add}>✅ محفوظ کریں</button>
+    </div>}
+    {/* Search & Filter */}
+    <div style={{display:"flex",gap:"10px",marginBottom:"14px",flexWrap:"wrap"}}>
+      <input style={{...S.inpSm,flex:1,minWidth:"180px",direction:"rtl"}} placeholder="🔍 نام، کوڈ یا والد..." value={q} onChange={e=>setQ(e.target.value)}/>
+      {[["all","سب"],["active","فعال"],["inactive","غیر فعال"]].map(([v,l])=><button key={v} onClick={()=>setFilter(v)} style={{padding:"8px 14px",borderRadius:"10px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:filter===v?"700":"400",background:filter===v?`linear-gradient(135deg,${C.gold},${C.goldDark})`:C.white,color:filter===v?C.white:"#888",fontFamily:"inherit"}}>{l}</button>)}
+    </div>
+    {/* Table */}
+    <div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+      <thead><tr><th style={S.th}>نام</th><th style={S.th}>والد</th><th style={S.th}>جماعت</th><th style={S.th}>ہاؤس</th><th style={S.th}>کوڈ</th><th style={S.th}>حال</th></tr></thead>
+      <tbody>{filtered.map(s=>{ const h=HOUSES.find(x=>x.id===s.houseId)||{}; return <tr key={s.id}>
+        <td style={{...S.td,fontWeight:"700"}}>{s.name}</td>
+        <td style={S.td}>{s.fatherName||"—"}</td>
+        <td style={S.td}>{s.grade}</td>
+        <td style={S.td}><span style={hBadge(h.color||C.gold,h.light)}>{h.emoji} {h.nameEn}</span></td>
+        <td style={{...S.td,fontFamily:"monospace",direction:"ltr",fontSize:"0.6rem",color:C.gold}}>{s.studentCode||"—"}</td>
+        <td style={S.td}><span style={{padding:"3px 8px",borderRadius:"20px",fontSize:"0.55rem",fontWeight:"700",background:s.enrollmentStatus==="active"?"#dcfce7":"#fee2e2",color:s.enrollmentStatus==="active"?C.green:C.red}}>{s.enrollmentStatus==="active"?"فعال":"غیر فعال"}</span></td>
+      </tr>; })}
+      {filtered.length===0&&<tr><td colSpan={6} style={{...S.td,textAlign:"center",color:"#bbb",padding:"40px"}}>کوئی طالب علم نہیں</td></tr>}
+      </tbody>
+    </table></div></div>
+  </div>;
+}
+
+// ===================== TEACHERS =====================
+function Teachers({teachers,addData}){
+  const [show,setShow]=useState(false); const [q,setQ]=useState("");
+  const [f,setF]=useState({name:"",subject:"",grade:"Grade 7",employeeCode:"",houseId:"abuBakr",isActive:true,phone:"",qualification:""});
+  const add=async()=>{ if(!f.name)return; await addData("teachers",{...f}); setShow(false); setF({name:"",subject:"",grade:"Grade 7",employeeCode:"",houseId:"abuBakr",isActive:true,phone:"",qualification:""}); };
+  const filtered=teachers.filter(t=>t.name?.includes(q)||t.subject?.includes(q)||t.employeeCode?.includes(q));
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>👨‍🏫 اساتذہ</div><div style={{fontSize:"0.62rem",color:"#888"}}>{teachers.length} کل اساتذہ</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نیا استاد</button>
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>نام *</label><input style={S.inpSm} value={f.name} onChange={e=>setF({...f,name:e.target.value})} placeholder="استاد کا نام..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>مضمون</label><input style={S.inpSm} value={f.subject} onChange={e=>setF({...f,subject:e.target.value})} placeholder="Mathematics..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>جماعت</label><select style={S.inpSm} value={f.grade} onChange={e=>setF({...f,grade:e.target.value})}>{["Grade 6","Grade 7","Grade 8","Grade 9","All Grades"].map(g=><option key={g}>{g}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>ہاؤس</label><select style={S.inpSm} value={f.houseId} onChange={e=>setF({...f,houseId:e.target.value})}>{HOUSES.map(h=><option key={h.id} value={h.id}>{h.emoji} {h.nameEn}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>ملازم کوڈ</label><input style={{...S.inpSm,direction:"ltr"}} value={f.employeeCode} onChange={e=>setF({...f,employeeCode:e.target.value})} placeholder="TCH-005"/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>فون</label><input style={{...S.inpSm,direction:"ltr"}} value={f.phone} onChange={e=>setF({...f,phone:e.target.value})} placeholder="0300-1234567"/></div>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>تعلیمی قابلیت</label><input style={S.inpSm} value={f.qualification} onChange={e=>setF({...f,qualification:e.target.value})} placeholder="M.A Islamiyat..."/></div>
+      </div>
+      <button style={S.saveBtn} onClick={add}>✅ محفوظ کریں</button>
+    </div>}
+    <div style={{marginBottom:"14px"}}><input style={{...S.inpSm,direction:"rtl"}} placeholder="🔍 نام یا مضمون..." value={q} onChange={e=>setQ(e.target.value)}/></div>
+    <div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+      <thead><tr><th style={S.th}>نام</th><th style={S.th}>مضمون</th><th style={S.th}>جماعت</th><th style={S.th}>ہاؤس</th><th style={S.th}>کوڈ</th><th style={S.th}>حال</th></tr></thead>
+      <tbody>{filtered.map(t=>{ const h=HOUSES.find(x=>x.id===t.houseId)||{}; return <tr key={t.id}>
+        <td style={{...S.td,fontWeight:"700"}}>{t.name}</td>
+        <td style={S.td}>{t.subject||"—"}</td>
+        <td style={S.td}>{t.grade}</td>
+        <td style={S.td}><span style={hBadge(h.color||C.gold,h.light)}>{h.emoji} {h.nameEn||"—"}</span></td>
+        <td style={{...S.td,fontFamily:"monospace",direction:"ltr",fontSize:"0.6rem",color:C.gold}}>{t.employeeCode||"—"}</td>
+        <td style={S.td}><span style={{padding:"3px 8px",borderRadius:"20px",fontSize:"0.55rem",fontWeight:"700",background:t.isActive!==false?"#dcfce7":"#fee2e2",color:t.isActive!==false?C.green:C.red}}>{t.isActive!==false?"فعال":"غیر فعال"}</span></td>
+      </tr>; })}
+      {filtered.length===0&&<tr><td colSpan={6} style={{...S.td,textAlign:"center",color:"#bbb",padding:"40px"}}>کوئی استاد نہیں</td></tr>}
+      </tbody>
+    </table></div></div>
+  </div>;
+}
+
+// ===================== HIFZ =====================
+function Hifz({students,addData}){
+  const [logs,setLogs]=useState([]); const [show,setShow]=useState(false);
+  const [f,setF]=useState({studentId:"",surah:"",ayahs:"",rating:3,notes:"",date:new Date().toISOString().split("T")[0]});
+  useEffect(()=>{ return onSnapshot(query(collection(db,"hifz_logs"),orderBy("createdAt","desc"),limit(100)),s=>setLogs(s.docs.map(d=>({id:d.id,...d.data()})))); },[]);
+  const add=async()=>{ if(!f.studentId||!f.surah)return; await addData("hifz_logs",{...f,rating:Number(f.rating)}); setShow(false); setF({studentId:"",surah:"",ayahs:"",rating:3,notes:"",date:new Date().toISOString().split("T")[0]}); };
+  const studentLogs=(sid)=>logs.filter(l=>l.studentId===sid);
+  const avgRating=(sid)=>{ const sl=studentLogs(sid); if(!sl.length)return 0; return (sl.reduce((s,l)=>s+(l.rating||0),0)/sl.length).toFixed(1); };
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>📖 حفظ ٹریکر</div><div style={{fontSize:"0.62rem",color:"#888"}}>{logs.length} کل اندراجات</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نئی تلاوت</button>
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>طالب علم *</label><select style={S.inpSm} value={f.studentId} onChange={e=>setF({...f,studentId:e.target.value})}><option value="">-- منتخب کریں --</option>{students.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>سورۃ *</label><input style={S.inpSm} value={f.surah} onChange={e=>setF({...f,surah:e.target.value})} placeholder="سورۃ البقرۃ..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>آیات</label><input style={S.inpSm} value={f.ayahs} onChange={e=>setF({...f,ayahs:e.target.value})} placeholder="1-10"/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>تاریخ</label><input style={{...S.inpSm,direction:"ltr"}} type="date" value={f.date} onChange={e=>setF({...f,date:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>معیار</label><select style={S.inpSm} value={f.rating} onChange={e=>setF({...f,rating:e.target.value})}>{RATING.map(r=><option key={r.val} value={r.val}>{r.label} ({r.labelEn})</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>نوٹس</label><input style={S.inpSm} value={f.notes} onChange={e=>setF({...f,notes:e.target.value})} placeholder="تلفظ اچھا تھا..."/></div>
+      </div>
+      <button style={S.saveBtn} onClick={add}>✅ محفوظ کریں</button>
+    </div>}
+    {/* Student Summary */}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:"12px",marginBottom:"20px"}}>
+      {students.map(s=>{ const cnt=studentLogs(s.id).length; const avg=avgRating(s.id); const h=HOUSES.find(x=>x.id===s.houseId)||{}; return <div key={s.id} style={{...S.card,padding:"16px",borderRight:`4px solid ${h.color||C.gold}`}}>
+        <div style={{fontWeight:"700",color:C.navy,marginBottom:"4px"}}>{s.name}</div>
+        <div style={{fontSize:"0.58rem",color:"#888",marginBottom:"8px"}}>{s.grade}</div>
+        <div style={{display:"flex",gap:"8px"}}>
+          <div style={{background:`${C.abuBakr}10`,borderRadius:"8px",padding:"6px 10px",textAlign:"center",flex:1}}><div style={{fontSize:"1rem",fontWeight:"900",color:C.abuBakr}}>{cnt}</div><div style={{fontSize:"0.5rem",color:"#888"}}>سبق</div></div>
+          <div style={{background:`${C.gold}10`,borderRadius:"8px",padding:"6px 10px",textAlign:"center",flex:1}}><div style={{fontSize:"1rem",fontWeight:"900",color:C.gold}}>{avg}</div><div style={{fontSize:"0.5rem",color:"#888"}}>اوسط</div></div>
+        </div>
+      </div>; })}
+    </div>
+    {/* Logs */}
+    <div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+      <thead><tr><th style={S.th}>طالب علم</th><th style={S.th}>سورۃ</th><th style={S.th}>آیات</th><th style={S.th}>تاریخ</th><th style={S.th}>معیار</th></tr></thead>
+      <tbody>{logs.slice(0,30).map(l=>{ const st=students.find(s=>s.id===l.studentId); const r=RATING.find(x=>x.val===l.rating)||RATING[1]; return <tr key={l.id}>
+        <td style={{...S.td,fontWeight:"700"}}>{st?.name||"—"}</td>
+        <td style={S.td}>{l.surah}</td>
+        <td style={{...S.td,direction:"ltr",fontFamily:"monospace"}}>{l.ayahs||"—"}</td>
+        <td style={{...S.td,direction:"ltr",fontFamily:"monospace",fontSize:"0.6rem"}}>{l.date||"—"}</td>
+        <td style={S.td}><span style={{padding:"3px 8px",borderRadius:"20px",fontSize:"0.58rem",fontWeight:"700",background:r.bg,color:r.color}}>{r.label}</span></td>
+      </tr>; })}
+      {logs.length===0&&<tr><td colSpan={5} style={{...S.td,textAlign:"center",color:"#bbb",padding:"40px"}}>کوئی ریکارڈ نہیں</td></tr>}
+      </tbody>
+    </table></div></div>
+  </div>;
+}
+
+// ===================== HOUSES =====================
+function Houses({houses,hvsLogs,students}){
+  const [selected,setSelected]=useState(null);
+  const houseStats=HOUSES.map(info=>{ const hd=houses.find(h=>h.id===info.id)||{}; const studs=students.filter(s=>s.houseId===info.id); const hLogs=hvsLogs.filter(l=>l.houseId===info.id); const avgHvs=hLogs.length?Math.round(hLogs.reduce((s,l)=>s+(l.totalScore||0),0)/hLogs.length):0; const bestWeek=hLogs.length?Math.max(...hLogs.map(l=>l.totalScore||0)):0; return {...info,...hd,studs,hLogs,avgHvs,bestWeek}; }).sort((a,b)=>(b.points||0)-(a.points||0)).map((h,i)=>({...h,rank:i+1}));
+  const selectedStats=selected?houseStats.find(h=>h.id===selected):null;
+  const selectedInfo=selected?HOUSES.find(h=>h.id===selected):null;
+  return <div style={S.page}>
+    <div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy,marginBottom:"16px"}}>🏠 ہاؤس سسٹم</div>
+    {/* House Cards */}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:"14px",marginBottom:"20px"}}>
+      {houseStats.map((h,i)=>{ const info=HOUSES.find(x=>x.id===h.id)||{}; return <div key={h.id} onClick={()=>setSelected(selected===h.id?null:h.id)} style={{borderRadius:"20px",padding:"20px",cursor:"pointer",background:selected===h.id?info.gradient:"linear-gradient(135deg,#fff,#fafafa)",border:`2px solid ${info.color}${selected===h.id?"":"40"}`,boxShadow:selected===h.id?`0 8px 24px ${info.color}40`:"0 2px 8px rgba(0,0,0,0.06)",transition:"all 0.3s"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"12px"}}>
+          <div style={{fontSize:"2rem"}}>{info.emoji}</div>
+          <div style={{fontSize:"1.2rem",fontWeight:"900",color:selected===h.id?C.white:info.color}}>{i===0?"👑":i===1?"🥈":i===2?"🥉":"4️⃣"}</div>
+        </div>
+        <div style={{fontWeight:"800",fontSize:"0.9rem",color:selected===h.id?C.white:info.color,marginBottom:"4px"}}>{info.nameEn}</div>
+        <div style={{fontSize:"0.6rem",color:selected===h.id?"rgba(255,255,255,0.7)":"#888",marginBottom:"10px"}}>{info.slogan}</div>
+        <div style={{fontSize:"1.8rem",fontWeight:"900",color:selected===h.id?C.white:info.color}}>{h.points||0}</div>
+        <div style={{fontSize:"0.58rem",color:selected===h.id?"rgba(255,255,255,0.6)":"#aaa"}}>پوائنٹس</div>
+        <div style={{marginTop:"10px",display:"flex",gap:"6px"}}>
+          <div style={{background:selected===h.id?"rgba(255,255,255,0.2)":info.color+"15",borderRadius:"8px",padding:"6px",flex:1,textAlign:"center"}}><div style={{fontSize:"0.9rem",fontWeight:"800",color:selected===h.id?C.white:info.color}}>{h.studs?.length||0}</div><div style={{fontSize:"0.5rem",color:selected===h.id?"rgba(255,255,255,0.6)":"#aaa"}}>طلبا</div></div>
+          <div style={{background:selected===h.id?"rgba(255,255,255,0.2)":info.color+"15",borderRadius:"8px",padding:"6px",flex:1,textAlign:"center"}}><div style={{fontSize:"0.9rem",fontWeight:"800",color:selected===h.id?C.white:info.color}}>{h.avgHvs}</div><div style={{fontSize:"0.5rem",color:selected===h.id?"rgba(255,255,255,0.6)":"#aaa"}}>اوسط HVS</div></div>
+        </div>
+      </div>; })}
+    </div>
+    {/* Detail Panel */}
+    {selectedStats&&selectedInfo&&<div style={{...S.card,marginBottom:"16px",borderTop:`4px solid ${selectedInfo.color}`}}>
+      <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy,marginBottom:"14px"}}>{selectedInfo.emoji} {selectedInfo.nameEn} — طلبا</div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:"8px"}}>
+        {selectedStats.studs?.map(s=><span key={s.id} style={{...hBadge(selectedInfo.color,selectedInfo.light),fontSize:"0.65rem"}}>{s.name} — {s.grade}</span>)}
+        {!selectedStats.studs?.length&&<div style={{color:"#bbb",fontSize:"0.65rem"}}>کوئی طالب علم نہیں</div>}
+      </div>
+    </div>}
+    {/* Comparison Table */}
+    <div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+      <thead><tr><th style={S.th}>ہاؤس</th><th style={S.th}>درجہ</th><th style={S.th}>پوائنٹس</th><th style={S.th}>طلبا</th><th style={S.th}>اوسط HVS</th><th style={S.th}>بہترین</th></tr></thead>
+      <tbody>{houseStats.map((h,i)=>{ const info=HOUSES.find(x=>x.id===h.id)||{}; return <tr key={h.id}>
+        <td style={S.td}><span style={hBadge(info.color,info.light)}>{info.emoji} {info.nameEn}</span></td>
+        <td style={{...S.td,fontWeight:"800",color:i===0?C.gold:"#888"}}>{i===0?"👑 1st":`#${i+1}`}</td>
+        <td style={{...S.td,fontWeight:"800",color:info.color}}>{h.points||0}</td>
+        <td style={S.td}>{h.studs?.length||0}</td>
+        <td style={S.td}>{h.avgHvs}/{HVS_TOTAL}</td>
+        <td style={{...S.td,color:C.green,fontWeight:"700"}}>{h.bestWeek}</td>
+      </tr>; })}
+      </tbody>
+    </table></div></div>
+  </div>;
+}
+
+// ===================== HVS ENTRY =====================
+function HVSEntry({students,houses,addData,updateHousePoints}){
+  const [houseId,setHouseId]=useState("abuBakr"); const [week,setWeek]=useState(""); const [scores,setScores]=useState({});
+  const [saving,setSaving]=useState(false); const [done,setDone]=useState(false);
+  const houseStudents=students.filter(s=>s.houseId===houseId);
+  const setScore=(cat,val)=>setScores(prev=>({...prev,[cat]:Math.min(HVS_CATS.find(c=>c.id===cat)?.max||10,Math.max(0,Number(val)))}));
+  const total=HVS_CATS.reduce((s,c)=>s+(scores[c.id]||0),0);
+  const save=async()=>{
+    if(!week){alert("ہفتہ درج کریں"); return;}
+    setSaving(true);
+    const houseInfo=HOUSES.find(h=>h.id===houseId)||{};
+    await addData("hvs_logs",{houseId,week,scores:{...scores},totalScore:total,houseName:houseInfo.nameEn});
+    await updateHousePoints(houseId,total);
+    setScores({}); setDone(true); setTimeout(()=>setDone(false),3000); setSaving(false);
+  };
+  return <div style={S.page}>
+    <div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy,marginBottom:"16px"}}>🏅 HVS اندراج</div>
+    {done&&<div style={{background:"#dcfce7",border:`2px solid ${C.green}`,borderRadius:"14px",padding:"14px",marginBottom:"16px",textAlign:"center",fontSize:"0.78rem",fontWeight:"700",color:C.green}}>✅ کامیابی سے محفوظ ہو گیا!</div>}
+    {/* House & Week Selector */}
+    <div style={{...S.card,marginBottom:"16px"}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>ہاؤس</label>
+          <select style={S.inpSm} value={houseId} onChange={e=>setHouseId(e.target.value)}>
+            {HOUSES.map(h=><option key={h.id} value={h.id}>{h.emoji} {h.nameEn}</option>)}
+          </select>
+        </div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>ہفتہ *</label>
+          <input style={{...S.inpSm,direction:"ltr"}} placeholder="2026-W12" value={week} onChange={e=>setWeek(e.target.value)}/>
+        </div>
+      </div>
+      {/* House Info */}
+      {(()=>{ const h=HOUSES.find(x=>x.id===houseId)||{}; return <div style={{background:h.color+"10",borderRadius:"12px",padding:"12px",border:`1px solid ${h.color}30`,display:"flex",alignItems:"center",gap:"12px"}}>
+        <span style={{fontSize:"2rem"}}>{h.emoji}</span>
+        <div><div style={{fontWeight:"700",color:h.color}}>{h.name}</div><div style={{fontSize:"0.6rem",color:"#888"}}>{h.slogan}</div><div style={{fontSize:"0.6rem",color:"#aaa",marginTop:"2px"}}>{houseStudents.length} طلبا</div></div>
+      </div>; })()}
+    </div>
+    {/* Scoring Categories */}
+    <div style={S.card}>
+      <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy,marginBottom:"14px"}}>📊 اسکور درج کریں (کل: {HVS_TOTAL})</div>
+      {HVS_CATS.map(cat=><div key={cat.id} style={{marginBottom:"16px",paddingBottom:"16px",borderBottom:`1px solid ${C.goldLight}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"6px"}}>
+          <div>
+            <span style={{fontSize:"0.78rem",fontWeight:"700",color:C.navy}}>{cat.icon} {cat.label}</span>
+            <span style={{fontSize:"0.55rem",color:"#aaa",marginRight:"8px"}}> — {cat.desc}</span>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
+            <input style={{...S.inpSm,width:"60px",textAlign:"center",direction:"ltr"}} type="number" min={0} max={cat.max} value={scores[cat.id]||0} onChange={e=>setScore(cat.id,e.target.value)}/>
+            <span style={{fontSize:"0.62rem",color:"#888",minWidth:"30px"}}>/{cat.max}</span>
+          </div>
+        </div>
+        {pBar(scores[cat.id]||0,cat.max,C.gold)}
+      </div>)}
+      {/* Total */}
+      <div style={{background:`linear-gradient(135deg,${C.navy},${C.navyMid})`,borderRadius:"14px",padding:"16px",display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px"}}>
+        <span style={{color:"rgba(255,255,255,0.8)",fontSize:"0.78rem",fontWeight:"700"}}>کل اسکور</span>
+        <div style={{textAlign:"center"}}>
+          <div style={{fontSize:"2rem",fontWeight:"900",color:C.gold}}>{total}</div>
+          <div style={{fontSize:"0.55rem",color:"rgba(255,255,255,0.5)"}}>/{HVS_TOTAL}</div>
+        </div>
+        <div style={{fontSize:"1.2rem",fontWeight:"800",color:total>=120?C.green:total>=80?C.amber:C.red}}>{total>=120?"شاندار":total>=80?"اچھا":"کمزور"}</div>
+      </div>
+      {pBar(total,HVS_TOTAL,total>=120?C.green:total>=80?C.amber:C.red)}
+      <button style={{...S.saveBtn,width:"100%",marginTop:"16px",padding:"14px",fontSize:"0.78rem"}} onClick={save} disabled={saving}>{saving?"محفوظ ہو رہا ہے...":"✅ HVS محفوظ کریں"}</button>
+    </div>
+  </div>;
+}
+
+// ===================== ATTENDANCE =====================
+function Attendance({students,addData}){
+  const [records,setRecords]=useState([]); const [date,setDate]=useState(new Date().toISOString().split("T")[0]);
+  const [attendance,setAttendance]=useState({}); const [saved,setSaved]=useState(false); const [tab,setTab]=useState("mark");
+  useEffect(()=>{ return onSnapshot(query(collection(db,"attendance"),orderBy("createdAt","desc"),limit(200)),s=>setRecords(s.docs.map(d=>({id:d.id,...d.data()})))); },[]);
+  const setStatus=(sid,val)=>setAttendance(prev=>({...prev,[sid]:val}));
+  const saveAll=async()=>{
+    for(const s of students){ const status=attendance[s.id]||"present"; await addData("attendance",{studentId:s.id,studentName:s.name,date,status,houseId:s.houseId,grade:s.grade}); }
+    setSaved(true); setTimeout(()=>setSaved(false),3000);
+  };
+  const todayRecords=records.filter(r=>r.date===date);
+  const presentToday=todayRecords.filter(r=>r.status==="present").length;
+  const absentToday=todayRecords.filter(r=>r.status==="absent").length;
+  const lateToday=todayRecords.filter(r=>r.status==="late").length;
+  return <div style={S.page}>
+    <div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy,marginBottom:"16px"}}>✅ حاضری</div>
+    {saved&&<div style={{background:"#dcfce7",border:`2px solid ${C.green}`,borderRadius:"14px",padding:"14px",marginBottom:"16px",textAlign:"center",fontSize:"0.78rem",fontWeight:"700",color:C.green}}>✅ حاضری محفوظ ہو گئی!</div>}
+    {/* Stats */}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"10px",marginBottom:"16px"}}>
+      {[{c:C.green,i:"✅",n:presentToday,l:"حاضر"},{c:C.red,i:"❌",n:absentToday,l:"غیر حاضر"},{c:C.amber,i:"⏰",n:lateToday,l:"دیر سے"}].map((x,i)=><div key={i} style={{background:`${x.c}10`,borderRadius:"14px",padding:"14px",border:`2px solid ${x.c}25`,textAlign:"center"}}><div style={{fontSize:"1.2rem"}}>{x.i}</div><div style={{fontSize:"1.4rem",fontWeight:"900",color:x.c}}>{x.n}</div><div style={{fontSize:"0.6rem",color:"#888"}}>{x.l}</div></div>)}
+    </div>
+    {/* Tabs */}
+    <div style={{display:"flex",gap:"8px",marginBottom:"16px"}}>{[["mark","✏️ حاضری لگائیں"],["history","📋 تاریخ"]].map(([t,l])=><button key={t} onClick={()=>setTab(t)} style={{padding:"8px 16px",borderRadius:"10px",border:"none",cursor:"pointer",fontSize:"0.65rem",fontWeight:tab===t?"700":"400",background:tab===t?`linear-gradient(135deg,${C.gold},${C.goldDark})`:C.white,color:tab===t?C.white:"#888",fontFamily:"inherit"}}>{l}</button>)}</div>
+    {tab==="mark"&&<div style={S.card}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px"}}>
+        <div style={{fontSize:"0.78rem",fontWeight:"700",color:C.navy}}>{students.length} طلبا</div>
+        <input style={{...S.inpSm,width:"160px",direction:"ltr"}} type="date" value={date} onChange={e=>setDate(e.target.value)}/>
+      </div>
+      {students.map(s=>{ const status=attendance[s.id]||"present"; const h=HOUSES.find(x=>x.id===s.houseId)||{}; return <div key={s.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:`1px solid ${C.goldLight}`}}>
+        <div>
+          <div style={{fontSize:"0.72rem",fontWeight:"700",color:C.navy}}>{s.name}</div>
+          <div style={{fontSize:"0.58rem",color:"#aaa"}}>{s.grade} • <span style={{color:h.color||C.gold}}>{h.nameEn}</span></div>
+        </div>
+        <div style={{display:"flex",gap:"6px"}}>
+          {[["present","✅","حاضر",C.green],["late","⏰","دیر",C.amber],["absent","❌","غیر",C.red]].map(([v,icon,l,c])=><button key={v} onClick={()=>setStatus(s.id,v)} style={{padding:"5px 10px",borderRadius:"8px",border:`1px solid ${status===v?c:C.goldLight}`,background:status===v?c+"20":C.white,color:status===v?c:"#bbb",fontSize:"0.58rem",cursor:"pointer",fontFamily:"inherit",fontWeight:status===v?"700":"400"}}>{icon} {l}</button>)}
+        </div>
+      </div>; })}
+      <button style={{...S.saveBtn,width:"100%",marginTop:"16px"}} onClick={saveAll}>✅ سب محفوظ کریں</button>
+    </div>}
+    {tab==="history"&&<div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+      <thead><tr><th style={S.th}>نام</th><th style={S.th}>تاریخ</th><th style={S.th}>جماعت</th><th style={S.th}>حال</th></tr></thead>
+      <tbody>{records.slice(0,50).map(r=><tr key={r.id}>
+        <td style={{...S.td,fontWeight:"700"}}>{r.studentName||"—"}</td>
+        <td style={{...S.td,direction:"ltr",fontFamily:"monospace",fontSize:"0.6rem"}}>{r.date}</td>
+        <td style={S.td}>{r.grade||"—"}</td>
+        <td style={S.td}><span style={{padding:"3px 8px",borderRadius:"20px",fontSize:"0.55rem",fontWeight:"700",background:r.status==="present"?"#dcfce7":r.status==="late"?"#fef3c7":"#fee2e2",color:r.status==="present"?C.green:r.status==="late"?C.amber:C.red}}>{r.status==="present"?"حاضر":r.status==="late"?"دیر":"غیر حاضر"}</span></td>
+      </tr>)}
+      {records.length===0&&<tr><td colSpan={4} style={{...S.td,textAlign:"center",color:"#bbb",padding:"40px"}}>کوئی ریکارڈ نہیں</td></tr>}
+      </tbody>
+    </table></div></div>}
+  </div>;
+}
+
+// ===================== FEE MANAGEMENT =====================
+function FeeManagement({students,addData}){
+  const [fees,setFees]=useState([]); const [show,setShow]=useState(false); const [q,setQ]=useState(""); const [filterStatus,setFilterStatus]=useState("all");
+  const [f,setF]=useState({studentId:"",feeType:"monthly",amount:3000,month:"",dueDate:"",status:"pending",notes:""});
+  useEffect(()=>{ return onSnapshot(query(collection(db,"fees"),orderBy("createdAt","desc"),limit(200)),s=>setFees(s.docs.map(d=>({id:d.id,...d.data()})))); },[]);
+  const add=async()=>{ if(!f.studentId||!f.amount)return; await addData("fees",{...f,amount:Number(f.amount)}); setShow(false); setF({studentId:"",feeType:"monthly",amount:3000,month:"",dueDate:"",status:"pending",notes:""}); };
+  const markPaid=async(id)=>{ await updateDoc(doc(db,"fees",id),{status:"paid",paidAt:serverTimestamp()}); };
+  const filtered=fees.filter(f=>{ const st=students.find(s=>s.id===f.studentId); const matchQ=st?.name?.includes(q)||st?.studentCode?.includes(q); const matchS=filterStatus==="all"||f.status===filterStatus; return matchQ&&matchS; });
+  const totalPending=fees.filter(f=>f.status==="pending").reduce((s,f)=>s+(f.amount||0),0);
+  const totalPaid=fees.filter(f=>f.status==="paid").reduce((s,f)=>s+(f.amount||0),0);
+  const feeTypes={"monthly":"ماہانہ فیس","admission":"داخلہ فیس","exam":"امتحانی فیس","canteen":"کینٹین","hostel":"ہوسٹل","transport":"ٹرانسپورٹ","other":"دیگر"};
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>💰 فیس مینجمنٹ</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نئی فیس</button>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:"10px",marginBottom:"16px"}}>
+      {[{c:C.red,i:"⚠️",n:`Rs.${totalPending.toLocaleString()}`,l:"باقی"},{c:C.green,i:"✅",n:`Rs.${totalPaid.toLocaleString()}`,l:"وصول"},{c:C.abuBakr,i:"📋",n:fees.filter(f=>f.status==="pending").length,l:"باقی طلبا"}].map((x,i)=><div key={i} style={{background:`${x.c}10`,borderRadius:"14px",padding:"14px",border:`2px solid ${x.c}25`,textAlign:"center"}}><div style={{fontSize:"1.1rem"}}>{x.i}</div><div style={{fontSize:"1rem",fontWeight:"900",color:x.c}}>{x.n}</div><div style={{fontSize:"0.6rem",color:"#888"}}>{x.l}</div></div>)}
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>طالب علم *</label><select style={S.inpSm} value={f.studentId} onChange={e=>setF({...f,studentId:e.target.value})}><option value="">-- منتخب کریں --</option>{students.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>قسم</label><select style={S.inpSm} value={f.feeType} onChange={e=>setF({...f,feeType:e.target.value})}>{Object.entries(feeTypes).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>رقم *</label><input style={{...S.inpSm,direction:"ltr"}} type="number" value={f.amount} onChange={e=>setF({...f,amount:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>مہینہ</label><input style={{...S.inpSm,direction:"ltr"}} type="month" value={f.month} onChange={e=>setF({...f,month:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>آخری تاریخ</label><input style={{...S.inpSm,direction:"ltr"}} type="date" value={f.dueDate} onChange={e=>setF({...f,dueDate:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>حال</label><select style={S.inpSm} value={f.status} onChange={e=>setF({...f,status:e.target.value})}><option value="pending">باقی</option><option value="paid">ادا شدہ</option></select></div>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>نوٹس</label><input style={S.inpSm} value={f.notes} onChange={e=>setF({...f,notes:e.target.value})} placeholder="ضروری نوٹ..."/></div>
+      </div>
+      <button style={S.saveBtn} onClick={add}>✅ محفوظ کریں</button>
+    </div>}
+    <div style={{display:"flex",gap:"10px",marginBottom:"14px",flexWrap:"wrap"}}>
+      <input style={{...S.inpSm,flex:1,minWidth:"180px",direction:"rtl"}} placeholder="🔍 نام یا کوڈ..." value={q} onChange={e=>setQ(e.target.value)}/>
+      {[["all","سب"],["pending","باقی"],["paid","ادا"]].map(([v,l])=><button key={v} onClick={()=>setFilterStatus(v)} style={{padding:"8px 14px",borderRadius:"10px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:filterStatus===v?"700":"400",background:filterStatus===v?`linear-gradient(135deg,${C.gold},${C.goldDark})`:C.white,color:filterStatus===v?C.white:"#888",fontFamily:"inherit"}}>{l}</button>)}
+    </div>
+    <div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+      <thead><tr><th style={S.th}>طالب علم</th><th style={S.th}>قسم</th><th style={S.th}>رقم</th><th style={S.th}>مہینہ</th><th style={S.th}>حال</th><th style={S.th}>عمل</th></tr></thead>
+      <tbody>{filtered.map(fee=>{ const st=students.find(s=>s.id===fee.studentId); return <tr key={fee.id}>
+        <td style={{...S.td,fontWeight:"700"}}>{st?.name||"—"}</td>
+        <td style={S.td}>{feeTypes[fee.feeType]||fee.feeType}</td>
+        <td style={{...S.td,fontWeight:"800",color:C.navy}}>Rs. {(fee.amount||0).toLocaleString()}</td>
+        <td style={{...S.td,direction:"ltr",fontFamily:"monospace",fontSize:"0.6rem"}}>{fee.month||"—"}</td>
+        <td style={S.td}><span style={{padding:"3px 8px",borderRadius:"20px",fontSize:"0.58rem",fontWeight:"700",background:fee.status==="paid"?"#dcfce7":"#fef3c7",color:fee.status==="paid"?C.green:C.amber}}>{fee.status==="paid"?"ادا":"باقی"}</span></td>
+        <td style={S.td}>{fee.status==="pending"&&<button onClick={()=>markPaid(fee.id)} style={{...S.saveBtn,padding:"4px 10px",fontSize:"0.55rem"}}>ادا ✓</button>}</td>
+      </tr>; })}
+      {filtered.length===0&&<tr><td colSpan={6} style={{...S.td,textAlign:"center",color:"#bbb",padding:"40px"}}>کوئی ریکارڈ نہیں</td></tr>}
+      </tbody>
+    </table></div></div>
+  </div>;
+}
+
+// ===================== RESULTS =====================
+function Results({students,addData}){
+  const [results,setResults]=useState([]); const [show,setShow]=useState(false); const [filterGrade,setFilterGrade]=useState("all");
+  const [f,setF]=useState({studentId:"",exam:"Monthly Test 1",subject:"Math",totalMarks:100,obtainedMarks:0,grade:"Grade 7",date:new Date().toISOString().split("T")[0]});
+  useEffect(()=>{ return onSnapshot(query(collection(db,"results"),orderBy("createdAt","desc"),limit(200)),s=>setResults(s.docs.map(d=>({id:d.id,...d.data()})))); },[]);
+  const add=async()=>{ if(!f.studentId||!f.exam)return; const pct=Math.round((Number(f.obtainedMarks)/Number(f.totalMarks))*100); await addData("results",{...f,totalMarks:Number(f.totalMarks),obtainedMarks:Number(f.obtainedMarks),percentage:pct}); setShow(false); setF({studentId:"",exam:"Monthly Test 1",subject:"Math",totalMarks:100,obtainedMarks:0,grade:"Grade 7",date:new Date().toISOString().split("T")[0]}); };
+  const getGrade=(pct)=>pct>=90?"A+":pct>=80?"A":pct>=70?"B":pct>=60?"C":pct>=50?"D":"F";
+  const gradeColor=(pct)=>pct>=80?C.green:pct>=60?C.amber:C.red;
+  const filtered=filterGrade==="all"?results:results.filter(r=>r.grade===filterGrade);
+  const grades=["Grade 6","Grade 7","Grade 8","Grade 9"];
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>📊 نتائج</div><div style={{fontSize:"0.62rem",color:"#888"}}>{results.length} کل نتائج</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نیا نتیجہ</button>
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>طالب علم *</label><select style={S.inpSm} value={f.studentId} onChange={e=>setF({...f,studentId:e.target.value})}><option value="">-- منتخب کریں --</option>{students.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>امتحان</label><input style={S.inpSm} value={f.exam} onChange={e=>setF({...f,exam:e.target.value})} placeholder="Monthly Test 1"/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>مضمون</label><input style={S.inpSm} value={f.subject} onChange={e=>setF({...f,subject:e.target.value})} placeholder="Mathematics"/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>جماعت</label><select style={S.inpSm} value={f.grade} onChange={e=>setF({...f,grade:e.target.value})}>{grades.map(g=><option key={g}>{g}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>کل نمبر</label><input style={{...S.inpSm,direction:"ltr"}} type="number" value={f.totalMarks} onChange={e=>setF({...f,totalMarks:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>حاصل نمبر</label><input style={{...S.inpSm,direction:"ltr"}} type="number" value={f.obtainedMarks} onChange={e=>setF({...f,obtainedMarks:e.target.value})}/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>تاریخ</label><input style={{...S.inpSm,direction:"ltr"}} type="date" value={f.date} onChange={e=>setF({...f,date:e.target.value})}/></div>
+      </div>
+      <div style={{background:C.white,borderRadius:"10px",padding:"12px",textAlign:"center",marginBottom:"12px"}}>
+        <div style={{fontSize:"0.6rem",color:"#888"}}>فیصد</div>
+        <div style={{fontSize:"1.6rem",fontWeight:"900",color:gradeColor(Math.round((Number(f.obtainedMarks)/Number(f.totalMarks))*100))}}>{f.totalMarks>0?Math.round((Number(f.obtainedMarks)/Number(f.totalMarks))*100):0}%</div>
+        <div style={{fontSize:"0.78rem",fontWeight:"700",color:"#888"}}>{getGrade(f.totalMarks>0?Math.round((Number(f.obtainedMarks)/Number(f.totalMarks))*100):0)}</div>
+      </div>
+      <button style={S.saveBtn} onClick={add}>✅ محفوظ کریں</button>
+    </div>}
+    <div style={{display:"flex",gap:"8px",marginBottom:"14px",flexWrap:"wrap"}}>
+      {[["all","سب"],...grades.map(g=>[g,g])].map(([v,l])=><button key={v} onClick={()=>setFilterGrade(v)} style={{padding:"8px 14px",borderRadius:"10px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:filterGrade===v?"700":"400",background:filterGrade===v?`linear-gradient(135deg,${C.gold},${C.goldDark})`:C.white,color:filterGrade===v?C.white:"#888",fontFamily:"inherit"}}>{l}</button>)}
+    </div>
+    <div style={S.card}><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+      <thead><tr><th style={S.th}>نام</th><th style={S.th}>امتحان</th><th style={S.th}>مضمون</th><th style={S.th}>نمبر</th><th style={S.th}>فیصد</th><th style={S.th}>گریڈ</th></tr></thead>
+      <tbody>{filtered.map(r=>{ const st=students.find(s=>s.id===r.studentId); const pct=r.percentage||0; return <tr key={r.id}>
+        <td style={{...S.td,fontWeight:"700"}}>{st?.name||"—"}</td>
+        <td style={S.td}>{r.exam}</td>
+        <td style={S.td}>{r.subject}</td>
+        <td style={S.td}>{r.obtainedMarks}/{r.totalMarks}</td>
+        <td style={{...S.td,fontWeight:"800",color:gradeColor(pct)}}>{pct}%</td>
+        <td style={S.td}><span style={{padding:"3px 10px",borderRadius:"20px",fontSize:"0.6rem",fontWeight:"800",background:gradeColor(pct)+"20",color:gradeColor(pct)}}>{getGrade(pct)}</span></td>
+      </tr>; })}
+      {filtered.length===0&&<tr><td colSpan={6} style={{...S.td,textAlign:"center",color:"#bbb",padding:"40px"}}>کوئی ریکارڈ نہیں</td></tr>}
+      </tbody>
+    </table></div></div>
+  </div>;
+}
+
+// ===================== NOTIFICATIONS =====================
+function Notifications({students,addData}){
+  const [notifs,setNotifs]=useState([]); const [show,setShow]=useState(false);
+  const [f,setF]=useState({title:"",message:"",type:"general",targetGrade:"all",priority:"normal"});
+  useEffect(()=>{ return onSnapshot(query(collection(db,"notifications"),orderBy("createdAt","desc"),limit(50)),s=>setNotifs(s.docs.map(d=>({id:d.id,...d.data()})))); },[]);
+  const add=async()=>{ if(!f.title||!f.message)return; await addData("notifications",{...f}); setShow(false); setF({title:"",message:"",type:"general",targetGrade:"all",priority:"normal"}); };
+  const typeConfig={"general":{c:C.abuBakr,i:"📢",l:"عام"},"urgent":{c:C.red,i:"🚨",l:"فوری"},"event":{c:C.purple,i:"🎭",l:"ایونٹ"},"fee":{c:C.amber,i:"💰",l:"فیس"},"exam":{c:C.teal,i:"📝",l:"امتحان"},"holiday":{c:C.green,i:"🌙",l:"چھٹی"}};
+  return <div style={S.page}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}}>
+      <div><div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy}}>📱 اطلاعات</div><div style={{fontSize:"0.62rem",color:"#888"}}>{notifs.length} اطلاعات</div></div>
+      <button style={S.addBtn} onClick={()=>setShow(!show)}>+ نئی اطلاع</button>
+    </div>
+    {show&&<div style={{...S.card,marginBottom:"20px",background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>عنوان *</label><input style={S.inpSm} value={f.title} onChange={e=>setF({...f,title:e.target.value})} placeholder="اطلاع کا عنوان..."/></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>قسم</label><select style={S.inpSm} value={f.type} onChange={e=>setF({...f,type:e.target.value})}>{Object.entries(typeConfig).map(([k,v])=><option key={k} value={k}>{v.i} {v.l}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>جماعت</label><select style={S.inpSm} value={f.targetGrade} onChange={e=>setF({...f,targetGrade:e.target.value})}><option value="all">سب</option>{["Grade 6","Grade 7","Grade 8","Grade 9"].map(g=><option key={g}>{g}</option>)}</select></div>
+        <div><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>اہمیت</label><select style={S.inpSm} value={f.priority} onChange={e=>setF({...f,priority:e.target.value})}><option value="normal">عام</option><option value="high">زیادہ</option><option value="urgent">فوری</option></select></div>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",display:"block"}}>پیغام *</label><textarea style={{...S.inpSm,minHeight:"80px",resize:"vertical"}} value={f.message} onChange={e=>setF({...f,message:e.target.value})} placeholder="مکمل پیغام درج کریں..."/></div>
+      </div>
+      <button style={S.saveBtn} onClick={add}>📢 بھیجیں</button>
+    </div>}
+    <div style={{display:"flex",flexDirection:"column",gap:"12px"}}>
+      {notifs.map(n=>{ const tc=typeConfig[n.type]||typeConfig.general; const isUrgent=n.priority==="urgent"||n.type==="urgent"; return <div key={n.id} style={{...S.card,padding:"16px 20px",borderRight:`4px solid ${tc.c}`,background:isUrgent?`linear-gradient(135deg,${C.red}05,#fff)`:C.white}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"8px"}}>
+          <div style={{display:"flex",alignItems:"center",gap:"8px"}}>
+            <span style={{fontSize:"1.2rem"}}>{tc.i}</span>
+            <div style={{fontSize:"0.78rem",fontWeight:"700",color:C.navy}}>{n.title}</div>
+          </div>
+          <span style={{...hBadge(tc.c),fontSize:"0.55rem"}}>{tc.l}</span>
+        </div>
+        <div style={{fontSize:"0.68rem",color:"#555",lineHeight:"1.6",marginBottom:"8px"}}>{n.message}</div>
+        <div style={{fontSize:"0.58rem",color:"#aaa"}}>جماعت: {n.targetGrade} • اہمیت: {n.priority==="urgent"?"🔴 فوری":n.priority==="high"?"🟡 زیادہ":"🟢 عام"}</div>
+      </div>; })}
+      {notifs.length===0&&<div style={{...S.card,textAlign:"center",color:"#bbb",padding:"60px"}}>کوئی اطلاع نہیں</div>}
+    </div>
+  </div>;
+}
+
+// ===================== TIMETABLE =====================
+function Timetable(){
+  const [grade,setGrade]=useState("Grade 7"); const [day,setDay]=useState("Monday");
+  const grades=Object.keys(TIMETABLE);
+  const schedule=TIMETABLE[grade]||{};
+  const periods=schedule[day]||[];
+  return <div style={S.page}>
+    <div style={{fontSize:"1.1rem",fontWeight:"700",color:C.navy,marginBottom:"16px"}}>🗓️ ٹائم ٹیبل</div>
+    {/* Selectors */}
+    <div style={{...S.card,marginBottom:"16px"}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px"}}>
+        <div>
+          <label style={{fontSize:"0.62rem",color:"#888",marginBottom:"6px",display:"block"}}>جماعت</label>
+          <div style={{display:"flex",gap:"6px",flexWrap:"wrap"}}>{grades.map(g=><button key={g} onClick={()=>setGrade(g)} style={{padding:"7px 12px",borderRadius:"10px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:grade===g?"700":"400",background:grade===g?`linear-gradient(135deg,${C.gold},${C.goldDark})`:C.white,color:grade===g?C.white:"#888",fontFamily:"inherit",border:`1px solid ${grade===g?C.gold:C.goldLight}`}}>{g}</button>)}</div>
+        </div>
+        <div>
+          <label style={{fontSize:"0.62rem",color:"#888",marginBottom:"6px",display:"block"}}>دن</label>
+          <div style={{display:"flex",gap:"6px",flexWrap:"wrap"}}>{DAYS.map(d=><button key={d} onClick={()=>setDay(d)} style={{padding:"7px 12px",borderRadius:"10px",border:"none",cursor:"pointer",fontSize:"0.62rem",fontWeight:day===d?"700":"400",background:day===d?`linear-gradient(135deg,${C.navy},${C.navyMid})`:C.white,color:day===d?C.white:"#888",fontFamily:"inherit",border:`1px solid ${day===d?C.navy:C.goldLight}`}}>{DAYS_UR[d]||d}</button>)}</div>
+        </div>
+      </div>
+    </div>
+    {/* Schedule */}
+    <div style={{...S.card,background:`linear-gradient(135deg,${C.navyDark},${C.navyMid})`,padding:"24px"}}>
+      <div style={{fontSize:"0.85rem",fontWeight:"700",color:C.gold,marginBottom:"20px",textAlign:"center"}}>{grade} — {DAYS_UR[day]||day}</div>
+      {periods.length===0&&<div style={{textAlign:"center",color:"rgba(255,255,255,0.4)",padding:"40px"}}>کوئی پیریڈ نہیں</div>}
+      {periods.map((p,i)=>{ const isBreak=p.toLowerCase().includes("break")||p.toLowerCase().includes("dua"); return <div key={i} style={{display:"flex",alignItems:"center",gap:"14px",marginBottom:"12px",background:isBreak?"rgba(183,134,11,0.15)":"rgba(255,255,255,0.05)",borderRadius:"12px",padding:"12px 16px",border:`1px solid ${isBreak?"rgba(183,134,11,0.4)":"rgba(255,255,255,0.08)"}`}}>
+        <div style={{width:"28px",height:"28px",borderRadius:"50%",background:isBreak?C.gold:C.abuBakr,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.65rem",fontWeight:"800",color:C.white,flexShrink:0}}>{i+1}</div>
+        <div style={{fontSize:"0.75rem",fontWeight:isBreak?"700":"600",color:isBreak?C.gold:"rgba(255,255,255,0.9)"}}>{isBreak?"☕ "+p:p}</div>
+      </div>; })}
+    </div>
+    {/* Full Week View */}
+    <div style={{...S.card,marginTop:"16px"}}>
+      <div style={{fontSize:"0.78rem",fontWeight:"700",color:C.navy,marginBottom:"14px"}}>{grade} — مکمل ہفتہ</div>
+      <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse",minWidth:"600px"}}>
+        <thead><tr><th style={{...S.th,background:C.navyDark,color:C.gold}}>پیریڈ</th>{DAYS.map(d=><th key={d} style={{...S.th,background:C.navyDark,color:C.gold}}>{DAYS_UR[d]}</th>)}</tr></thead>
+        <tbody>{[0,1,2,3,4,5,6].map(i=><tr key={i} style={{background:i%2===0?"#fafafa":C.white}}>
+          <td style={{...S.th,color:C.gold,fontWeight:"800",background:`${C.gold}10`}}>{i+1}</td>
+          {DAYS.map(d=><td key={d} style={{...S.td,fontSize:"0.58rem",textAlign:"center"}}>{(TIMETABLE[grade]?.[d]||[])[i]||"—"}</td>)}
+        </tr>)}
+        </tbody>
+      </table></div>
+    </div>
+  </div>;
+}
+
+// =====================================================================
+// YAHAN TAK COPY KARO — App.js mein seedDB() function se PEHLE paste karo
+// =====================================================================
 
 async function seedDB() {
   try {
