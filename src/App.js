@@ -3507,7 +3507,7 @@ const NAV_GROUPS = [
       {page==="fees"&&<FeeManagement students={students} addData={addData}/>}
       {page==="results"&&<Results students={students} addData={addData}/>}
       {page==="events"&&<Events addData={addData} houses={houses} updateHousePoints={updateHousePoints}/>}
-      {page==="attendance"&&<Attendance students={students} addData={addData}/>}
+      {page==="attendance"&&<Attendance students={students} addData={addData} teachers={teachers}/>}
       {page==="notifications"&&<Notifications students={students} addData={addData}/>}
       {page==="library"&&<Library students={students} addData={addData}/>}
       {page==="salary"&&<SalaryManagement teachers={teachers} addData={addData}/>}
