@@ -41,7 +41,21 @@ function Students({students,addData,results=[],fees=[],hifzLogs=[]}){
 
   const add=async()=>{
     if(!f.name){alert("براہ کرم طالب علم کا نام درج کریں");return;}
-    await addData("students",{...f,canteenBalance:Number(f.canteenBalance)});
+    const payload = {
+      name: f.name,
+      fatherName: f.fatherName,
+      grade: f.grade,
+      section: f.section,
+      houseId: f.houseId,
+      studentCode: f.studentCode,
+      canteenBalance: Number(f.canteenBalance),
+      talent: f.talent,
+      phone: f.phone,
+      enrollmentStatus: f.enrollmentStatus,
+      // photoUrl is not stored in the DB schema (causes schema cache errors),
+      // so we omit it here.
+    };
+    await addData("students", payload);
     setShow(false);
     setF({name:"",fatherName:"",grade:"Grade 7",section:"Orchid",houseId:"abuBakr",studentCode:"",canteenBalance:0,talent:"",phone:"",enrollmentStatus:"active",photoUrl:""});
     setPhotoPreview(null);setUploadError(null);
