@@ -1,0 +1,153 @@
+/* ================================================================
+   AMEEN SCHOOL HUB — Global Hover & Interaction Effects
+   Navy/Gold color scheme: #1e293b (navy), #b7860b (gold)
+   ================================================================ */
+
+/* ── Smooth transition base for all interactive elements ───────── */
+button,
+select,
+input,
+textarea,
+a {
+  transition: transform 0.15s ease, box-shadow 0.2s ease,
+    border-color 0.2s ease, background 0.2s ease, color 0.15s ease !important;
+}
+
+/* ── All buttons ───────────────────────────────────────────────── */
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(183, 134, 11, 0.3) !important;
+  filter: brightness(1.08);
+}
+
+button:active {
+  transform: translateY(0px) scale(0.98) !important;
+  box-shadow: none !important;
+  filter: brightness(0.95);
+}
+
+/* ── Cards ─────────────────────────────────────────────────────── */
+.hv-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease,
+    border-color 0.2s ease !important;
+  will-change: transform;
+}
+
+.hv-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 36px rgba(183, 134, 11, 0.18),
+    0 4px 12px rgba(30, 58, 95, 0.1) !important;
+  border-color: rgba(183, 134, 11, 0.45) !important;
+}
+
+.hv-card:active {
+  transform: translateY(-1px);
+}
+
+/* ── Table rows ────────────────────────────────────────────────── */
+tbody tr {
+  transition: background 0.15s ease;
+}
+
+tbody tr:hover td {
+  background: rgba(183, 134, 11, 0.06) !important;
+}
+
+/* ── Navigation group buttons (top nav) ────────────────────────── */
+nav button:hover,
+.nav-group-btn:hover {
+  color: #b7860b !important;
+  background: rgba(183, 134, 11, 0.06) !important;
+}
+
+/* ── Dropdown menu items ───────────────────────────────────────── */
+.nav-dropdown-item:hover {
+  background: rgba(183, 134, 11, 0.1) !important;
+  color: #b7860b !important;
+  padding-right: 20px !important;
+}
+
+/* ── Inputs & Selects ──────────────────────────────────────────── */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #b7860b !important;
+  box-shadow: 0 0 0 3px rgba(183, 134, 11, 0.15) !important;
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: rgba(183, 134, 11, 0.6) !important;
+}
+
+/* ── Badges / status chips ─────────────────────────────────────── */
+.hv-badge {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.hv-badge:hover {
+  transform: scale(1.06);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+}
+
+/* ── Clickable rows / list items ───────────────────────────────── */
+.hv-row {
+  transition: background 0.15s ease, padding-right 0.15s ease;
+  cursor: pointer;
+}
+
+.hv-row:hover {
+  background: rgba(183, 134, 11, 0.05) !important;
+  padding-right: 24px !important;
+}
+
+/* ── Header logo / brand area ──────────────────────────────────── */
+.hv-brand {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.hv-brand:hover {
+  transform: scale(1.03);
+  opacity: 0.9;
+}
+
+/* ── Stat/summary cards (mini cards in dashboard) ──────────────── */
+.hv-stat {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.hv-stat:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 14px 40px rgba(183, 134, 11, 0.22) !important;
+}
+
+/* ── Smooth scroll for content area ────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── Dashboard dark glass stat cards ───────────────────────────── */
+.hv-stat:hover {
+  transform: translateY(-5px) scale(1.02) !important;
+  box-shadow: 0 16px 48px rgba(212, 175, 55, 0.2),
+    0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  border-color: rgba(212, 175, 55, 0.4) !important;
+}
+
+/* ── Dashboard quick-access cards (dark theme) ──────────────────── */
+button:has(.material-symbols-rounded):hover,
+button:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(212, 175, 55, 0.35) !important;
+  transform: translateY(-3px);
+  box-shadow: 0 12px 36px rgba(212, 175, 55, 0.2),
+    0 4px 16px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* ── Link-style text ────────────────────────────────────────────── */
+a:hover {
+  opacity: 0.85;
+  text-decoration: underline;
+}
