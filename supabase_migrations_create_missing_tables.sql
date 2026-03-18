@@ -4,6 +4,12 @@
 -- NOTE: This migration assumes the following existing tables:
 --   - public.students (id uuid)
 --   - public.houses (id text)
+--
+-- If the students table is missing the photoUrl column (used by the UI), this
+-- migration adds it so inserts/updates do not error.
+
+alter table public.students add column if not exists photoUrl text;
+
 
 -- ===== Create results table =====
 create table if not exists public.results (
