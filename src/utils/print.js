@@ -31,9 +31,11 @@ async function printReport(title, contentHtml, subtitle = "") {
       <meta charset="UTF-8"/>
       <title>${title}</title>
       <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Cinzel:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Public+Sans:wght@400;600;700;800&family=Cinzel:wght@700&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Noto Nastaliq Urdu','Arial',sans-serif; direction:rtl; background:#fff; color:#1e293b; padding:20px; }
+        body { font-family:'Noto Nastaliq Urdu','Segoe UI','Arial',sans-serif; direction:rtl; background:#fff; color:#1e293b; padding:20px; }
+        .ltr, .ltr * { font-family:'Public Sans','Segoe UI',sans-serif; direction:ltr; }
+        .en { font-family:'Public Sans','Segoe UI',sans-serif; }
         .header { background:linear-gradient(135deg,#0f172a,#1e3a5f); color:white; padding:20px 30px; border-radius:12px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; }
         .header-right { text-align:right; }
         .school-name { font-size:1.4rem; font-weight:800; color:#b7860b; }
@@ -73,11 +75,11 @@ async function printReport(title, contentHtml, subtitle = "") {
     <body>
       <div class="header">
         <div class="header-right">
-          <div class="school-name">امین اسلامک انسٹی ٹیوٹ</div>
+          <div class="school-name">Ameen Islamic Institute</div>
           <div class="school-sub">AMEEN ISLAMIC INSTITUTE • SWAT</div>
           <div class="report-title">${title}</div>
           ${subtitle ? `<div class="report-subtitle">${subtitle}</div>` : ""}
-          <div class="date-box">تاریخ: ${new Date().toLocaleDateString("ur-PK")}</div>
+          <div class="date-box">Date: ${new Date().toLocaleDateString("ur-PK")}</div>
         </div>
         <div class="header-left">
           ${logo ? `<img src="${logo}" style="width:95px;height:95px;border-radius:10px;object-fit:contain;background:white;padding:4px;" />` : `<div class="seal">☪</div>`}
@@ -87,16 +89,16 @@ async function printReport(title, contentHtml, subtitle = "") {
       <div class="content">${contentHtml}</div>
 
       <div class="footer">
-        <div class="footer-text">امین اسلامک انسٹی ٹیوٹ — سوات • یہ دستاویز AmeenSchoolHub سے تیار کی گئی ہے</div>
+        <div class="footer-text">Ameen Islamic Institute — سوات • یہ دستاویز AmeenSchoolHub سے تیار کی گئی ہے</div>
         <div style="display:flex;gap:30px;">
-          <div class="signature-box">پرنسپل دستخط</div>
+          <div class="signature-box">Principal Signature</div>
           <div class="signature-box">مہر</div>
         </div>
       </div>
 
       <div class="no-print" style="text-align:center;margin-top:20px;display:flex;gap:10px;justify-content:center;">
         <button onclick="window.print()" style="background:#1e293b;color:#b7860b;border:none;padding:12px 30px;border-radius:10px;font-size:1rem;cursor:pointer;font-family:inherit;">🖨️ پرنٹ کریں</button>
-        <button onclick="window.close()" style="background:#f1f5f9;color:#666;border:none;padding:12px 30px;border-radius:10px;font-size:1rem;cursor:pointer;">✕ بند کریں</button>
+        <button onclick="window.close()" style="background:#f1f5f9;color:#666;border:none;padding:12px 30px;border-radius:10px;font-size:1rem;cursor:pointer;">✕ Close</button>
       </div>
 
       <script>
@@ -135,18 +137,18 @@ function printStudentAttendance(students, records) {
 
   const html = `
     <div class="stat-grid">
-      <div class="stat-card"><div class="stat-num" style="color:#1e40af">${students.length}</div><div class="stat-label">کل طلبا</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:#1e40af">${students.length}</div><div class="stat-label">Total Students</div></div>
       <div class="stat-card"><div class="stat-num" style="color:#16a34a">${totalPresent}</div><div class="stat-label">کل حاضری</div></div>
       <div class="stat-card"><div class="stat-num" style="color:#dc2626">${totalAbsent}</div><div class="stat-label">کل غیر حاضری</div></div>
       <div class="stat-card"><div class="stat-num" style="color:#b7860b">${records.filter(r=>r.type!=="teacher").length}</div><div class="stat-label">کل اندراجات</div></div>
     </div>
-    <div class="section-title">📊 طلبا حاضری رپورٹ</div>
+    <div class="section-title">📊 طلبہ حاضری رپورٹ</div>
     <table>
-      <thead><tr><th>نام</th><th>والد</th><th>جماعت</th><th>حاضر</th><th>غیر حاضر</th><th>دیر</th><th>کل</th><th>فیصد</th></tr></thead>
+      <thead><tr><th>Name</th><th>Father</th><th>Grade</th><th>Present</th><th>غیر Present</th><th>Late</th><th>Total</th><th>Percentage</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
 
-  printReport("طلبا حاضری رپورٹ", html, `کل طلبا: ${students.length}`);
+  printReport("طلبہ حاضری رپورٹ", html, `کل طلبہ: ${students.length}`);
 }
 
 // 2. Teacher Attendance Report
@@ -175,7 +177,7 @@ function printTeacherAttendance(teachers, records) {
   const html = `
     <div class="section-title">👨‍🏫 اساتذہ حاضری رپورٹ</div>
     <table>
-      <thead><tr><th>نام</th><th>مضمون</th><th>حاضر</th><th>غیر حاضر</th><th>دیر</th><th>چھٹی</th><th>کل</th><th>فیصد</th></tr></thead>
+      <thead><tr><th>نام</th><th>مضمون</th><th>حاضر</th><th>غیر حاضر</th><th>تاخیر</th><th>چھٹی</th><th>کل</th><th>فیصد</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
 
@@ -186,9 +188,9 @@ function printTeacherAttendance(teachers, records) {
 function printFeeReceipt(student, fee) {
   const html = `
     <div style="max-width:500px;margin:0 auto;border:2px solid #b7860b;border-radius:16px;padding:24px;">
-      <div class="section-title">💰 فیس رسید</div>
+      <div class="section-title">💰 Fee Receipt</div>
       <table>
-        <tr><td style="font-weight:700;color:#888">طالب علم</td><td style="font-weight:800">${student?.name || "—"}</td></tr>
+        <tr><td style="font-weight:700;color:#888">Student</td><td style="font-weight:800">${student?.name || "—"}</td></tr>
         <tr><td style="font-weight:700;color:#888">والد کا نام</td><td>${student?.fatherName || "—"}</td></tr>
         <tr><td style="font-weight:700;color:#888">جماعت</td><td>${student?.grade || "—"}</td></tr>
         <tr><td style="font-weight:700;color:#888">کوڈ</td><td style="direction:ltr;font-family:monospace">${student?.studentCode || "—"}</td></tr>
@@ -203,7 +205,7 @@ function printFeeReceipt(student, fee) {
       </div>
     </div>`;
 
-  printReport("فیس رسید", html, student?.name);
+  printReport("Fee Receipt", html, student?.name);
 }
 
 // 4. Result Card
@@ -227,10 +229,10 @@ function printResultCard(student, results) {
       <div style="background:#f8fafc;border-radius:10px;padding:14px;border:1px solid #e2e8f0;">
         <div class="section-title">👤 طالب علم کی معلومات</div>
         <table>
-          <tr><td style="color:#888;font-weight:700">نام</td><td style="font-weight:800">${student?.name || "—"}</td></tr>
-          <tr><td style="color:#888;font-weight:700">والد</td><td>${student?.fatherName || "—"}</td></tr>
-          <tr><td style="color:#888;font-weight:700">جماعت</td><td>${student?.grade || "—"}</td></tr>
-          <tr><td style="color:#888;font-weight:700">کوڈ</td><td style="direction:ltr;font-family:monospace">${student?.studentCode || "—"}</td></tr>
+          <tr><td style="color:#888;font-weight:700">Name</td><td style="font-weight:800">${student?.name || "—"}</td></tr>
+          <tr><td style="color:#888;font-weight:700">Father</td><td>${student?.fatherName || "—"}</td></tr>
+          <tr><td style="color:#888;font-weight:700">Grade</td><td>${student?.grade || "—"}</td></tr>
+          <tr><td style="color:#888;font-weight:700">Code</td><td style="direction:ltr;font-family:monospace">${student?.studentCode || "—"}</td></tr>
         </table>
       </div>
       <div style="background:${avgPct>=80?"#dcfce7":avgPct>=50?"#fef3c7":"#fee2e2"};border-radius:10px;padding:14px;text-align:center;border:2px solid ${avgPct>=80?"#16a34a":avgPct>=50?"#d97706":"#dc2626"}">
@@ -240,10 +242,10 @@ function printResultCard(student, results) {
         <div style="font-size:0.65rem;color:#888;margin-top:4px">${avgPct>=80?"شاندار 🌟":avgPct>=70?"بہت اچھا ✅":avgPct>=50?"مناسب 👍":"محنت کریں 📚"}</div>
       </div>
     </div>
-    <div class="section-title">📊 مضمون وار نتائج</div>
+    <div class="section-title">📊 مضامین کے نتائج</div>
     <table>
-      <thead><tr><th>امتحان</th><th>مضمون</th><th>نمبر</th><th>فیصد</th><th>گریڈ</th></tr></thead>
-      <tbody>${rows || '<tr><td colspan="5" style="text-align:center;color:#bbb;padding:20px">کوئی نتیجہ نہیں</td></tr>'}</tbody>
+      <thead><tr><th>Exam</th><th>Subject</th><th>Marks</th><th>Percentage</th><th>Grade</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="5" style="text-align:center;color:#bbb;padding:20px">No results</td></tr>'}</tbody>
     </table>`;
 
   printReport("رزلٹ کارڈ", html, student?.name + " — " + student?.grade);
@@ -277,16 +279,16 @@ function printHVSReport(houses, hvsLogs, students) {
         <div style="font-size:1.5rem">${i===0?"👑":i===1?"🥈":i===2?"🥉":"4️⃣"}</div>
         <div style="font-size:1rem;font-weight:800;color:${h.color}">${h.emoji} ${h.nameEn}</div>
         <div class="stat-num" style="color:${h.color}">${h.points}</div>
-        <div class="stat-label">پوائنٹس</div>
+        <div class="stat-label">Points</div>
       </div>`).join("")}
     </div>
-    <div class="section-title">🏆 ہاؤس موازنہ</div>
+    <div class="section-title">🏆 گھر موازنہ</div>
     <table>
-      <thead><tr><th>ہاؤس</th><th>پوائنٹس</th><th>طلبا</th><th>HVS اندراجات</th><th>اوسط HVS</th><th>بہترین</th></tr></thead>
+      <thead><tr><th>گھر</th><th>پوائنٹس</th><th>طلبہ</th><th>HVS اندراجات</th><th>اوسط HVS</th><th>بہترین</th></tr></thead>
       <tbody>${houseRows}</tbody>
     </table>`;
 
-  printReport("HVS ہاؤس رپورٹ", html, `کل ہاوسز: ${HOUSES.length}`);
+  printReport("HVS گھر رپورٹ", html, `کل ہاوسز: ${HOUSES.length}`);
 }
 
 // 6. Salary Slip
@@ -309,27 +311,27 @@ async function printSalarySlip(teacher, salary) {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
         <div style="background:#f8fafc;padding:12px;border-radius:10px;">
           <table style="width:100%;border-collapse:collapse;">
-            <tr><td style="color:#888;font-size:0.62rem;padding:3px 4px;">نام</td><td style="font-weight:800;font-size:0.68rem;padding:3px 4px;">${teacher?.name || "—"}</td></tr>
-            <tr><td style="color:#888;font-size:0.62rem;padding:3px 4px;">مضمون</td><td style="font-size:0.68rem;padding:3px 4px;">${teacher?.subject || "—"}</td></tr>
-            <tr><td style="color:#888;font-size:0.62rem;padding:3px 4px;">کوڈ</td><td style="direction:ltr;font-family:monospace;font-size:0.68rem;padding:3px 4px;">${teacher?.employeeCode || "—"}</td></tr>
-            <tr><td style="color:#888;font-size:0.62rem;padding:3px 4px;">مہینہ</td><td style="direction:ltr;font-size:0.68rem;padding:3px 4px;">${salary?.month || "—"} ${salary?.year || ""}</td></tr>
+            <tr><td style="color:#888;font-size:0.62rem;padding:3px 4px;">Name</td><td style="font-weight:800;font-size:0.68rem;padding:3px 4px;">${teacher?.name || "—"}</td></tr>
+            <tr><td style="color:#888;font-size:0.62rem;padding:3px 4px;">Subject</td><td style="font-size:0.68rem;padding:3px 4px;">${teacher?.subject || "—"}</td></tr>
+            <tr><td style="color:#888;font-size:0.62rem;padding:3px 4px;">Code</td><td style="direction:ltr;font-family:monospace;font-size:0.68rem;padding:3px 4px;">${teacher?.employeeCode || "—"}</td></tr>
+            <tr><td style="color:#888;font-size:0.62rem;padding:3px 4px;">Month</td><td style="direction:ltr;font-size:0.68rem;padding:3px 4px;">${salary?.month || "—"} ${salary?.year || ""}</td></tr>
           </table>
         </div>
         <div style="background:#f8fafc;padding:12px;border-radius:10px;">
           <table style="width:100%;border-collapse:collapse;">
-            <tr><td style="color:#888;font-size:0.62rem;padding:3px 4px;">بنیادی تنخواہ</td><td style="font-weight:700;font-size:0.68rem;padding:3px 4px;">Rs. ${(salary?.basicSalary || 0).toLocaleString()}</td></tr>
+            <tr><td style="color:#888;font-size:0.62rem;padding:3px 4px;">Basic Salary</td><td style="font-weight:700;font-size:0.68rem;padding:3px 4px;">Rs. ${(salary?.basicSalary || 0).toLocaleString()}</td></tr>
             ${salary?.houseRent > 0 ? `<tr><td style="color:#16a34a;font-size:0.62rem;padding:3px 4px;">مکان کرایہ</td><td style="color:#16a34a;font-weight:700;font-size:0.68rem;padding:3px 4px;">+ Rs. ${Number(salary.houseRent).toLocaleString()}</td></tr>` : ""}
-            ${salary?.medicalAllowance > 0 ? `<tr><td style="color:#16a34a;font-size:0.62rem;padding:3px 4px;">طبی الاؤنس</td><td style="color:#16a34a;font-weight:700;font-size:0.68rem;padding:3px 4px;">+ Rs. ${Number(salary.medicalAllowance).toLocaleString()}</td></tr>` : ""}
+            ${salary?.medicalAllowance > 0 ? `<tr><td style="color:#16a34a;font-size:0.62rem;padding:3px 4px;">طبی الاونس</td><td style="color:#16a34a;font-weight:700;font-size:0.68rem;padding:3px 4px;">+ Rs. ${Number(salary.medicalAllowance).toLocaleString()}</td></tr>` : ""}
             ${salary?.transport > 0 ? `<tr><td style="color:#16a34a;font-size:0.62rem;padding:3px 4px;">ٹرانسپورٹ</td><td style="color:#16a34a;font-weight:700;font-size:0.68rem;padding:3px 4px;">+ Rs. ${Number(salary.transport).toLocaleString()}</td></tr>` : ""}
             ${salary?.bonus > 0 ? `<tr><td style="color:#16a34a;font-size:0.62rem;padding:3px 4px;">بونس</td><td style="color:#16a34a;font-weight:700;font-size:0.68rem;padding:3px 4px;">+ Rs. ${Number(salary.bonus).toLocaleString()}</td></tr>` : ""}
-            ${salary?.allowances > 0 ? `<tr><td style="color:#16a34a;font-size:0.62rem;padding:3px 4px;">الاؤنسز</td><td style="color:#16a34a;font-weight:700;font-size:0.68rem;padding:3px 4px;">+ Rs. ${Number(salary.allowances).toLocaleString()}</td></tr>` : ""}
+            ${salary?.allowances > 0 ? `<tr><td style="color:#16a34a;font-size:0.62rem;padding:3px 4px;">الاونسز</td><td style="color:#16a34a;font-weight:700;font-size:0.68rem;padding:3px 4px;">+ Rs. ${Number(salary.allowances).toLocaleString()}</td></tr>` : ""}
             ${salary?.deductions > 0 ? `<tr><td style="color:#dc2626;font-size:0.62rem;padding:3px 4px;">کٹوتی</td><td style="color:#dc2626;font-weight:700;font-size:0.68rem;padding:3px 4px;">- Rs. ${Number(salary.deductions).toLocaleString()}</td></tr>` : ""}
             ${salary?.tax > 0 ? `<tr><td style="color:#dc2626;font-size:0.62rem;padding:3px 4px;">ٹیکس</td><td style="color:#dc2626;font-weight:700;font-size:0.68rem;padding:3px 4px;">- Rs. ${Number(salary.tax).toLocaleString()}</td></tr>` : ""}
           </table>
         </div>
       </div>
       <div style="background:linear-gradient(135deg,#0f172a,#1e3a5f);border-radius:12px;padding:20px;text-align:center;">
-        <div style="color:rgba(255,255,255,0.6);font-size:0.7rem;">خالص تنخواہ</div>
+        <div style="color:rgba(255,255,255,0.6);font-size:0.7rem;">Net Salary</div>
         <div style="font-size:2rem;font-weight:900;color:#b7860b;">Rs. ${net.toLocaleString()}</div>
         <div style="color:rgba(255,255,255,0.4);font-size:0.6rem;margin-top:4px;">${salary?.month || ""} ${salary?.year || ""}</div>
       </div>
@@ -378,7 +380,7 @@ async function printSalarySlip(teacher, salary) {
 }
 
 // Print Button Component
-function PrintBtn({ onClick, label = "🖨️ پرنٹ / PDF" }) {
+function PrintBtn({ onClick, label = "🖨️ Print / PDF" }) {
   return (
     <button
       onClick={onClick}

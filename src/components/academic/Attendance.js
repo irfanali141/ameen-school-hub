@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { useState, useEffect } from "react";
-import { C, S, hBadge, HOUSES } from "../../constants";
-import { db, collection, onSnapshot, query, orderBy, limit } from "../../firebase";
+import { C, S, hBadge, HOUSES, sLabel } from "../../constants";
+import { supabase, getData } from "../../supabase";
 import { PrintBtn, printStudentAttendance, printTeacherAttendance } from "../../utils/print";
 
 function Attendance({students,addData,teachers}){
@@ -12,7 +12,8 @@ function Attendance({students,addData,teachers}){
   const [sAttendance, setSAttendance] = useState({});
   const [sSaved, setSSaved] = useState(false);
   const [sTab, setSTab] = useState("mark");
-  useEffect(()=>{ return onSnapshot(query(collection(db,"attendance"),orderBy("createdAt","desc"),limit(500)),s=>setSRecords(s.docs.map(d=>({id:d.id,...d.data()})))); },[]);
+  const [sQ, setSQ] = useState("");
+  useEffect(()=>{ getData("attendance").then(data=>setSRecords(data||[])); },[]);
   const setSStatus=(sid,val)=>setSAttendance(prev=>({...prev,[sid]:val}));
   const saveStudents=async()=>{ for(const s of students){ const status=sAttendance[s.id]||"present"; await addData("attendance",{studentId:s.id,studentName:s.name,date:sDate,status,houseId:s.houseId,grade:s.grade,type:"student"}); } setSSaved(true); setTimeout(()=>setSSaved(false),3000); };
   const sTodayRecords=sRecords.filter(r=>r.date===sDate&&r.type!=="teacher");
@@ -26,7 +27,7 @@ function Attendance({students,addData,teachers}){
   const [tSaved, setTSaved] = useState(false);
   const [tTab, setTTab] = useState("mark");
   const [selectedTeacher, setSelectedTeacher] = useState(null);
-  useEffect(()=>{ return onSnapshot(query(collection(db,"teacher_attendance"),orderBy("createdAt","desc"),limit(500)),s=>setTRecords(s.docs.map(d=>({id:d.id,...d.data()})))); },[]);
+  useEffect(()=>{ getData("teacher_attendance").then(data=>setTRecords(data||[])); },[]);
   const setTStatus=(tid,val)=>setTAttendance(prev=>({...prev,[tid]:val}));
   const saveTeachers=async()=>{ for(const t of teachers){ const status=tAttendance[t.id]||"present"; await addData("teacher_attendance",{teacherId:t.id,teacherName:t.name,subject:t.subject||"",date:tDate,status,type:"teacher"}); } setTSaved(true); setTimeout(()=>setTSaved(false),3000); };
   const tTodayRecords=tRecords.filter(r=>r.date===tDate);
@@ -44,7 +45,7 @@ function Attendance({students,addData,teachers}){
 
   /* ── Reusable status badge ── */
   const StatusBadge=({status})=>{
-    const cfg={present:{bg:"rgba(52,211,153,0.15)",color:"#34d399",border:"rgba(52,211,153,0.3)",label:"حاضر",icon:"check_circle"},absent:{bg:"rgba(248,113,113,0.15)",color:"#f87171",border:"rgba(248,113,113,0.3)",label:"غیر حاضر",icon:"cancel"},late:{bg:"rgba(251,191,36,0.15)",color:"#fbbf24",border:"rgba(251,191,36,0.3)",label:"دیر",icon:"schedule"},leave:{bg:"rgba(167,139,250,0.15)",color:"#a78bfa",border:"rgba(167,139,250,0.3)",label:"چھٹی",icon:"beach_access"}};
+    const cfg={present:{bg:"rgba(52,211,153,0.15)",color:"#34d399",border:"rgba(52,211,153,0.3)",label:"Present",icon:"check_circle"},absent:{bg:"rgba(248,113,113,0.15)",color:"#f87171",border:"rgba(248,113,113,0.3)",label:"Absent",icon:"cancel"},late:{bg:"rgba(251,191,36,0.15)",color:"#fbbf24",border:"rgba(251,191,36,0.3)",label:"Late",icon:"schedule"},leave:{bg:"rgba(167,139,250,0.15)",color:"#a78bfa",border:"rgba(167,139,250,0.3)",label:"Leave",icon:"beach_access"}};
     const s=cfg[status]||cfg.absent;
     return <span style={{display:"inline-flex",alignItems:"center",gap:"4px",padding:"4px 10px",borderRadius:"20px",fontSize:"0.62rem",fontWeight:"700",background:s.bg,color:s.color,border:`1px solid ${s.border}`,fontFamily:"'Public Sans',sans-serif",direction:"ltr",whiteSpace:"nowrap"}}>
       <span className="material-symbols-rounded" style={{fontSize:"12px"}}>{s.icon}</span>{s.label}
@@ -63,7 +64,7 @@ function Attendance({students,addData,teachers}){
   );
 
   /* ── Shared table header cell ── */
-  const TH=({children})=><th style={{padding:"12px 14px",textAlign:"right",fontSize:"0.65rem",color:"rgba(212,175,55,0.7)",borderBottom:"1px solid rgba(212,175,55,0.15)",fontWeight:"600",letterSpacing:"0.05em",whiteSpace:"nowrap",fontFamily:"'Public Sans',sans-serif"}}>{children}</th>;
+  const TH=({children})=><th style={{padding:"12px 14px",textAlign:"left",fontSize:"0.65rem",color:"rgba(212,175,55,0.7)",borderBottom:"1px solid rgba(212,175,55,0.15)",fontWeight:"600",letterSpacing:"0.05em",whiteSpace:"nowrap",fontFamily:"'Public Sans',sans-serif"}}>{children}</th>;
   const TD=({children,style={}})=><td style={{padding:"11px 14px",fontSize:"0.72rem",borderBottom:"1px solid rgba(255,255,255,0.05)",color:"rgba(255,255,255,0.8)",...style}}>{children}</td>;
 
   const isStudents=mainTab==="students";
@@ -76,7 +77,7 @@ function Attendance({students,addData,teachers}){
   const selTR=selectedTeacher?getTeacherReport(selectedTeacher):null;
 
   return (
-    <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#0f172a 0%,#13203a 45%,#1a2c4a 100%)",direction:"rtl",fontFamily:"'Public Sans','Noto Nastaliq Urdu',sans-serif",overflowX:"hidden"}}>
+    <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#0f172a 0%,#13203a 45%,#1a2c4a 100%)",direction:"ltr",fontFamily:"'Public Sans','Segoe UI',sans-serif",overflowX:"hidden"}}>
       <div style={{position:"sticky",top:0,left:0,right:0,height:"3px",background:"linear-gradient(90deg,transparent,#d4af37,#f5e4a1,#d4af37,transparent)",zIndex:10}}/>
 
       <div style={{padding:"28px 32px",maxWidth:"1400px",margin:"0 auto"}}>
@@ -87,12 +88,12 @@ function Attendance({students,addData,teachers}){
             <div style={{color:G,fontSize:"0.65rem",fontWeight:"700",letterSpacing:"0.2em",textTransform:"uppercase",fontFamily:"'Public Sans',sans-serif",direction:"ltr",marginBottom:"6px",display:"flex",alignItems:"center",gap:"6px"}}>
               <span className="material-symbols-rounded" style={{fontSize:"14px"}}>fact_check</span> Attendance Management
             </div>
-            <div style={{color:"white",fontSize:"1.6rem",fontWeight:"800",lineHeight:1.1}}>✅ حاضری</div>
+            <div style={{color:"white",fontSize:"1.6rem",fontWeight:"800",lineHeight:1.1}}>✅ Attendance</div>
             <div style={{color:"rgba(255,255,255,0.4)",fontSize:"0.68rem",marginTop:"4px"}}>{new Date(activeDate).toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}</div>
           </div>
           {/* Main tab switcher */}
           <div style={{display:"flex",gap:"8px",background:"rgba(255,255,255,0.05)",padding:"5px",borderRadius:"14px",border:"1px solid rgba(255,255,255,0.08)"}}>
-            {[["students","school","طلبا"],["teachers","supervisor_account","اساتذہ"]].map(([t,icon,l])=>(
+            {[["students","school","Students"],["teachers","supervisor_account","Teachers"]].map(([t,icon,l])=>(
               <button key={t} onClick={()=>setMainTab(t)} style={{padding:"10px 20px",borderRadius:"10px",border:"none",cursor:"pointer",fontSize:"0.72rem",fontWeight:mainTab===t?"700":"500",background:mainTab===t?`linear-gradient(135deg,${G},#b8960a)`:"transparent",color:mainTab===t?"#0f172a":"rgba(255,255,255,0.5)",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"6px",transition:"all 0.2s ease"}}>
                 <span className="material-symbols-rounded" style={{fontSize:"16px"}}>{icon}</span>{l}
               </button>
@@ -103,11 +104,11 @@ function Attendance({students,addData,teachers}){
         {/* ══ STAT CARDS ══ */}
         <div style={{display:"grid",gridTemplateColumns:`repeat(${isStudents?4:5},1fr)`,gap:"14px",marginBottom:"24px"}}>
           {[
-            {icon:"check_circle",label:"حاضر",labelEn:"Present",value:presentN,accent:"#34d399"},
-            {icon:"cancel",label:"غیر حاضر",labelEn:"Absent",value:absentN,accent:"#f87171"},
-            {icon:"schedule",label:"دیر سے",labelEn:"Late",value:lateN,accent:"#fbbf24"},
-            {icon:"group",label:"کل",labelEn:"Total",value:totalN,accent:"#60a5fa"},
-            ...(!isStudents?[{icon:"beach_access",label:"چھٹی",labelEn:"On Leave",value:tLeaveToday,accent:"#a78bfa"}]:[]),
+            {icon:"check_circle",label:"Present",labelEn:"Present",value:presentN,accent:"#34d399"},
+            {icon:"cancel",label:"Absent",labelEn:"Absent",value:absentN,accent:"#f87171"},
+            {icon:"schedule",label:"Late",labelEn:"Late",value:lateN,accent:"#fbbf24"},
+            {icon:"group",label:"Total",labelEn:"Total",value:totalN,accent:"#60a5fa"},
+            ...(!isStudents?[{icon:"beach_access",label:"Leave",labelEn:"On Leave",value:tLeaveToday,accent:"#a78bfa"}]:[]),
           ].map((s,i)=>(
             <div key={i} className="hv-stat" style={{...glass,padding:"20px 22px",position:"relative",overflow:"hidden"}}>
               <div style={{position:"absolute",top:"-15px",left:"-15px",width:"70px",height:"70px",borderRadius:"50%",background:`${s.accent}18`,pointerEvents:"none"}}/>
@@ -125,12 +126,12 @@ function Attendance({students,addData,teachers}){
         {isStudents&&<div>
           {sSaved&&<div style={{...glass,padding:"14px 20px",marginBottom:"16px",textAlign:"center",border:"1px solid rgba(52,211,153,0.3)",background:"rgba(52,211,153,0.1)"}}>
             <span className="material-symbols-rounded" style={{fontSize:"16px",color:"#34d399",verticalAlign:"middle",marginLeft:"6px"}}>check_circle</span>
-            <span style={{color:"#34d399",fontWeight:"700",fontSize:"0.8rem"}}>طلبا حاضری کامیابی سے محفوظ ہو گئی!</span>
+            <span style={{color:"#34d399",fontWeight:"700",fontSize:"0.8rem"}}>Student attendance saved successfully!</span>
           </div>}
 
           {/* Sub-tab bar */}
           <div style={{display:"flex",gap:"8px",marginBottom:"20px",flexWrap:"wrap"}}>
-            {[["mark","edit","لگائیں"],["history","history","تاریخ"],["report","analytics","رپورٹ"]].map(([t,icon,l])=>(
+            {[["mark","edit","Mark"],["history","history","History"],["report","analytics","Report"]].map(([t,icon,l])=>(
               <button key={t} onClick={()=>setSTab(t)} style={{padding:"9px 18px",borderRadius:"12px",border:`1px solid ${sTab===t?"rgba(212,175,55,0.5)":"rgba(255,255,255,0.1)"}`,cursor:"pointer",fontSize:"0.72rem",fontWeight:sTab===t?"700":"500",background:sTab===t?"rgba(212,175,55,0.15)":"rgba(255,255,255,0.05)",color:sTab===t?G:"rgba(255,255,255,0.5)",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"6px",transition:"all 0.2s"}}>
                 <span className="material-symbols-rounded" style={{fontSize:"15px"}}>{icon}</span>{l}
               </button>
@@ -142,12 +143,13 @@ function Attendance({students,addData,teachers}){
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"20px",flexWrap:"wrap",gap:"12px"}}>
               <div>
                 <div style={{color:G,fontSize:"0.62rem",fontWeight:"700",letterSpacing:"0.15em",direction:"ltr",marginBottom:"4px"}}>MARK ATTENDANCE</div>
-                <div style={{color:"white",fontSize:"0.95rem",fontWeight:"700"}}>{students.length} طلبا</div>
+                <div style={{color:"white",fontSize:"0.95rem",fontWeight:"700"}}>{students.length} Students</div>
               </div>
               <input type="date" value={sDate} onChange={e=>setSDate(e.target.value)} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(212,175,55,0.3)",borderRadius:"10px",padding:"9px 14px",color:"white",fontSize:"0.78rem",fontFamily:"'Public Sans',sans-serif",direction:"ltr",outline:"none",cursor:"pointer",colorScheme:"dark"}}/>
             </div>
+            <input value={sQ} onChange={e=>setSQ(e.target.value)} placeholder="🔍 Search student..." style={{width:"100%",padding:"9px 14px",borderRadius:"10px",border:"1px solid rgba(212,175,55,0.25)",background:"rgba(255,255,255,0.06)",color:"#f1f5f9",fontSize:"0.78rem",fontFamily:"'Public Sans',sans-serif",outline:"none",boxSizing:"border-box",colorScheme:"dark",marginBottom:"14px"}}/>
             <div style={{display:"flex",flexDirection:"column",gap:"2px"}}>
-              {students.map(s=>{ const status=sAttendance[s.id]||"present"; const h=HOUSES.find(x=>x.id===s.houseId)||{}; return (
+              {students.filter(s=>!sQ||s.name?.toLowerCase().includes(sQ.toLowerCase())).map(s=>{ const status=sAttendance[s.id]||"present"; const h=HOUSES.find(x=>x.id===s.houseId)||{}; return (
                 <div key={s.id} className="hv-row" style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 16px",borderRadius:"12px",border:"1px solid transparent",transition:"all 0.15s ease"}}>
                   <div style={{display:"flex",alignItems:"center",gap:"12px"}}>
                     <div style={{width:"34px",height:"34px",borderRadius:"50%",background:`${h.color||G}20`,border:`2px solid ${h.color||G}40`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.7rem",fontWeight:"700",color:h.color||G,fontFamily:"'Public Sans',sans-serif",flexShrink:0}}>{s.name?.[0]||"?"}</div>
@@ -156,12 +158,12 @@ function Attendance({students,addData,teachers}){
                       <div style={{fontSize:"0.6rem",color:"rgba(255,255,255,0.35)",fontFamily:"'Public Sans',sans-serif"}}>{s.grade} • <span style={{color:h.color||G}}>{h.nameEn}</span></div>
                     </div>
                   </div>
-                  <StatusPicker current={status} onChange={v=>setSStatus(s.id,v)} options={[["present","✅","حاضر","#34d399"],["late","⏰","دیر","#fbbf24"],["absent","❌","غیر حاضر","#f87171"]]}/>
+                  <StatusPicker current={status} onChange={v=>setSStatus(s.id,v)} options={[["present","✅","Present","#34d399"],["late","⏰","Late","#fbbf24"],["absent","❌","Absent","#f87171"]]}/>
                 </div>
               );})}
             </div>
             <button onClick={saveStudents} style={{width:"100%",marginTop:"20px",padding:"14px",borderRadius:"14px",border:"none",background:`linear-gradient(135deg,${G},#b8960a)`,color:"#0f172a",fontSize:"0.82rem",fontWeight:"800",cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center",gap:"8px"}}>
-              <span className="material-symbols-rounded" style={{fontSize:"18px"}}>save</span>✅ سب محفوظ کریں
+              <span className="material-symbols-rounded" style={{fontSize:"18px"}}>save</span>✅ All Save
             </button>
           </div>}
 
@@ -170,7 +172,7 @@ function Attendance({students,addData,teachers}){
             <div style={{color:G,fontSize:"0.62rem",fontWeight:"700",letterSpacing:"0.15em",direction:"ltr",marginBottom:"16px"}}>ATTENDANCE HISTORY</div>
             <div style={{overflowX:"auto"}}>
               <table style={{width:"100%",borderCollapse:"collapse"}}>
-                <thead><tr style={{background:"rgba(212,175,55,0.06)"}}><TH>نام</TH><TH>تاریخ</TH><TH>جماعت</TH><TH>حال</TH></tr></thead>
+                <thead><tr style={{background:"rgba(212,175,55,0.06)"}}><TH>Name</TH><TH>Date</TH><TH>Grade</TH><TH>Status</TH></tr></thead>
                 <tbody>
                   {sRecords.filter(r=>r.type!=="teacher").slice(0,50).map(r=>(
                     <tr key={r.id} style={{transition:"background 0.15s"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.04)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
@@ -180,7 +182,7 @@ function Attendance({students,addData,teachers}){
                       <TD><StatusBadge status={r.status}/></TD>
                     </tr>
                   ))}
-                  {sRecords.length===0&&<tr><td colSpan={4} style={{padding:"40px",textAlign:"center",color:"rgba(255,255,255,0.2)",fontSize:"0.75rem"}}>کوئی ریکارڈ نہیں</td></tr>}
+                  {sRecords.length===0&&<tr><td colSpan={4} style={{padding:"40px",textAlign:"center",color:"rgba(255,255,255,0.2)",fontSize:"0.75rem"}}><span className="ur">کوئی اندراج نہیں</span></td></tr>}
                 </tbody>
               </table>
             </div>
@@ -190,11 +192,11 @@ function Attendance({students,addData,teachers}){
           {sTab==="report"&&<div style={{...glass,padding:"24px"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"20px",flexWrap:"wrap",gap:"12px"}}>
               <div style={{color:G,fontSize:"0.62rem",fontWeight:"700",letterSpacing:"0.15em",direction:"ltr"}}>STUDENT ATTENDANCE REPORT</div>
-              <PrintBtn onClick={()=>printStudentAttendance(students,sRecords)} label="حاضری رپورٹ PDF"/>
+              <PrintBtn onClick={()=>printStudentAttendance(students,sRecords)} label="Attendance Report PDF"/>
             </div>
             <div style={{overflowX:"auto"}}>
               <table style={{width:"100%",borderCollapse:"collapse"}}>
-                <thead><tr style={{background:"rgba(212,175,55,0.06)"}}><TH>نام</TH><TH>جماعت</TH><TH>حاضر</TH><TH>غیر حاضر</TH><TH>دیر</TH><TH>فیصد</TH></tr></thead>
+                <thead><tr style={{background:"rgba(212,175,55,0.06)"}}><TH>Name</TH><TH>Grade</TH><TH>Present</TH><TH>Absent</TH><TH>Late</TH><TH>Percentage</TH></tr></thead>
                 <tbody>
                   {students.map(s=>{ const r=getStudentReport(s.id); const col=r.pct>=75?"#34d399":r.pct>=50?"#fbbf24":"#f87171"; return (
                     <tr key={s.id} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.04)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"} style={{transition:"background 0.15s"}}>
@@ -223,12 +225,12 @@ function Attendance({students,addData,teachers}){
         {!isStudents&&<div>
           {tSaved&&<div style={{...glass,padding:"14px 20px",marginBottom:"16px",textAlign:"center",border:"1px solid rgba(52,211,153,0.3)",background:"rgba(52,211,153,0.1)"}}>
             <span className="material-symbols-rounded" style={{fontSize:"16px",color:"#34d399",verticalAlign:"middle",marginLeft:"6px"}}>check_circle</span>
-            <span style={{color:"#34d399",fontWeight:"700",fontSize:"0.8rem"}}>اساتذہ حاضری کامیابی سے محفوظ ہو گئی!</span>
+            <span style={{color:"#34d399",fontWeight:"700",fontSize:"0.8rem"}}>Teacher attendance saved successfully!</span>
           </div>}
 
           {/* Sub-tab bar */}
           <div style={{display:"flex",gap:"8px",marginBottom:"20px",flexWrap:"wrap"}}>
-            {[["mark","edit","لگائیں"],["history","history","تاریخ"],["report","analytics","رپورٹ"],["late","schedule","دیر کی تاریخ"]].map(([t,icon,l])=>(
+            {[["mark","edit","Mark"],["history","history","History"],["report","analytics","Report"],["late","schedule","Late History"]].map(([t,icon,l])=>(
               <button key={t} onClick={()=>setTTab(t)} style={{padding:"9px 18px",borderRadius:"12px",border:`1px solid ${tTab===t?"rgba(212,175,55,0.5)":"rgba(255,255,255,0.1)"}`,cursor:"pointer",fontSize:"0.72rem",fontWeight:tTab===t?"700":"500",background:tTab===t?"rgba(212,175,55,0.15)":"rgba(255,255,255,0.05)",color:tTab===t?G:"rgba(255,255,255,0.5)",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"6px",transition:"all 0.2s"}}>
                 <span className="material-symbols-rounded" style={{fontSize:"15px"}}>{icon}</span>{l}
               </button>
@@ -240,7 +242,7 @@ function Attendance({students,addData,teachers}){
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"20px",flexWrap:"wrap",gap:"12px"}}>
               <div>
                 <div style={{color:G,fontSize:"0.62rem",fontWeight:"700",letterSpacing:"0.15em",direction:"ltr",marginBottom:"4px"}}>MARK ATTENDANCE</div>
-                <div style={{color:"white",fontSize:"0.95rem",fontWeight:"700"}}>{teachers.length} اساتذہ</div>
+                <div style={{color:"white",fontSize:"0.95rem",fontWeight:"700"}}>{teachers.length} Teachers</div>
               </div>
               <input type="date" value={tDate} onChange={e=>setTDate(e.target.value)} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(212,175,55,0.3)",borderRadius:"10px",padding:"9px 14px",color:"white",fontSize:"0.78rem",fontFamily:"'Public Sans',sans-serif",direction:"ltr",outline:"none",colorScheme:"dark"}}/>
             </div>
@@ -254,12 +256,12 @@ function Attendance({students,addData,teachers}){
                       <div style={{fontSize:"0.6rem",color:"rgba(255,255,255,0.35)",fontFamily:"'Public Sans',sans-serif"}}>{t.subject||"—"}</div>
                     </div>
                   </div>
-                  <StatusPicker current={status} onChange={v=>setTStatus(t.id,v)} options={[["present","✅","حاضر","#34d399"],["late","⏰","دیر","#fbbf24"],["absent","❌","غیر حاضر","#f87171"],["leave","🏖️","چھٹی","#a78bfa"]]}/>
+                  <StatusPicker current={status} onChange={v=>setTStatus(t.id,v)} options={[["present","✅","Present","#34d399"],["late","⏰","Late","#fbbf24"],["absent","❌","Absent","#f87171"],["leave","🏖️","Leave","#a78bfa"]]}/>
                 </div>
               );})}
             </div>
             <button onClick={saveTeachers} style={{width:"100%",marginTop:"20px",padding:"14px",borderRadius:"14px",border:"none",background:`linear-gradient(135deg,${G},#b8960a)`,color:"#0f172a",fontSize:"0.82rem",fontWeight:"800",cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center",gap:"8px"}}>
-              <span className="material-symbols-rounded" style={{fontSize:"18px"}}>save</span>✅ سب محفوظ کریں
+              <span className="material-symbols-rounded" style={{fontSize:"18px"}}>save</span>✅ All Save
             </button>
           </div>}
 
@@ -268,7 +270,7 @@ function Attendance({students,addData,teachers}){
             <div style={{color:G,fontSize:"0.62rem",fontWeight:"700",letterSpacing:"0.15em",direction:"ltr",marginBottom:"16px"}}>TEACHER ATTENDANCE HISTORY</div>
             <div style={{overflowX:"auto"}}>
               <table style={{width:"100%",borderCollapse:"collapse"}}>
-                <thead><tr style={{background:"rgba(212,175,55,0.06)"}}><TH>نام</TH><TH>مضمون</TH><TH>تاریخ</TH><TH>حال</TH></tr></thead>
+                <thead><tr style={{background:"rgba(212,175,55,0.06)"}}><TH>Name</TH><TH>Subject</TH><TH>Date</TH><TH>Status</TH></tr></thead>
                 <tbody>
                   {tRecords.slice(0,50).map(r=>(
                     <tr key={r.id} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.04)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"} style={{transition:"background 0.15s"}}>
@@ -278,7 +280,7 @@ function Attendance({students,addData,teachers}){
                       <TD><StatusBadge status={r.status}/></TD>
                     </tr>
                   ))}
-                  {tRecords.length===0&&<tr><td colSpan={4} style={{padding:"40px",textAlign:"center",color:"rgba(255,255,255,0.2)",fontSize:"0.75rem"}}>کوئی ریکارڈ نہیں</td></tr>}
+                  {tRecords.length===0&&<tr><td colSpan={4} style={{padding:"40px",textAlign:"center",color:"rgba(255,255,255,0.2)",fontSize:"0.75rem"}}><span className="ur">کوئی اندراج نہیں</span></td></tr>}
                 </tbody>
               </table>
             </div>
@@ -288,11 +290,11 @@ function Attendance({students,addData,teachers}){
           {tTab==="report"&&<div style={{...glass,padding:"24px"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"20px",flexWrap:"wrap",gap:"12px"}}>
               <div style={{color:G,fontSize:"0.62rem",fontWeight:"700",letterSpacing:"0.15em",direction:"ltr"}}>TEACHER ATTENDANCE REPORT</div>
-              <PrintBtn onClick={()=>printTeacherAttendance(teachers,tRecords)} label="اساتذہ رپورٹ PDF"/>
+              <PrintBtn onClick={()=>printTeacherAttendance(teachers,tRecords)} label="Teachers Report PDF"/>
             </div>
             <div style={{overflowX:"auto"}}>
               <table style={{width:"100%",borderCollapse:"collapse"}}>
-                <thead><tr style={{background:"rgba(212,175,55,0.06)"}}><TH>نام</TH><TH>مضمون</TH><TH>حاضر</TH><TH>غیر حاضر</TH><TH>دیر</TH><TH>چھٹی</TH><TH>فیصد</TH></tr></thead>
+                <thead><tr style={{background:"rgba(212,175,55,0.06)"}}><TH>Name</TH><TH>Subject</TH><TH>Present</TH><TH>Absent</TH><TH>Late</TH><TH>Leave</TH><TH>Percentage</TH></tr></thead>
                 <tbody>
                   {teachers.map(t=>{ const r=getTeacherReport(t.id); const col=r.pct>=75?"#34d399":r.pct>=50?"#fbbf24":"#f87171"; const isSelected=selectedTeacher===t.id; return (
                     <tr key={t.id} onClick={()=>setSelectedTeacher(isSelected?null:t.id)} style={{cursor:"pointer",background:isSelected?"rgba(212,175,55,0.08)":"transparent",transition:"background 0.15s"}} onMouseEnter={e=>{if(!isSelected)e.currentTarget.style.background="rgba(255,255,255,0.04)"}} onMouseLeave={e=>{if(!isSelected)e.currentTarget.style.background="transparent"}}>
@@ -322,7 +324,7 @@ function Attendance({students,addData,teachers}){
                   <span className="material-symbols-rounded" style={{fontSize:"14px"}}>person</span> {selT.name} — DETAILED REPORT
                 </div>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(100px,1fr))",gap:"10px"}}>
-                  {[{c:"#34d399",n:selTR.present,l:"حاضر"},{c:"#f87171",n:selTR.absent,l:"غیر حاضر"},{c:"#fbbf24",n:selTR.late,l:"دیر"},{c:"#a78bfa",n:selTR.leave,l:"چھٹی"},{c:"#60a5fa",n:selTR.total,l:"کل دن"},{c:selTR.pct>=75?"#34d399":"#f87171",n:`${selTR.pct}%`,l:"حاضری"}].map((x,i)=>(
+                  {[{c:"#34d399",n:selTR.present,l:"Present"},{c:"#f87171",n:selTR.absent,l:"Absent"},{c:"#fbbf24",n:selTR.late,l:"Late"},{c:"#a78bfa",n:selTR.leave,l:"Leave"},{c:"#60a5fa",n:selTR.total,l:"Total Days"},{c:selTR.pct>=75?"#34d399":"#f87171",n:`${selTR.pct}%`,l:"Attendance"}].map((x,i)=>(
                     <div key={i} style={{background:`${x.c}12`,borderRadius:"12px",padding:"12px",textAlign:"center",border:`1px solid ${x.c}25`}}>
                       <div style={{fontSize:"1.2rem",fontWeight:"800",color:x.c,fontFamily:"'Public Sans',sans-serif"}}>{x.n}</div>
                       <div style={{fontSize:"0.58rem",color:"rgba(255,255,255,0.4)",marginTop:"3px"}}>{x.l}</div>
@@ -349,10 +351,10 @@ function Attendance({students,addData,teachers}){
             {selectedTeacher&&<div style={{...glass,padding:"24px"}}>
               <div style={{color:"#fbbf24",fontSize:"0.78rem",fontWeight:"700",marginBottom:"16px",display:"flex",alignItems:"center",gap:"8px"}}>
                 <span className="material-symbols-rounded" style={{fontSize:"18px"}}>schedule</span>
-                {teachers.find(t=>t.id===selectedTeacher)?.name} — دیر کی تاریخ
+                {teachers.find(t=>t.id===selectedTeacher)?.name} — Late History
               </div>
               {getTeacherLateHistory(selectedTeacher).length===0
-                ? <div style={{textAlign:"center",color:"rgba(255,255,255,0.2)",padding:"30px",fontSize:"0.78rem"}}>کوئی دیر نہیں — شاباش! 🎉</div>
+                ? <div style={{textAlign:"center",color:"rgba(255,255,255,0.2)",padding:"30px",fontSize:"0.78rem"}}>Any Late No — Well Done! 🎉</div>
                 : <div style={{display:"flex",flexDirection:"column",gap:"8px"}}>
                     {getTeacherLateHistory(selectedTeacher).map((r,i)=>(
                       <div key={r.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 16px",background:"rgba(251,191,36,0.06)",borderRadius:"10px",border:"1px solid rgba(251,191,36,0.15)"}}>

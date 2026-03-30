@@ -151,3 +151,9 @@ a:hover {
   opacity: 0.85;
   text-decoration: underline;
 }
+
+/* ── Select dropdown options — dark theme ───────────────────────── */
+option {
+  background: #1e293b;
+  color: #f1f5f9;
+}

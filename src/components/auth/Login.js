@@ -26,19 +26,19 @@ function Login({onLogin,err,loading}){
 
   if(showLogin) return <div style={S.lp}>
     <div style={S.lc}>
-      <button onClick={()=>setShowLogin(false)} style={{background:"none",border:"none",color:C.gold,cursor:"pointer",fontSize:"0.7rem",marginBottom:"16px",textAlign:"right",display:"block",width:"100%"}}>← واپس جائیں</button>
+      <button onClick={()=>setShowLogin(false)} style={{background:"none",border:"none",color:C.gold,cursor:"pointer",fontSize:"0.7rem",marginBottom:"16px",textAlign:"left",display:"block",width:"100%"}}>← Go Back</button>
       <div style={{textAlign:"center",marginBottom:"28px"}}>
         <div style={{display:"flex",justifyContent:"center",marginBottom:"14px"}}><AIILogo size={72}/></div>
-        <div style={S.title}>امین اسکول ہب</div>
+        <div style={{...S.title,fontFamily:"'Noto Nastaliq Urdu',serif"}}>امین اسکول ہب</div>
         <div style={{fontSize:"0.65rem",color:"#888",marginTop:"6px",fontFamily:"'Cinzel',serif",letterSpacing:"0.15em"}}>AMEEN ISLAMIC INSTITUTE</div>
-        <div style={{fontSize:"0.6rem",color:C.gold,marginTop:"4px"}}>ایمان • نظم • برتری</div>
+        <div style={{fontSize:"0.6rem",color:C.gold,marginTop:"4px"}}>Faith • Discipline • Excellence</div>
       </div>
       <input style={S.inp} type="email" placeholder="Email" value={e} onChange={x=>setE(x.target.value)}/>
       <input style={S.inp} type="password" placeholder="Password" value={p} onChange={x=>setP(x.target.value)} onKeyDown={k=>k.key==="Enter"&&onLogin(e,p)}/>
       {err&&<div style={{color:C.red,fontSize:"0.68rem",textAlign:"center",marginBottom:"8px",padding:"8px",background:"#fee2e2",borderRadius:"8px"}}>{err}</div>}
-      <button style={S.btn} onClick={()=>onLogin(e,p)} disabled={loading}>{loading?"لاگ ان ہو رہا ہے...":"🔐 لاگ ان"}</button>
+      <button style={S.btn} onClick={()=>onLogin(e,p)} disabled={loading}>{loading?"Logging in...":"🔐 Log In"}</button>
       <div style={{background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`,borderRadius:"14px",padding:"16px",marginTop:"20px",border:`1px solid ${C.goldLight}`}}>
-        <div style={{fontSize:"0.62rem",color:C.goldDark,fontWeight:"700",marginBottom:"10px"}}>🔑 Demo — کلک کر کے لاگ ان:</div>
+        <div style={{fontSize:"0.62rem",color:C.goldDark,fontWeight:"700",marginBottom:"10px"}}>🔑 Demo — Click to log in:</div>
         {DEMO.map(u=><div key={u.email} style={{fontSize:"0.58rem",color:"#555",marginBottom:"6px",fontFamily:"monospace",direction:"ltr",cursor:"pointer",padding:"6px 10px",background:"rgba(255,255,255,0.7)",borderRadius:"8px"}} onClick={()=>{setE(u.email);setP(u.password);}}>
           [{u.role}] {u.email} / {u.password}
         </div>)}
@@ -52,11 +52,11 @@ function Login({onLogin,err,loading}){
         <div style={{display:"flex",justifyContent:"center",marginBottom:"18px",filter:"drop-shadow(0 0 24px rgba(245,166,35,0.35))"}}>
           <AIILogo size={120}/>
         </div>
-        <div style={{fontFamily:"'Amiri',serif",fontSize:"1.9rem",fontWeight:"700",color:"#e8b84b",marginBottom:"6px"}}>امین اسلامک انسٹیٹیوٹ</div>
+        <div style={{fontFamily:"Arial,serif",fontSize:"1.9rem",fontWeight:"700",color:"#e8b84b",marginBottom:"6px"}}>Ameen Islamic Institute</div>
         <div style={{fontFamily:"'Cinzel',serif",fontSize:"0.72rem",color:"rgba(255,255,255,0.5)",letterSpacing:"0.2em",marginBottom:"6px"}}>AMEEN ISLAMIC INSTITUTE • SWAT</div>
         <div style={{fontFamily:"'Cinzel',serif",fontSize:"0.6rem",color:"#f5a623",letterSpacing:"0.12em"}}>ESTD. 2025 • FAITH • DISCIPLINE • EXCELLENCE</div>
         <div style={{width:"80px",height:"2px",background:"linear-gradient(90deg,transparent,#b7860b,transparent)",margin:"14px auto"}}/>
-        <div style={{fontSize:"0.78rem",color:"rgba(255,255,255,0.5)",fontFamily:"'Amiri',serif"}}>ہاؤس سسٹم — سیشن 2026-27</div>
+        <div style={{fontSize:"0.78rem",color:"rgba(255,255,255,0.5)",fontFamily:"Arial,serif"}}>House System — Session 2026-27</div>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px",marginBottom:"28px",padding:"0 10px"}}>
         {["abuBakr","umar","uthman","ali"].map(h=><div key={h} style={{display:"flex",justifyContent:"center"}}>
@@ -65,17 +65,17 @@ function Login({onLogin,err,loading}){
       </div>
       <div style={{borderRadius:"18px",background:"linear-gradient(135deg,rgba(183,134,11,0.1),rgba(183,134,11,0.03))",border:"2px solid rgba(183,134,11,0.2)",padding:"18px",textAlign:"center",marginBottom:"20px"}}>
         <div style={{fontSize:"1.1rem",fontFamily:"'Cinzel',serif",fontWeight:"900",color:"#e8b84b",letterSpacing:"0.08em"}}>FAITH • DISCIPLINE • EXCELLENCE</div>
-        <div style={{fontSize:"0.82rem",fontFamily:"'Amiri',serif",color:"rgba(255,255,255,0.5)",marginTop:"5px"}}>ایمان • نظم • برتری</div>
+        <div style={{fontSize:"0.82rem",fontFamily:"Arial,serif",color:"rgba(255,255,255,0.5)",marginTop:"5px"}}>Faith • Discipline • Excellence</div>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"10px",marginBottom:"28px"}}>
-        {[{n:"4",l:"Houses",u:"ہاؤس"},{n:"160",l:"HVS Points",u:"زیادہ سے زیادہ"},{n:"2026",l:"Session",u:"تعلیمی سال"}].map((s,i)=><div key={i} style={{borderRadius:"14px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",padding:"14px",textAlign:"center"}}>
+        {[{n:"4",l:"Houses",u:"House"},{n:"160",l:"HVS Points",u:"Maximum"},{n:"2026",l:"Session",u:"Academic Year"}].map((s,i)=><div key={i} style={{borderRadius:"14px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",padding:"14px",textAlign:"center"}}>
           <div style={{fontSize:"1.5rem",fontWeight:"900",color:"#e8b84b",fontFamily:"'Cinzel',serif"}}>{s.n}</div>
           <div style={{fontSize:"0.52rem",color:"rgba(255,255,255,0.4)",fontFamily:"'Cinzel',serif",letterSpacing:"0.08em",marginTop:"2px"}}>{s.l}</div>
           <div style={{fontSize:"0.52rem",color:"rgba(183,134,11,0.6)",marginTop:"1px"}}>{s.u}</div>
         </div>)}
       </div>
-      <button onClick={()=>setShowLogin(true)} style={{width:"100%",padding:"16px",borderRadius:"16px",border:"none",background:"linear-gradient(135deg,#b7860b,#7a5807)",color:"white",fontSize:"0.88rem",fontWeight:"700",cursor:"pointer",fontFamily:"'Amiri',serif",boxShadow:"0 8px 30px rgba(183,134,11,0.4)"}}>
-        🔐 اسکول ہب میں داخل ہوں
+      <button onClick={()=>setShowLogin(true)} style={{width:"100%",padding:"16px",borderRadius:"16px",border:"none",background:"linear-gradient(135deg,#b7860b,#7a5807)",color:"white",fontSize:"0.88rem",fontWeight:"700",cursor:"pointer",fontFamily:"Arial,serif",boxShadow:"0 8px 30px rgba(183,134,11,0.4)"}}>
+        🔐 Enter School Hub
       </button>
       <div style={{textAlign:"center",marginTop:"12px",fontSize:"0.55rem",color:"rgba(255,255,255,0.2)",fontFamily:"'Cinzel',serif",letterSpacing:"0.1em"}}>AMEEN SCHOOL HUB • STAFF & MANAGEMENT PORTAL</div>
     </div>

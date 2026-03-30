@@ -1,6 +1,5 @@
 /* eslint-disable */
-import { useState, useEffect } from "react";
-import { C, S } from "../../constants";
+import { useState } from "react";
 import letterhead from "../../assets/letterhead.png";
 
 const TT_PRINT_STYLE = `
@@ -30,10 +29,10 @@ function Timetable() {
   ];
 
   const DEFAULT_SUBJECTS = [
-    "قرآن کریم","حفظ","اسلامیات","عربی","اردو","English",
+    "Quran Kareem","Hifz","Islamic Studies","Arabic","Urdu","English",
     "Mathematics","Science","Physics","Chemistry","Biology",
     "Computer","Social Studies","Pakistan Studies","History",
-    "Geography","PE/کھیل","Art","Assembly","Break","دعا و اختتام"
+    "Geography","PE/Sports","Art","Assembly","Break","Dua & End"
   ];
 
   const DEFAULT_TIMES = [
@@ -147,19 +146,17 @@ function Timetable() {
   };
 
   const G="#d4af37"; const N="#0f172a"; const N2="#1e293b";
-  const glass={background:"rgba(255,255,255,0.07)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"16px"};
-  const inp={width:"100%",padding:"10px 14px",borderRadius:"10px",border:"1px solid rgba(212,175,55,0.25)",background:"rgba(255,255,255,0.06)",color:"#f1f5f9",fontSize:"0.8rem",fontFamily:"'Public Sans',sans-serif",outline:"none",boxSizing:"border-box",direction:"rtl",colorScheme:"dark"};
-  const lbl={fontSize:"0.7rem",color:"rgba(212,175,55,0.8)",marginBottom:"6px",display:"block",fontWeight:"600"};
+  const inp={width:"100%",padding:"10px 14px",borderRadius:"10px",border:"1px solid rgba(212,175,55,0.25)",background:"rgba(255,255,255,0.06)",color:"#f1f5f9",fontSize:"0.8rem",fontFamily:"'Public Sans',sans-serif",outline:"none",boxSizing:"border-box",direction:"ltr",colorScheme:"dark"};
   return (
     <>
-    <div className="no-print" style={{minHeight:"100vh",background:"linear-gradient(160deg,#0f172a 0%,#0d1f3c 50%,#0a1628 100%)",padding:"24px 20px",fontFamily:"'Public Sans',sans-serif",direction:"rtl"}}>
+    <div className="no-print" style={{minHeight:"100vh",background:"linear-gradient(160deg,#0f172a 0%,#0d1f3c 50%,#0a1628 100%)",padding:"24px 20px",fontFamily:"'Public Sans',sans-serif",direction:"ltr"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"24px",flexWrap:"wrap",gap:"12px"}}>
         <div style={{display:"flex",alignItems:"center",gap:"12px"}}>
           <div style={{width:"44px",height:"44px",borderRadius:"12px",background:"linear-gradient(135deg,#d4af37,#b8960a)",display:"flex",alignItems:"center",justifyContent:"center"}}><span className="material-symbols-rounded" style={{fontSize:"24px",color:N}}>schedule</span></div>
-          <div><h2 style={{margin:0,fontSize:"1.4rem",fontWeight:"800",color:"#f1f5f9"}}>ٹائم ٹیبل</h2><p style={{margin:0,fontSize:"0.72rem",color:"rgba(212,175,55,0.7)"}}>{classes.length} کلاسیں • {subjects.length} مضامین</p></div>
+          <div><h2 style={{margin:0,fontSize:"1.4rem",fontWeight:"800",color:"#f1f5f9"}}>Timetable</h2><p style={{margin:0,fontSize:"0.72rem",color:"rgba(212,175,55,0.7)"}}>{classes.length} Classes • {subjects.length} Subjects</p></div>
         </div>
         <div style={{display:"flex",gap:"6px",background:"rgba(255,255,255,0.05)",padding:"4px",borderRadius:"12px",border:"1px solid rgba(255,255,255,0.08)"}}>
-          {[["view","visibility","دیکھیں"],["edit","edit","ترتیب"],["manage","settings","انتظام"]].map(([t,ic,l]) =>
+          {[["view","visibility","دیکھیں"],["edit","edit","ترتیب"],["manage","settings","منظم"]].map(([t,ic,l]) =>
             <button key={t} onClick={() => setTab(t)} style={{display:"flex",alignItems:"center",gap:"5px",padding:"8px 14px",borderRadius:"9px",border:"none",cursor:"pointer",fontSize:"0.72rem",fontWeight:tab===t?"700":"400",background:tab===t?"linear-gradient(135deg,#d4af37,#b8960a)":"transparent",color:tab===t?N:"rgba(255,255,255,0.5)",fontFamily:"inherit"}}><span className="material-symbols-rounded" style={{fontSize:"15px"}}>{ic}</span>{l}</button>
           )}
         </div>
@@ -167,7 +164,7 @@ function Timetable() {
 
       {/* Class Selector */}
       <div style={{background:"rgba(255,255,255,0.07)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"16px",marginBottom:"14px",padding:"16px"}}>
-        <div style={{fontSize:"0.65rem",color:"rgba(212,175,55,0.7)",marginBottom:"8px",fontWeight:"700"}}>📚 کلاس منتخب کریں</div>
+        <div style={{fontSize:"0.65rem",color:"rgba(212,175,55,0.7)",marginBottom:"8px",fontWeight:"700"}}>📚 جماعت منتخب کریں</div>
         <div style={{display:"flex",flexWrap:"wrap",gap:"6px"}}>
           {classes.map(cls => (
             <button key={cls} onClick={() => setSelectedClass(cls)} style={{
@@ -202,8 +199,8 @@ function Timetable() {
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"12px" }}>
             <div style={{fontSize:"0.78rem",fontWeight:"700",color:"#f1f5f9"}}>{selectedClass} — {DAYS_UR[selectedDay]}</div>
             <div style={{display:"flex",gap:"8px"}}>
-              <button onClick={handlePrint} style={{display:"flex",alignItems:"center",gap:"6px",padding:"8px 16px",borderRadius:"10px",border:"1px solid rgba(74,222,128,0.5)",background:"rgba(74,222,128,0.08)",color:"#4ade80",fontSize:"0.72rem",cursor:"pointer",fontFamily:"inherit",fontWeight:"700"}}><span className="material-symbols-rounded" style={{fontSize:"16px"}}>print</span>پرنٹ</button>
-              <button onClick={loadEdit} style={{display:"flex",alignItems:"center",gap:"6px",padding:"8px 16px",borderRadius:"10px",border:"1px solid #d4af37",background:"transparent",color:"#d4af37",fontSize:"0.72rem",cursor:"pointer",fontFamily:"inherit",fontWeight:"700"}}><span className="material-symbols-rounded" style={{fontSize:"16px"}}>edit</span>ترتیب دیں</button>
+              <button onClick={handlePrint} style={{display:"flex",alignItems:"center",gap:"6px",padding:"8px 16px",borderRadius:"10px",border:"1px solid rgba(74,222,128,0.5)",background:"rgba(74,222,128,0.08)",color:"#4ade80",fontSize:"0.72rem",cursor:"pointer",fontFamily:"inherit",fontWeight:"700"}}><span className="material-symbols-rounded" style={{fontSize:"16px"}}>print</span>Print</button>
+              <button onClick={loadEdit} style={{display:"flex",alignItems:"center",gap:"6px",padding:"8px 16px",borderRadius:"10px",border:"1px solid #d4af37",background:"transparent",color:"#d4af37",fontSize:"0.72rem",cursor:"pointer",fontFamily:"inherit",fontWeight:"700"}}><span className="material-symbols-rounded" style={{fontSize:"16px"}}>edit</span>ترمیم کریں</button>
             </div>
           </div>
 
@@ -217,7 +214,7 @@ function Timetable() {
           ) : (
             <div style={{ display:"flex", flexDirection:"column", gap:"8px" }}>
               {currentPeriods.map((p, i) => {
-                const isBreak = p.subject.includes("Break") || p.subject.includes("بریک") || p.subject.includes("دعا") || p.subject.includes("Assembly");
+                const isBreak = p.subject.includes("Break") || p.subject.includes("Break") || p.subject.includes("Dua") || p.subject.includes("Assembly");
                 return (
                   <div key={i} style={{display:"flex",alignItems:"center",gap:"14px",background:isBreak?"rgba(212,175,55,0.1)":"rgba(255,255,255,0.06)",borderRadius:"12px",padding:"12px 16px",border:`1px solid ${isBreak?"rgba(212,175,55,0.4)":"rgba(255,255,255,0.1)"}`}}>
                     <div style={{width:"32px",height:"32px",borderRadius:"50%",background:isBreak?"#d4af37":"rgba(96,165,250,0.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.65rem",fontWeight:"800",color:isBreak?N:"#60a5fa",flexShrink:0}}>{i+1}</div>
@@ -236,8 +233,8 @@ function Timetable() {
               <table style={{ width:"100%", borderCollapse:"collapse", minWidth:"500px" }}>
                 <thead>
                   <tr>
-                    <th style={{padding:"12px 14px",textAlign:"right",fontSize:"0.65rem",color:"rgba(212,175,55,0.8)",background:"rgba(255,255,255,0.04)",fontWeight:"700"}}>پیریڈ</th>
-                    {DAYS.map(d => <th key={d} style={{padding:"12px 14px",textAlign:"right",fontSize:"0.65rem",color:"rgba(212,175,55,0.8)",background:"rgba(255,255,255,0.04)",fontWeight:"700"}}>{DAYS_UR[d]}</th>)}
+                    <th style={{padding:"12px 14px",textAlign:"left",fontSize:"0.65rem",color:"rgba(212,175,55,0.8)",background:"rgba(255,255,255,0.04)",fontWeight:"700"}}>پیریڈ</th>
+                    {DAYS.map(d => <th key={d} style={{padding:"12px 14px",textAlign:"left",fontSize:"0.65rem",color:"rgba(212,175,55,0.8)",background:"rgba(255,255,255,0.04)",fontWeight:"700"}}>{DAYS_UR[d]}</th>)}
                   </tr>
                 </thead>
                 <tbody>
@@ -260,7 +257,7 @@ function Timetable() {
       {/* ======= EDIT TAB ======= */}
       {tab==="edit" && (
         <div style={{background:"rgba(255,255,255,0.07)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",border:"1px solid rgba(212,175,55,0.3)",borderRadius:"16px",padding:"24px"}}>
-          <div style={{fontSize:"0.9rem",fontWeight:"700",color:G,marginBottom:"16px"}}>✏️ {selectedClass} — {DAYS_UR[selectedDay]} — پیریڈ ترتیب دیں</div>
+          <div style={{fontSize:"0.9rem",fontWeight:"700",color:G,marginBottom:"16px"}}>✏️ {selectedClass} — {DAYS_UR[selectedDay]} — پیریڈ ترتیب</div>
           {editPeriods.map((p, i) => (
             <div key={i} style={{display:"flex",gap:"8px",alignItems:"center",marginBottom:"10px"}}>
               <div style={{width:"28px",height:"28px",borderRadius:"50%",background:"linear-gradient(135deg,#d4af37,#b8960a)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.6rem",fontWeight:"800",color:N,flexShrink:0}}>{i+1}</div>
@@ -284,10 +281,10 @@ function Timetable() {
       {tab==="manage" && (
         <div style={{display:"flex",flexDirection:"column",gap:"14px"}}>
           <div style={{background:"rgba(255,255,255,0.07)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"16px",padding:"20px"}}>
-            <div style={{fontSize:"0.78rem",fontWeight:"700",color:G,marginBottom:"12px"}}>📚 کلاسیں</div>
+            <div style={{fontSize:"0.78rem",fontWeight:"700",color:G,marginBottom:"12px"}}>📚 جماعتیں</div>
             <div style={{display:"flex",gap:"8px",marginBottom:"12px"}}>
-              <input style={{...inp,flex:1}} value={newClass} onChange={e=>setNewClass(e.target.value)} placeholder="نئی کلاس کا نام... مثلاً Grade 11"/>
-              <button onClick={addClass} style={{background:"linear-gradient(135deg,#d4af37,#b8960a)",color:N,border:"none",borderRadius:"10px",padding:"8px 16px",cursor:"pointer",fontWeight:"700",fontFamily:"inherit"}}>+ شامل</button>
+              <input style={{...inp,flex:1}} value={newClass} onChange={e=>setNewClass(e.target.value)} placeholder="نئی جماعت مثلاً گریڈ 11"/>
+              <button onClick={addClass} style={{background:"linear-gradient(135deg,#d4af37,#b8960a)",color:N,border:"none",borderRadius:"10px",padding:"8px 16px",cursor:"pointer",fontWeight:"700",fontFamily:"inherit"}}>+ شامل کریں</button>
             </div>
             <div style={{display:"flex",flexWrap:"wrap",gap:"6px"}}>
               {classes.map(cls => (
@@ -302,8 +299,8 @@ function Timetable() {
           <div style={{background:"rgba(255,255,255,0.07)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"16px",padding:"20px"}}>
             <div style={{fontSize:"0.78rem",fontWeight:"700",color:G,marginBottom:"12px"}}>📖 مضامین</div>
             <div style={{display:"flex",gap:"8px",marginBottom:"12px"}}>
-              <input style={{...inp,flex:1}} value={newSubject} onChange={e=>setNewSubject(e.target.value)} placeholder="نیا مضمون... مثلاً Arabic Grammar"/>
-              <button onClick={addSubject} style={{background:"linear-gradient(135deg,#d4af37,#b8960a)",color:N,border:"none",borderRadius:"10px",padding:"8px 16px",cursor:"pointer",fontWeight:"700",fontFamily:"inherit"}}>+ شامل</button>
+              <input style={{...inp,flex:1}} value={newSubject} onChange={e=>setNewSubject(e.target.value)} placeholder="نیا مضمون مثلاً عربی گرامر"/>
+              <button onClick={addSubject} style={{background:"linear-gradient(135deg,#d4af37,#b8960a)",color:N,border:"none",borderRadius:"10px",padding:"8px 16px",cursor:"pointer",fontWeight:"700",fontFamily:"inherit"}}>+ شامل کریں</button>
             </div>
             <div style={{display:"flex",flexWrap:"wrap",gap:"6px"}}>
               {subjects.map(sub => (
@@ -318,8 +315,8 @@ function Timetable() {
           <div style={{background:"rgba(255,255,255,0.07)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"16px",padding:"20px"}}>
             <div style={{fontSize:"0.78rem",fontWeight:"700",color:G,marginBottom:"12px"}}>⏰ اوقات</div>
             <div style={{display:"flex",gap:"8px",marginBottom:"12px"}}>
-              <input style={{...inp,flex:1,direction:"ltr"}} value={newTime} onChange={e=>setNewTime(e.target.value)} placeholder="نیا وقت... مثلاً 2:00"/>
-              <button onClick={addTime} style={{background:"linear-gradient(135deg,#d4af37,#b8960a)",color:N,border:"none",borderRadius:"10px",padding:"8px 16px",cursor:"pointer",fontWeight:"700",fontFamily:"inherit"}}>+ شامل</button>
+              <input style={{...inp,flex:1,direction:"ltr"}} value={newTime} onChange={e=>setNewTime(e.target.value)} placeholder="نیا وقت مثلاً 2:00"/>
+              <button onClick={addTime} style={{background:"linear-gradient(135deg,#d4af37,#b8960a)",color:N,border:"none",borderRadius:"10px",padding:"8px 16px",cursor:"pointer",fontWeight:"700",fontFamily:"inherit"}}>+ شامل کریں</button>
             </div>
             <div style={{display:"flex",flexWrap:"wrap",gap:"6px"}}>
               {times.map(t => (
@@ -332,12 +329,12 @@ function Timetable() {
     </div>
 
     {/* ── Hidden print area ── */}
-    <div id="tt-print-area" style={{position:"absolute",left:"-9999px",top:0,width:"297mm",background:"#fff",fontFamily:"'Noto Nastaliq Urdu','Amiri',serif",direction:"rtl",color:"#0f172a"}}>
+    <div id="tt-print-area" style={{position:"absolute",left:"-9999px",top:0,width:"297mm",background:"#fff",fontFamily:"'Segoe UI',Arial,serif",direction:"ltr",color:"#0f172a"}}>
       <img src={letterhead} alt="" style={{width:"100%",display:"block"}}/>
       <div style={{padding:"12px 32px 28px"}}>
         <div style={{textAlign:"center",borderBottom:"2px solid #b7860b",paddingBottom:"10px",marginBottom:"16px"}}>
-          <div style={{fontSize:"1.1rem",fontWeight:"800",color:"#7a5807"}}>{selectedClass} — ٹائم ٹیبل</div>
-          <div style={{fontSize:"0.68rem",color:"#888",fontFamily:"'Public Sans',sans-serif",marginTop:"3px"}}>Timetable — {new Date().toLocaleDateString("ur-PK")}</div>
+          <div style={{fontSize:"1.1rem",fontWeight:"800",color:"#7a5807",fontFamily:"'Noto Nastaliq Urdu',serif"}}>نظام الاوقات — {selectedClass} — {new Date().getFullYear()}-{new Date().getFullYear()+1}</div>
+          <div style={{fontSize:"0.68rem",color:"#888",fontFamily:"'Public Sans',sans-serif",marginTop:"3px"}}>تعلیمی سال {new Date().getFullYear()}-{new Date().getFullYear()+1}</div>
         </div>
         <table style={{width:"100%",borderCollapse:"collapse"}}>
           <thead>
@@ -352,15 +349,21 @@ function Timetable() {
                 <td style={{padding:"7px 10px",border:"1px solid #f0ede8",textAlign:"center",fontWeight:"800",color:"#b7860b",fontSize:"0.68rem"}}>{i+1}</td>
                 {DAYS.map(d=>{
                   const p=(schedule[selectedClass]?.[d]||[])[i];
-                  const isBreak=p&&(p.subject.includes("Break")||p.subject.includes("دعا")||p.subject.includes("Assembly"));
+                  const isBreak=p&&(p.subject.includes("Break")||p.subject.includes("Dua")||p.subject.includes("Assembly"));
                   return <td key={d} style={{padding:"7px 10px",border:"1px solid #f0ede8",textAlign:"center",fontSize:"0.65rem",color:isBreak?"#7a5807":"#1e293b",fontWeight:isBreak?"700":"400",background:isBreak?"#fef9e7":"inherit"}}>{p?`${p.subject} (${p.time})`:"—"}</td>;
                 })}
               </tr>
             ))}
           </tbody>
         </table>
-        <div style={{marginTop:"32px",textAlign:"center",fontSize:"0.6rem",color:"#aaa",borderTop:"1px solid #f0ede8",paddingTop:"10px",fontFamily:"'Public Sans',sans-serif"}}>
-          امین اسلامک انسٹی ٹیوٹ • شین، نواکلے، سوات &nbsp;|&nbsp; Ameen Islamic Institute • Shin, Nawa Kalay, Swat
+        <div style={{marginTop:"40px",display:"flex",justifyContent:"space-between",alignItems:"flex-end",paddingTop:"10px",borderTop:"1px solid #f0ede8"}}>
+          <div style={{textAlign:"center",minWidth:"180px"}}>
+            <div style={{borderTop:"1.5px solid #0f172a",paddingTop:"8px",fontSize:"0.68rem",color:"#444",fontWeight:"600",fontFamily:"'Noto Nastaliq Urdu',serif"}}>پرنسپل کا دستخط</div>
+          </div>
+          <div style={{textAlign:"center",fontSize:"0.6rem",color:"#aaa",fontFamily:"'Public Sans',sans-serif"}}>
+            <div>Printed on: {new Date().toLocaleDateString("en-PK",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}</div>
+            <div style={{marginTop:"4px"}}>Ameen Islamic Institute • Shin, Nawa Kalay, Swat</div>
+          </div>
         </div>
       </div>
     </div>
