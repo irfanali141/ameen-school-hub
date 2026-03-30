@@ -1,12 +1,12 @@
 // ═══════════════════════════════════════════════════════════
 // Ameen School Hub — AI Assistant Serverless Function
 // Vercel: /api/ai  (POST)
-// Requires: ANTHROPIC_API_KEY env variable in Vercel dashboard
+// Requires: GEMINI_API_KEY env variable in Vercel dashboard
 // ═══════════════════════════════════════════════════════════
 
-const Anthropic = require("@anthropic-ai/sdk");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// ── System prompt for all tasks ───────────────────────────────────────────────
+// ── System prompt ─────────────────────────────────────────────────────────────
 const SYSTEM = `آپ امین اسلامک اسکول کے AI معاون ہیں۔
 آپ ایک ماہر اسلامی تعلیمی مشیر ہیں جو:
 - اردو میں جواب دیتے ہیں
@@ -20,7 +20,9 @@ function buildPrompt(task, data) {
   switch (task) {
 
     case "lesson_plan":
-      return `سبق منصوبہ تیار کریں:
+      return `${SYSTEM}
+
+سبق منصوبہ تیار کریں:
 مضمون: ${data.subject}
 جماعت: ${data.grade}
 موضوع: ${data.topic}
@@ -37,7 +39,9 @@ function buildPrompt(task, data) {
 اردو میں تفصیل سے لکھیں۔`;
 
     case "mistake_analysis":
-      return `حفظ کی غلطیوں کا تجزیہ کریں:
+      return `${SYSTEM}
+
+حفظ کی غلطیوں کا تجزیہ کریں:
 طالب علم: ${data.studentName}
 پارہ نمبر: ${data.paraNum}
 غلطیاں:
@@ -52,7 +56,9 @@ ${JSON.stringify(data.mistakes, null, 2)}
 اردو میں تفصیل سے لکھیں۔`;
 
     case "parent_report":
-      return `والدین کے لیے سہ ماہی رپورٹ تیار کریں:
+      return `${SYSTEM}
+
+والدین کے لیے سہ ماہی رپورٹ تیار کریں:
 طالب علم: ${data.studentName}
 جماعت: ${data.grade}
 حاضری: ${data.attendance}%
@@ -69,7 +75,9 @@ ${JSON.stringify(data.mistakes, null, 2)}
 - اگلے ماہ کا ہدف بتائے`;
 
     case "homework_suggestion":
-      return `ہوم ورک تجاویز دیں:
+      return `${SYSTEM}
+
+ہوم ورک تجاویز دیں:
 مضمون: ${data.subject}
 جماعت: ${data.grade}
 حالیہ موضوع: ${data.topic}
@@ -84,7 +92,9 @@ ${JSON.stringify(data.mistakes, null, 2)}
 اردو میں لکھیں، آسان اور قابلِ عمل ہوں۔`;
 
     case "class_summary":
-      return `جماعت کا خلاصہ تیار کریں:
+      return `${SYSTEM}
+
+جماعت کا خلاصہ تیار کریں:
 جماعت: ${data.grade}
 مضمون: ${data.subject}
 اوسط نمبر: ${data.avgMarks}%
@@ -99,7 +109,9 @@ ${JSON.stringify(data.mistakes, null, 2)}
 5. والدین کو کیا پیغام بھیجیں؟`;
 
     case "quiz_questions":
-      return `MCQ سوالات بنائیں:
+      return `${SYSTEM}
+
+MCQ سوالات بنائیں:
 مضمون: ${data.subject}
 جماعت: ${data.grade}
 موضوع/عنوان: ${data.title || data.subject}
@@ -122,65 +134,49 @@ ${JSON.stringify(data.mistakes, null, 2)}
 اسلامی تعلیمی معیار کے مطابق ${data.count || 10} سوالات بنائیں۔ صرف JSON array واپس کریں۔`;
 
     default:
-      return `براہ کرم مندرجہ ذیل کے بارے میں مدد کریں:\n${JSON.stringify(data)}`;
+      return `${SYSTEM}\n\nبراہ کرم مندرجہ ذیل کے بارے میں مدد کریں:\n${JSON.stringify(data)}`;
   }
 }
 
 // ── Handler ────────────────────────────────────────────────────────────────────
 module.exports = async function handler(req, res) {
-  // CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return res.status(500).json({ error: "ANTHROPIC_API_KEY not configured" });
-  }
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: "GEMINI_API_KEY not configured" });
 
   const { task, data } = req.body || {};
-  if (!task || !data) {
-    return res.status(400).json({ error: "task and data required" });
-  }
+  if (!task || !data) return res.status(400).json({ error: "task and data required" });
 
   try {
-    const client = new Anthropic({ apiKey });
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     const prompt = buildPrompt(task, data);
 
-    // Streaming response
+    // SSE streaming
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
 
-    const stream = await client.messages.stream({
-      model: "claude-opus-4-6",
-      max_tokens: 2048,
-      thinking: { type: "adaptive" },
-      system: SYSTEM,
-      messages: [{ role: "user", content: prompt }],
-    });
+    const result = await model.generateContentStream(prompt);
 
-    for await (const chunk of stream) {
-      if (
-        chunk.type === "content_block_delta" &&
-        chunk.delta.type === "text_delta"
-      ) {
-        res.write(`data: ${JSON.stringify({ text: chunk.delta.text })}\n\n`);
+    for await (const chunk of result.stream) {
+      const text = chunk.text();
+      if (text) {
+        res.write(`data: ${JSON.stringify({ text })}\n\n`);
       }
     }
 
     res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
     res.end();
+
   } catch (err) {
-    console.error("AI error:", err.message);
+    console.error("Gemini error:", err.message);
     if (!res.headersSent) {
       res.status(500).json({ error: err.message });
     } else {
