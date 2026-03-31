@@ -88,6 +88,7 @@ import QuizHub         from "./components/academic/QuizHub";
 import SchemeOfStudies from "./components/academic/SchemeOfStudies";
 import AcademicCalendar from "./components/academic/AcademicCalendar";
 import TermBreakup     from "./components/academic/TermBreakup";
+import SchoolDecorPlans from "./components/admin/SchoolDecorPlans";
 
 // Welfare components
 import StudentHealth from "./components/welfare/StudentHealth";
@@ -138,7 +139,8 @@ const TRANS = {
       quizhub:"📝 آن لائن ٹیسٹ",
       schemeofstudies:"📋 اسکیم آف اسٹڈیز",
       academiccalendar:"📅 تعلیمی کیلنڈر",
-      termbreakup:"🗓️ ٹرم تقسیم"
+      termbreakup:"🗓️ ٹرم تقسیم",
+      schooldecor:"🎨 اسکول سجاوٹ"
     }
   },
   en: {
@@ -175,7 +177,8 @@ const TRANS = {
       quizhub:"📝 Online Quiz",
       schemeofstudies:"📋 Scheme of Studies",
       academiccalendar:"📅 Academic Calendar",
-      termbreakup:"🗓️ Term Breakup"
+      termbreakup:"🗓️ Term Breakup",
+      schooldecor:"🎨 School Decor Plans"
     }
   },
   ar: {
@@ -212,7 +215,8 @@ const TRANS = {
       quizhub:"📝 الاختبار الإلكتروني",
       schemeofstudies:"📋 مخطط الدراسة",
       academiccalendar:"📅 التقويم الأكاديمي",
-      termbreakup:"🗓️ تقسيم الفصول"
+      termbreakup:"🗓️ تقسيم الفصول",
+      schooldecor:"🎨 خطط الديكور"
     }
   }
 };
@@ -365,6 +369,7 @@ const NAV_GROUPS = [
       {id:"assets",label:t.pages.assets},
       {id:"donations",label:t.pages.donations},
       {id:"phase2plan",label:t.pages.phase2plan},
+      {id:"schooldecor",label:t.pages.schooldecor},
     ]
   },
 ];
@@ -401,6 +406,7 @@ const NAV_GROUPS = [
     {id:"schemeofstudies",label:t.pages.schemeofstudies},
     {id:"academiccalendar",label:t.pages.academiccalendar},
     {id:"termbreakup",label:t.pages.termbreakup},
+    {id:"schooldecor",label:t.pages.schooldecor},
   ];
 
   const uName=DEMO.find(d=>d.email===user?.email)?.name||user?.email||"";
@@ -676,6 +682,7 @@ const NAV_GROUPS = [
       {page==="schemeofstudies"&&<SchemeOfStudies addData={addData}/>}
       {page==="academiccalendar"&&<AcademicCalendar addData={addData}/>}
       {page==="termbreakup"&&<TermBreakup addData={addData}/>}
+      {page==="schooldecor"&&<SchoolDecorPlans addData={addData}/>}
       </>}
     </div>
   </div>
