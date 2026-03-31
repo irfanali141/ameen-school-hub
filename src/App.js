@@ -89,6 +89,8 @@ import SchemeOfStudies from "./components/academic/SchemeOfStudies";
 import AcademicCalendar from "./components/academic/AcademicCalendar";
 import TermBreakup     from "./components/academic/TermBreakup";
 import SchoolDecorPlans from "./components/admin/SchoolDecorPlans";
+import ChatSystem      from "./components/communication/ChatSystem";
+import ETube           from "./components/academic/ETube";
 
 // Welfare components
 import StudentHealth from "./components/welfare/StudentHealth";
@@ -140,7 +142,9 @@ const TRANS = {
       schemeofstudies:"📋 اسکیم آف اسٹڈیز",
       academiccalendar:"📅 تعلیمی کیلنڈر",
       termbreakup:"🗓️ ٹرم تقسیم",
-      schooldecor:"🎨 اسکول سجاوٹ"
+      schooldecor:"🎨 اسکول سجاوٹ",
+      chat:"💬 چیٹ",
+      etube:"📺 E-Tube"
     }
   },
   en: {
@@ -178,7 +182,9 @@ const TRANS = {
       schemeofstudies:"📋 Scheme of Studies",
       academiccalendar:"📅 Academic Calendar",
       termbreakup:"🗓️ Term Breakup",
-      schooldecor:"🎨 School Decor Plans"
+      schooldecor:"🎨 School Decor Plans",
+      chat:"💬 Chat",
+      etube:"📺 E-Tube"
     }
   },
   ar: {
@@ -216,7 +222,9 @@ const TRANS = {
       schemeofstudies:"📋 مخطط الدراسة",
       academiccalendar:"📅 التقويم الأكاديمي",
       termbreakup:"🗓️ تقسيم الفصول",
-      schooldecor:"🎨 خطط الديكور"
+      schooldecor:"🎨 خطط الديكور",
+      chat:"💬 الدردشة",
+      etube:"📺 E-Tube"
     }
   }
 };
@@ -353,6 +361,7 @@ const NAV_GROUPS = [
       {id:"schemeofstudies",label:t.pages.schemeofstudies},
       {id:"academiccalendar",label:t.pages.academiccalendar},
       {id:"termbreakup",label:t.pages.termbreakup},
+      {id:"etube",label:t.pages.etube},
     ]
   },
   {
@@ -370,6 +379,7 @@ const NAV_GROUPS = [
       {id:"donations",label:t.pages.donations},
       {id:"phase2plan",label:t.pages.phase2plan},
       {id:"schooldecor",label:t.pages.schooldecor},
+      {id:"chat",label:t.pages.chat},
     ]
   },
 ];
@@ -407,6 +417,8 @@ const NAV_GROUPS = [
     {id:"academiccalendar",label:t.pages.academiccalendar},
     {id:"termbreakup",label:t.pages.termbreakup},
     {id:"schooldecor",label:t.pages.schooldecor},
+    {id:"chat",label:t.pages.chat},
+    {id:"etube",label:t.pages.etube},
   ];
 
   const uName=DEMO.find(d=>d.email===user?.email)?.name||user?.email||"";
@@ -683,6 +695,8 @@ const NAV_GROUPS = [
       {page==="academiccalendar"&&<AcademicCalendar addData={addData}/>}
       {page==="termbreakup"&&<TermBreakup addData={addData}/>}
       {page==="schooldecor"&&<SchoolDecorPlans addData={addData}/>}
+      {page==="chat"&&<ChatSystem user={user} userRole={uRole}/>}
+      {page==="etube"&&<ETube addData={addData} userRole={uRole}/>}
       </>}
     </div>
   </div>

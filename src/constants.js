@@ -91,17 +91,17 @@ const ROLE_PAGES = {
                 "houses","hvs","superhouse","duties","grandtotal","superannual","tarbiyah","ethics","pride",
                 "teachers","salary","slips","leave","staffperf","faculty_dev","lessons","curriculum","lmaterials",
                 "exams","seating","analytics","library","madrasa","fees","reports",
-                "director","registrar","reportchain","housereportchain","investigationhub","invcase","incidentlog","weaknessmatrix","monthlyplanner","societysystem","leadershiproles","housetemplates","housebazaar","sitaraameen","parents","messaging","homeworkhub","aiassistant","quizhub","schemeofstudies","academiccalendar","termbreakup","schooldecor","alumni","visitors","meetings","assets","donations","phase2plan","watchlist"],
+                "director","registrar","reportchain","housereportchain","investigationhub","invcase","incidentlog","weaknessmatrix","monthlyplanner","societysystem","leadershiproles","housetemplates","housebazaar","sitaraameen","parents","messaging","homeworkhub","aiassistant","quizhub","schemeofstudies","academiccalendar","termbreakup","schooldecor","chat","etube","alumni","visitors","meetings","assets","donations","phase2plan","watchlist"],
   teacher:     ["dashboard","timetable","attendance","notifications","noticeboard",
-                "marks","hifz","results","students","lessons","curriculum","lmaterials","leave","evaluationscales","homeworkhub","aiassistant","quizhub","schemeofstudies","academiccalendar","termbreakup"],
+                "marks","hifz","results","students","lessons","curriculum","lmaterials","leave","evaluationscales","homeworkhub","aiassistant","quizhub","schemeofstudies","academiccalendar","termbreakup","chat","etube"],
   finance:     ["dashboard","fees","salary","slips","donations","reports"],
   registrar:   ["dashboard","students","registrar","transcript","reportcard","dmc",
                 "results","marks","analytics","notifications","noticeboard","attendance"],
   housemaster: ["dashboard","students","houses","hvs","superhouse","duties","grandtotal","superannual","investigationhub","invcase","incidentlog","weaknessmatrix","monthlyplanner","societysystem","leadershiproles","housetemplates","housebazaar","sitaraameen","tarbiyah","ethics","pride",
                 "notifications","attendance","watchlist","housereportchain"],
   madrasa:     ["dashboard","madrasa","notifications","students"],
-  parent:      ["parents","messaging","homeworkhub","quizhub"],
-  student:     ["parents","homeworkhub","quizhub"],
+  parent:      ["parents","messaging","homeworkhub","quizhub","etube"],
+  student:     ["parents","homeworkhub","quizhub","etube"],
 };
 
 const SEED_S = [
