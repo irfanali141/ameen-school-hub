@@ -4,7 +4,7 @@
 // Requires: GEMINI_API_KEY env variable in Vercel dashboard
 // ═══════════════════════════════════════════════════════════
 
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+// Direct REST API — no SDK needed
 
 // ── System prompt ─────────────────────────────────────────────────────────────
 const SYSTEM = `آپ امین اسلامک اسکول کے AI معاون ہیں۔
@@ -154,11 +154,6 @@ module.exports = async function handler(req, res) {
   if (!task || !data) return res.status(400).json({ error: "task and data required" });
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel(
-      { model: "gemini-1.5-flash" },
-      { apiVersion: "v1" }
-    );
     const prompt = buildPrompt(task, data);
 
     // SSE streaming
@@ -166,12 +161,44 @@ module.exports = async function handler(req, res) {
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
 
-    const result = await model.generateContentStream(prompt);
+    // Direct REST API — no SDK
+    const geminiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?key=${apiKey}&alt=sse`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
+        }),
+      }
+    );
 
-    for await (const chunk of result.stream) {
-      const text = chunk.text();
-      if (text) {
-        res.write(`data: ${JSON.stringify({ text })}\n\n`);
+    if (!geminiRes.ok) {
+      const errText = await geminiRes.text();
+      throw new Error(errText);
+    }
+
+    const reader = geminiRes.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith("data:")) continue;
+        const jsonStr = line.slice(5).trim();
+        if (!jsonStr || jsonStr === "[DONE]") continue;
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (text) res.write(`data: ${JSON.stringify({ text })}\n\n`);
+        } catch {}
       }
     }
 
