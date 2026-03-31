@@ -82,9 +82,12 @@ import ParentPortal from "./components/portals/ParentPortal";
 import DirectorPortal from "./components/portals/DirectorPortal";
 import AlumniPortal from "./components/portals/AlumniPortal";
 import ParentMessaging from "./components/portals/ParentMessaging";
-import HomeworkHub    from "./components/academic/HomeworkHub";
-import AIAssistant   from "./components/ai/AIAssistant";
-import QuizHub       from "./components/academic/QuizHub";
+import HomeworkHub      from "./components/academic/HomeworkHub";
+import AIAssistant     from "./components/ai/AIAssistant";
+import QuizHub         from "./components/academic/QuizHub";
+import SchemeOfStudies from "./components/academic/SchemeOfStudies";
+import AcademicCalendar from "./components/academic/AcademicCalendar";
+import TermBreakup     from "./components/academic/TermBreakup";
 
 // Welfare components
 import StudentHealth from "./components/welfare/StudentHealth";
@@ -132,7 +135,10 @@ const TRANS = {
       messaging:"💬 والدین پیغامات",
       homeworkhub:"📝 ہوم ورک",
       aiassistant:"✨ AI معاون",
-      quizhub:"📝 آن لائن ٹیسٹ"
+      quizhub:"📝 آن لائن ٹیسٹ",
+      schemeofstudies:"📋 اسکیم آف اسٹڈیز",
+      academiccalendar:"📅 تعلیمی کیلنڈر",
+      termbreakup:"🗓️ ٹرم تقسیم"
     }
   },
   en: {
@@ -166,7 +172,10 @@ const TRANS = {
       messaging:"💬 Parent Messages",
       homeworkhub:"📝 Homework",
       aiassistant:"✨ AI Assistant",
-      quizhub:"📝 Online Quiz"
+      quizhub:"📝 Online Quiz",
+      schemeofstudies:"📋 Scheme of Studies",
+      academiccalendar:"📅 Academic Calendar",
+      termbreakup:"🗓️ Term Breakup"
     }
   },
   ar: {
@@ -200,7 +209,10 @@ const TRANS = {
       messaging:"💬 رسائل الوالدين",
       homeworkhub:"📝 الواجبات",
       aiassistant:"✨ المساعد الذكي",
-      quizhub:"📝 الاختبار الإلكتروني"
+      quizhub:"📝 الاختبار الإلكتروني",
+      schemeofstudies:"📋 مخطط الدراسة",
+      academiccalendar:"📅 التقويم الأكاديمي",
+      termbreakup:"🗓️ تقسيم الفصول"
     }
   }
 };
@@ -334,6 +346,9 @@ const NAV_GROUPS = [
       {id:"reports",label:t.pages.reports},
       {id:"aiassistant",label:t.pages.aiassistant},
       {id:"quizhub",label:t.pages.quizhub},
+      {id:"schemeofstudies",label:t.pages.schemeofstudies},
+      {id:"academiccalendar",label:t.pages.academiccalendar},
+      {id:"termbreakup",label:t.pages.termbreakup},
     ]
   },
   {
@@ -383,6 +398,9 @@ const NAV_GROUPS = [
     {id:"homeworkhub",label:t.pages.homeworkhub},
     {id:"aiassistant",label:t.pages.aiassistant},
     {id:"quizhub",label:t.pages.quizhub},
+    {id:"schemeofstudies",label:t.pages.schemeofstudies},
+    {id:"academiccalendar",label:t.pages.academiccalendar},
+    {id:"termbreakup",label:t.pages.termbreakup},
   ];
 
   const uName=DEMO.find(d=>d.email===user?.email)?.name||user?.email||"";
@@ -655,6 +673,9 @@ const NAV_GROUPS = [
       {page==="homeworkhub"&&<HomeworkHub students={students} user={user} userRole={uRole} teachers={teachers}/>}
       {page==="aiassistant"&&<AIAssistant students={students} userRole={uRole}/>}
       {page==="quizhub"&&<QuizHub user={user} role={uRole}/>}
+      {page==="schemeofstudies"&&<SchemeOfStudies addData={addData}/>}
+      {page==="academiccalendar"&&<AcademicCalendar addData={addData}/>}
+      {page==="termbreakup"&&<TermBreakup addData={addData}/>}
       </>}
     </div>
   </div>
