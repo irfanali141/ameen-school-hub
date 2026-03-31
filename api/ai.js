@@ -150,7 +150,16 @@ module.exports = async function handler(req, res) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return res.status(500).json({ error: "GEMINI_API_KEY not configured" });
 
+  // DEBUG: key check endpoint
   const { task, data } = req.body || {};
+  if (task === "debug") {
+    return res.status(200).json({
+      keyLength: apiKey.length,
+      keyStart: apiKey.substring(0, 8),
+      keyEnd: apiKey.substring(apiKey.length - 4),
+    });
+  }
+
   if (!task || !data) return res.status(400).json({ error: "task and data required" });
 
   try {
