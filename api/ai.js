@@ -161,9 +161,9 @@ module.exports = async function handler(req, res) {
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
 
-    // Direct REST API — no SDK
+    // Direct REST API — gemini-pro generateContent (non-streaming)
     const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?key=${apiKey}&alt=sse`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -179,27 +179,15 @@ module.exports = async function handler(req, res) {
       throw new Error(errText);
     }
 
-    const reader = geminiRes.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
+    const json = await geminiRes.json();
+    const text = json?.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop();
+    if (!text) throw new Error("Gemini ne koi jawab nahi diya");
 
-      for (const line of lines) {
-        if (!line.startsWith("data:")) continue;
-        const jsonStr = line.slice(5).trim();
-        if (!jsonStr || jsonStr === "[DONE]") continue;
-        try {
-          const parsed = JSON.parse(jsonStr);
-          const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (text) res.write(`data: ${JSON.stringify({ text })}\n\n`);
-        } catch {}
-      }
+    // Send as SSE chunks (simulate streaming)
+    const chunkSize = 100;
+    for (let i = 0; i < text.length; i += chunkSize) {
+      res.write(`data: ${JSON.stringify({ text: text.slice(i, i + chunkSize) })}\n\n`);
     }
 
     res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
