@@ -76,10 +76,15 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
         }
       }
 
-      // Extract JSON from response
-      const jsonMatch = fullText.match(/\{[\s\S]*\}/);
+      // Extract JSON from response — strip markdown code blocks first
+      let clean = fullText
+        .replace(/```json/gi, "").replace(/```/g, "").trim();
+      const jsonMatch = clean.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error("AI نے غلط format میں جواب دیا");
-      const parsed = JSON.parse(jsonMatch[0]);
+      let jsonStr = jsonMatch[0]
+        .replace(/[\u0000-\u001F\u007F]/g, " ") // remove control chars
+        .replace(/,\s*}/g, "}").replace(/,\s*]/g, "]"); // trailing commas
+      const parsed = JSON.parse(jsonStr);
       setResult(parsed);
 
     } catch (e) {

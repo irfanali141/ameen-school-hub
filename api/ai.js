@@ -110,7 +110,8 @@ Role کے مطابق اجازت:
 - finance: add_fee, mark_fee_paid
 - housemaster: add_house_points, add_hvs
 
-بالکل اس JSON format میں جواب دیں (کوئی اضافی متن نہیں، صرف JSON):
+IMPORTANT: صرف JSON واپس کریں۔ کوئی explanation نہیں، کوئی markdown code block نہیں — صرف خالص JSON object:
+
 {
   "understood": "مختصر وضاحت کیا سمجھا",
   "action": "action_name یا null اگر سمجھ نہ آئے",
