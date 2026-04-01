@@ -93,6 +93,37 @@ function buildPrompt(task, data) {
 4. کمزور طلبہ کے لیے خصوصی منصوبہ
 5. والدین کو کیا پیغام بھیجیں؟`;
 
+    case "ai_command":
+      return `آپ امین اسلامک اسکول کے AI ڈیٹا منیجر ہیں۔
+آپ کا کام یہ ہے کہ اردو میں دیے گئے حکم کو سمجھیں اور ایک JSON action واپس کریں۔
+
+صارف کا کردار: ${data.role}
+موجود طلبہ: ${JSON.stringify((data.students||[]).map(s=>({id:s.id,name:s.name,grade:s.grade})))}
+موجود اساتذہ: ${JSON.stringify((data.teachers||[]).map(t=>({id:t.id,name:t.name})))}
+موجود گھر: ${JSON.stringify((data.houses||[]).map(h=>({id:h.id,name:h.name})))}
+
+صارف کا حکم: "${data.command}"
+
+Role کے مطابق اجازت:
+- director/admin: add_fee, mark_fee_paid, add_result, add_house_points, update_student, add_attendance, add_marks
+- teacher: add_result, add_marks, add_attendance
+- finance: add_fee, mark_fee_paid
+- housemaster: add_house_points, add_hvs
+
+بالکل اس JSON format میں جواب دیں (کوئی اضافی متن نہیں، صرف JSON):
+{
+  "understood": "مختصر وضاحت کیا سمجھا",
+  "action": "action_name یا null اگر سمجھ نہ آئے",
+  "allowed": true یا false,
+  "params": { متعلقہ data fields },
+  "confirmation": "اردو میں تصدیقی سوال",
+  "error": "اگر کوئی مسئلہ ہو تو وضاحت، ورنہ null"
+}
+
+ممکنہ actions: add_fee, mark_fee_paid, add_result, add_marks, add_house_points, add_attendance, update_student
+params میں student_id، student_name، amount، grade وغیرہ موضوع کے مطابق شامل کریں۔
+student_id وہی ہو جو students list میں ہے۔`;
+
     case "quiz_questions":
       return `MCQ سوالات بنائیں:
 مضمون: ${data.subject}

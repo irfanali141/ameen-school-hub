@@ -91,6 +91,7 @@ import TermBreakup     from "./components/academic/TermBreakup";
 import SchoolDecorPlans from "./components/admin/SchoolDecorPlans";
 import ChatSystem      from "./components/communication/ChatSystem";
 import ETube           from "./components/academic/ETube";
+import AICommandCenter from "./components/ai/AICommandCenter";
 
 // Welfare components
 import StudentHealth from "./components/welfare/StudentHealth";
@@ -144,7 +145,8 @@ const TRANS = {
       termbreakup:"🗓️ ٹرم تقسیم",
       schooldecor:"🎨 اسکول سجاوٹ",
       chat:"💬 چیٹ",
-      etube:"📺 E-Tube"
+      etube:"📺 E-Tube",
+      aicommand:"🤖 AI کمانڈ"
     }
   },
   en: {
@@ -184,7 +186,8 @@ const TRANS = {
       termbreakup:"🗓️ Term Breakup",
       schooldecor:"🎨 School Decor Plans",
       chat:"💬 Chat",
-      etube:"📺 E-Tube"
+      etube:"📺 E-Tube",
+      aicommand:"🤖 AI Command"
     }
   },
   ar: {
@@ -224,7 +227,8 @@ const TRANS = {
       termbreakup:"🗓️ تقسيم الفصول",
       schooldecor:"🎨 خطط الديكور",
       chat:"💬 الدردشة",
-      etube:"📺 E-Tube"
+      etube:"📺 E-Tube",
+      aicommand:"🤖 مركز الأوامر"
     }
   }
 };
@@ -362,6 +366,7 @@ const NAV_GROUPS = [
       {id:"academiccalendar",label:t.pages.academiccalendar},
       {id:"termbreakup",label:t.pages.termbreakup},
       {id:"etube",label:t.pages.etube},
+      {id:"aicommand",label:t.pages.aicommand},
     ]
   },
   {
@@ -419,6 +424,7 @@ const NAV_GROUPS = [
     {id:"schooldecor",label:t.pages.schooldecor},
     {id:"chat",label:t.pages.chat},
     {id:"etube",label:t.pages.etube},
+    {id:"aicommand",label:t.pages.aicommand},
   ];
 
   const uName=DEMO.find(d=>d.email===user?.email)?.name||user?.email||"";
@@ -697,6 +703,7 @@ const NAV_GROUPS = [
       {page==="schooldecor"&&<SchoolDecorPlans addData={addData}/>}
       {page==="chat"&&<ChatSystem user={user} userRole={uRole}/>}
       {page==="etube"&&<ETube addData={addData} userRole={uRole}/>}
+      {page==="aicommand"&&<AICommandCenter students={students} teachers={teachers} houses={houses} userRole={uRole} addData={addData} updateData={updateData}/>}
       </>}
     </div>
   </div>
