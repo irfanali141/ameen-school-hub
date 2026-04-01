@@ -34,6 +34,44 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
   const [executing, setExec]  = useState(false);
   const [done, setDone]       = useState(false);
   const [error, setError]     = useState("");
+  const [csvTab, setCsvTab]   = useState(false);
+  const [csvResult, setCsvResult] = useState(null);
+  const [csvLoading, setCsvLoading] = useState(false);
+
+  const handleCSV = async (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    setCsvLoading(true); setCsvResult(null);
+    const text = await file.text();
+    const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+    const dataLines = (lines[0]?.toLowerCase().includes("name") || lines[0]?.toLowerCase().includes("student"))
+      ? lines.slice(1) : lines;
+    let ok = 0, skip = 0, errs = [];
+    for (const line of dataLines) {
+      const [nameOrCode, amtStr, typeStr, monthStr] = line.split(",").map(s => s?.trim());
+      if (!nameOrCode || !amtStr) { skip++; continue; }
+      const st = students.find(s =>
+        s.name?.toLowerCase().includes(nameOrCode.toLowerCase()) ||
+        s.studentCode?.toLowerCase() === nameOrCode.toLowerCase()
+      );
+      if (!st) { errs.push(`نہیں ملا: ${nameOrCode}`); skip++; continue; }
+      const [yr, mo] = monthStr ? monthStr.split("-").map(Number)
+        : [new Date().getFullYear(), new Date().getMonth() + 1];
+      try {
+        await addData("fees", {
+          student_id: st.id, student_name: st.name,
+          amount: parseFloat(amtStr) || 0,
+          type: typeStr || "monthly",
+          month: mo || new Date().getMonth() + 1,
+          year: yr || new Date().getFullYear(),
+          status: "pending",
+        });
+        ok++;
+      } catch (err) { errs.push(`${st.name}: ${err.message}`); skip++; }
+    }
+    setCsvResult({ ok, skip, errs });
+    setCsvLoading(false);
+    e.target.value = "";
+  };
 
   const allowedActions = ROLE_ACTIONS[userRole] || [];
 
@@ -247,8 +285,80 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
         </div>
       </div>
 
+      {/* Tab Toggle */}
+      <div style={{ display:"flex", gap:8, marginBottom:16 }}>
+        <button onClick={()=>setCsvTab(false)}
+          style={{ padding:"9px 20px", borderRadius:9, border:"none", cursor:"pointer",
+            fontFamily:"inherit", fontWeight:700, fontSize:13,
+            background: !csvTab ? G : "rgba(255,255,255,0.06)",
+            color: !csvTab ? N : "#64748b" }}>
+          🤖 AI حکم
+        </button>
+        <button onClick={()=>setCsvTab(true)}
+          style={{ padding:"9px 20px", borderRadius:9, border:"none", cursor:"pointer",
+            fontFamily:"inherit", fontWeight:700, fontSize:13,
+            background: csvTab ? G : "rgba(255,255,255,0.06)",
+            color: csvTab ? N : "#64748b" }}>
+          📂 فائل سے fees
+        </button>
+      </div>
+
+      {/* CSV Upload Panel */}
+      {csvTab && (
+        <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(212,175,55,0.2)",
+          borderRadius:14, padding:20, marginBottom:20 }}>
+          <div style={{ color:G, fontWeight:700, fontSize:15, marginBottom:4 }}>📂 CSV فائل سے ایک ساتھ فیس ڈالیں</div>
+          <div style={{ color:"#64748b", fontSize:12, marginBottom:16 }}>ایک CSV فائل میں سارے طلبہ کی fees لکھ کر upload کریں</div>
+
+          {/* Format guide */}
+          <div style={{ background:"rgba(99,202,183,0.06)", border:"1px solid rgba(99,202,183,0.2)",
+            borderRadius:10, padding:"12px 16px", marginBottom:16, direction:"ltr" }}>
+            <div style={{ color:"#63cab7", fontWeight:700, fontSize:12, marginBottom:8 }}>📄 CSV Format:</div>
+            <code style={{ display:"block", background:"rgba(0,0,0,0.4)", padding:"10px 14px",
+              borderRadius:8, color:"#a3e6dc", fontFamily:"monospace", fontSize:12, lineHeight:2 }}>
+              student_name,amount,type,YYYY-MM<br/>
+              Ahmad Ali,3000,monthly,2024-04<br/>
+              Bilal Khan,2500,monthly,2024-04<br/>
+              Sara Noor,3000,admission,
+            </code>
+            <div style={{ color:"#64748b", fontSize:11, marginTop:8 }}>
+              • type: monthly / admission / exam / hostel / transport<br/>
+              • YYYY-MM optional (نہ لکھیں تو آج کا مہینہ)<br/>
+              • Header row ہو یا نہ ہو — خود سمجھ جائے گا
+            </div>
+          </div>
+
+          {/* Upload button */}
+          <label style={{ display:"inline-flex", alignItems:"center", gap:10,
+            padding:"12px 28px", borderRadius:10, cursor:"pointer",
+            background:`linear-gradient(135deg,${G},#b8960a)`, color:N,
+            fontWeight:700, fontSize:14, fontFamily:"inherit" }}>
+            {csvLoading ? "⏳ upload ہو رہا ہے..." : "📂 CSV فائل منتخب کریں"}
+            <input type="file" accept=".csv,.txt" style={{display:"none"}}
+              onChange={handleCSV} disabled={csvLoading}/>
+          </label>
+
+          {/* Result */}
+          {csvResult && (
+            <div style={{ marginTop:16, padding:"14px 18px", borderRadius:10,
+              background: csvResult.skip===0 ? "rgba(74,222,128,0.1)" : "rgba(251,146,60,0.1)",
+              border: `1px solid ${csvResult.skip===0 ? "rgba(74,222,128,0.3)" : "rgba(251,146,60,0.3)"}` }}>
+              <div style={{ fontWeight:700, fontSize:14 }}>
+                <span style={{ color:"#4ade80" }}>✅ {csvResult.ok} fees کامیابی سے شامل ہوگئیں</span>
+                {csvResult.skip > 0 && <span style={{ color:"#fb923c", marginRight:16 }}> ⚠️ {csvResult.skip} ناکام</span>}
+              </div>
+              {csvResult.errs.length > 0 && (
+                <div style={{ color:"#fca5a5", fontSize:12, marginTop:8 }}>
+                  {csvResult.errs.slice(0,5).join(" • ")}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Command Input */}
-      <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(212,175,55,0.2)",
+      {!csvTab && <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(212,175,55,0.2)",
         borderRadius:14, padding:20, marginBottom:20 }}>
         <label style={{ fontSize:13, color:"rgba(212,175,55,0.8)", fontWeight:700,
           marginBottom:10, display:"block" }}>
@@ -270,7 +380,7 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
             {loading ? "⏳ سوچ رہا ہے..." : "🤖 AI سے پوچھیں"}
           </button>
         </div>
-      </div>
+      </div>}
 
       {/* Error */}
       {error && (
