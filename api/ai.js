@@ -1,12 +1,10 @@
 // ═══════════════════════════════════════════════════════════
 // Ameen School Hub — AI Assistant Serverless Function
 // Vercel: /api/ai  (POST)
-// Requires: GEMINI_API_KEY env variable in Vercel dashboard
+// Provider: Groq (free tier — 14,400 req/day)
+// Requires: GROQ_API_KEY env variable in Vercel dashboard
 // ═══════════════════════════════════════════════════════════
 
-// Direct REST API — no SDK needed
-
-// ── System prompt ─────────────────────────────────────────────────────────────
 const SYSTEM = `آپ امین اسلامک اسکول کے AI معاون ہیں۔
 آپ ایک ماہر اسلامی تعلیمی مشیر ہیں جو:
 - اردو میں جواب دیتے ہیں
@@ -15,14 +13,10 @@ const SYSTEM = `آپ امین اسلامک اسکول کے AI معاون ہیں�
 - عملی، مختصر اور مفید تجاویز دیتے ہیں
 ہمیشہ بسم اللہ سے شروع کریں۔`;
 
-// ── Task prompts ──────────────────────────────────────────────────────────────
 function buildPrompt(task, data) {
   switch (task) {
-
     case "lesson_plan":
-      return `${SYSTEM}
-
-سبق منصوبہ تیار کریں:
+      return `سبق منصوبہ تیار کریں:
 مضمون: ${data.subject}
 جماعت: ${data.grade}
 موضوع: ${data.topic}
@@ -39,13 +33,10 @@ function buildPrompt(task, data) {
 اردو میں تفصیل سے لکھیں۔`;
 
     case "mistake_analysis":
-      return `${SYSTEM}
-
-حفظ کی غلطیوں کا تجزیہ کریں:
+      return `حفظ کی غلطیوں کا تجزیہ کریں:
 طالب علم: ${data.studentName}
 پارہ نمبر: ${data.paraNum}
-غلطیاں:
-${JSON.stringify(data.mistakes, null, 2)}
+غلطیاں: ${JSON.stringify(data.mistakes)}
 
 براہ کرم بتائیں:
 1. سب سے زیادہ کون سی غلطیاں ہیں؟
@@ -56,9 +47,7 @@ ${JSON.stringify(data.mistakes, null, 2)}
 اردو میں تفصیل سے لکھیں۔`;
 
     case "parent_report":
-      return `${SYSTEM}
-
-والدین کے لیے سہ ماہی رپورٹ تیار کریں:
+      return `والدین کے لیے سہ ماہی رپورٹ تیار کریں:
 طالب علم: ${data.studentName}
 جماعت: ${data.grade}
 حاضری: ${data.attendance}%
@@ -75,9 +64,7 @@ ${JSON.stringify(data.mistakes, null, 2)}
 - اگلے ماہ کا ہدف بتائے`;
 
     case "homework_suggestion":
-      return `${SYSTEM}
-
-ہوم ورک تجاویز دیں:
+      return `ہوم ورک تجاویز دیں:
 مضمون: ${data.subject}
 جماعت: ${data.grade}
 حالیہ موضوع: ${data.topic}
@@ -92,9 +79,7 @@ ${JSON.stringify(data.mistakes, null, 2)}
 اردو میں لکھیں، آسان اور قابلِ عمل ہوں۔`;
 
     case "class_summary":
-      return `${SYSTEM}
-
-جماعت کا خلاصہ تیار کریں:
+      return `جماعت کا خلاصہ تیار کریں:
 جماعت: ${data.grade}
 مضمون: ${data.subject}
 اوسط نمبر: ${data.avgMarks}%
@@ -109,24 +94,17 @@ ${JSON.stringify(data.mistakes, null, 2)}
 5. والدین کو کیا پیغام بھیجیں؟`;
 
     case "quiz_questions":
-      return `${SYSTEM}
-
-MCQ سوالات بنائیں:
+      return `MCQ سوالات بنائیں:
 مضمون: ${data.subject}
 جماعت: ${data.grade}
-موضوع/عنوان: ${data.title || data.subject}
+موضوع: ${data.title || data.subject}
 سوالات کی تعداد: ${data.count || 10}
 
-براہ کرم بالکل اس JSON format میں جواب دیں (صرف JSON array، کوئی اضافی متن نہیں):
+بالکل اس JSON format میں جواب دیں (صرف JSON array، کوئی اضافی متن نہیں):
 [
   {
     "text": "سوال کا متن اردو میں",
-    "options": {
-      "A": "پہلا آپشن",
-      "B": "دوسرا آپشن",
-      "C": "تیسرا آپشن",
-      "D": "چوتھا آپشن"
-    },
+    "options": { "A": "پہلا آپشن", "B": "دوسرا آپشن", "C": "تیسرا آپشن", "D": "چوتھا آپشن" },
     "correct": "A",
     "marks": 1
   }
@@ -134,11 +112,10 @@ MCQ سوالات بنائیں:
 اسلامی تعلیمی معیار کے مطابق ${data.count || 10} سوالات بنائیں۔ صرف JSON array واپس کریں۔`;
 
     default:
-      return `${SYSTEM}\n\nبراہ کرم مندرجہ ذیل کے بارے میں مدد کریں:\n${JSON.stringify(data)}`;
+      return `براہ کرم مندرجہ ذیل کے بارے میں اردو میں مدد کریں:\n${JSON.stringify(data)}`;
   }
 }
 
-// ── Handler ────────────────────────────────────────────────────────────────────
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -147,65 +124,56 @@ module.exports = async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: "GEMINI_API_KEY not configured" });
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: "GROQ_API_KEY not configured in Vercel" });
 
   const { task, data } = req.body || {};
-
-  // DEBUG: list available models for this key
-  if (task === "debug") {
-    const r = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`
-    );
-    const json = await r.json();
-    const models = (json.models || []).map(m => m.name);
-    return res.status(200).json({ keyStart: apiKey.substring(0,8), models });
-  }
-
   if (!task || !data) return res.status(400).json({ error: "task and data required" });
 
   try {
     const prompt = buildPrompt(task, data);
 
-    // SSE streaming
+    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "llama-3.1-8b-instant",
+        messages: [
+          { role: "system", content: SYSTEM },
+          { role: "user",   content: prompt },
+        ],
+        temperature: 0.7,
+        max_tokens: 2048,
+      }),
+    });
+
+    if (!groqRes.ok) {
+      const errText = await groqRes.text();
+      throw new Error(errText);
+    }
+
+    const json = await groqRes.json();
+    const text = json?.choices?.[0]?.message?.content || "";
+
+    if (!text) throw new Error("Groq ne koi jawab nahi diya");
+
+    // SSE streaming (simulate)
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
 
-    // Direct REST API — gemini-pro generateContent (non-streaming)
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
-        }),
-      }
-    );
-
-    if (!geminiRes.ok) {
-      const errText = await geminiRes.text();
-      throw new Error(errText);
-    }
-
-    const json = await geminiRes.json();
-    const text = json?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-
-    if (!text) throw new Error("Gemini ne koi jawab nahi diya");
-
-    // Send as SSE chunks (simulate streaming)
     const chunkSize = 100;
     for (let i = 0; i < text.length; i += chunkSize) {
       res.write(`data: ${JSON.stringify({ text: text.slice(i, i + chunkSize) })}\n\n`);
     }
-
     res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
     res.end();
 
   } catch (err) {
-    console.error("Gemini error:", err.message);
+    console.error("Groq error:", err.message);
     if (!res.headersSent) {
       res.status(500).json({ error: err.message });
     } else {
