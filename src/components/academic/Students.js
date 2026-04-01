@@ -17,6 +17,40 @@ function Students({students,addData,results=[],fees=[],hifzLogs=[],classes=[],se
   const [uploading,setUploading]=useState(false);
   const [uploadError,setUploadError]=useState(null);
   const [photoPreview,setPhotoPreview]=useState(null);
+  const [csvLoading,setCsvLoading]=useState(false);
+  const [csvResult,setCsvResult]=useState(null);
+  const [showCsvGuide,setShowCsvGuide]=useState(false);
+
+  const HOUSE_MAP={"abu bakr":"abuBakr","abubakr":"abuBakr","abuBakr":"abuBakr","umar":"umar","uthman":"uthman","ali":"ali"};
+  const resolveHouse=(h="")=>HOUSE_MAP[h.toLowerCase().replace(/\s+/g,"")] || HOUSE_MAP[h.toLowerCase()] || "abuBakr";
+
+  const handleStudentsCSV=async(e)=>{
+    const file=e.target.files[0]; if(!file)return;
+    setCsvLoading(true); setCsvResult(null);
+    const text=await file.text();
+    const lines=text.split("\n").map(l=>l.trim()).filter(Boolean);
+    const isHeader=lines[0]?.toLowerCase().includes("name")||lines[0]?.toLowerCase().includes("student");
+    const dataLines=isHeader?lines.slice(1):lines;
+    let ok=0,skip=0,errs=[];
+    for(const line of dataLines){
+      const [name,fatherName,grade,section,house,studentCode,phone,talent,status]=line.split(",").map(s=>s?.trim());
+      if(!name){skip++;continue;}
+      try{
+        await addData("students",{
+          name, fatherName:fatherName||"",
+          grade:grade||"", section:section||"",
+          houseId:resolveHouse(house),
+          studentCode:studentCode||"",
+          phone:phone||"", talent:talent||"",
+          enrollmentStatus:status||"active",
+          canteenBalance:0,
+        });
+        ok++;
+      }catch(err){errs.push(`${name}: ${err.message}`);skip++;}
+    }
+    setCsvResult({ok,skip,errs});
+    setCsvLoading(false); e.target.value="";
+  };
 
   const uploadStudentPhoto=async(event)=>{
     if(!event.target.files||event.target.files.length===0){setUploadError("Please select a photo");return;}
@@ -101,10 +135,40 @@ function Students({students,addData,results=[],fees=[],hifzLogs=[],classes=[],se
           <div style={{fontSize:"1.3rem",fontWeight:800,color:"#f1f5f9"}}>🎓 Students</div>
           <div style={{fontSize:"0.75rem",color:"rgba(255,255,255,0.5)"}}>Total: {students.length} | Active: {activeCount}</div>
         </div>
-        <button onClick={()=>setShow(true)} style={{background:G,color:N,border:"none",borderRadius:"12px",padding:"10px 20px",fontSize:"0.82rem",fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
-          + New Student
-        </button>
+        <div style={{display:"flex",gap:"8px",flexWrap:"wrap",alignItems:"center"}}>
+          <button onClick={()=>setShowCsvGuide(!showCsvGuide)} style={{background:"rgba(99,202,183,0.1)",color:"#63cab7",border:"1px solid rgba(99,202,183,0.3)",borderRadius:"10px",padding:"9px 14px",fontSize:"0.75rem",fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>📋 CSV Format</button>
+          <label style={{display:"inline-flex",alignItems:"center",gap:"6px",background:"rgba(99,202,183,0.12)",color:"#63cab7",border:"1px solid rgba(99,202,183,0.4)",borderRadius:"10px",padding:"9px 16px",fontSize:"0.82rem",fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+            {csvLoading?"⏳ upload...":"📂 CSV Upload"}
+            <input type="file" accept=".csv,.txt" style={{display:"none"}} onChange={handleStudentsCSV} disabled={csvLoading}/>
+          </label>
+          <button onClick={()=>setShow(true)} style={{background:G,color:N,border:"none",borderRadius:"12px",padding:"10px 20px",fontSize:"0.82rem",fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+            + New Student
+          </button>
+        </div>
       </div>
+
+      {/* CSV Format Guide */}
+      {showCsvGuide&&<div style={{background:"rgba(99,202,183,0.06)",border:"1px solid rgba(99,202,183,0.25)",borderRadius:"12px",padding:"14px 18px",marginBottom:"16px",direction:"ltr"}}>
+        <div style={{color:"#63cab7",fontWeight:700,fontSize:"13px",marginBottom:"8px"}}>📄 Students CSV Format (comma separated):</div>
+        <code style={{display:"block",background:"rgba(0,0,0,0.4)",padding:"10px",borderRadius:"8px",color:"#a3e6dc",fontFamily:"monospace",fontSize:"12px",lineHeight:"2",overflowX:"auto"}}>
+          name,fatherName,grade,section,house,studentCode,phone,talent,enrollmentStatus<br/>
+          Ahmad Ali,Irfan Ali,Grade 7,A,Abu Bakr,STU-001,0300-1234567,تقریر,active<br/>
+          Bilal Khan,Aslam Khan,Grade 8,B,Umar,STU-002,0301-2345678,,active<br/>
+          Sara Noor,Noor Khan,Grade 6,A,Uthman,STU-003,,,active
+        </code>
+        <div style={{color:"#64748b",fontSize:"11px",marginTop:"8px"}}>
+          • house: Abu Bakr / Umar / Uthman / Ali &nbsp;•&nbsp; grade: Grade 6 / Grade 7 etc &nbsp;•&nbsp; enrollmentStatus: active / inactive<br/>
+          • header row optional &nbsp;•&nbsp; phone, talent, enrollmentStatus یہ ڈالنا ضروری نہیں
+        </div>
+      </div>}
+
+      {/* CSV Result */}
+      {csvResult&&<div style={{background:csvResult.skip===0?"rgba(74,222,128,0.08)":"rgba(251,146,60,0.08)",border:`1px solid ${csvResult.skip===0?"rgba(74,222,128,0.3)":"rgba(251,146,60,0.3)"}`,borderRadius:"10px",padding:"12px 16px",marginBottom:"16px",display:"flex",alignItems:"center",gap:"12px",flexWrap:"wrap"}}>
+        <span style={{color:"#4ade80",fontWeight:700}}>✅ {csvResult.ok} طلبہ شامل ہوگئے</span>
+        {csvResult.skip>0&&<span style={{color:"#fb923c",fontWeight:700}}>⚠️ {csvResult.skip} ناکام</span>}
+        {csvResult.errs.length>0&&<span style={{color:"#fca5a5",fontSize:"12px"}}>{csvResult.errs.slice(0,3).join(" • ")}</span>}
+        <button onClick={()=>setCsvResult(null)} style={{background:"none",border:"none",color:"#64748b",cursor:"pointer",marginLeft:"auto"}}>✕</button>
+      </div>}
 
       <div style={{display:"flex",gap:"10px",marginBottom:"16px",flexWrap:"wrap"}}>
         <input value={q} onChange={e=>setQ(e.target.value)} placeholder="🔍 Search by name, code, father's name..."

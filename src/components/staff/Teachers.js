@@ -12,6 +12,38 @@ function Teachers({teachers,addData}){
   const [filterGrade,setFilterGrade]=useState("all"); const [filterStatus,setFilterStatus]=useState("all");
   const [f,setF]=useState({name:"",subject:"",grade:"Grade 7",employeeCode:"",houseId:"abuBakr",isActive:true,phone:"",qualification:""});
   const add=async()=>{ if(!f.name)return; await addData("teachers",{...f}); setShow(false); setF({name:"",subject:"",grade:"Grade 7",employeeCode:"",houseId:"abuBakr",isActive:true,phone:"",qualification:""}); };
+  const [csvLoading,setCsvLoading]=useState(false);
+  const [csvResult,setCsvResult]=useState(null);
+  const [showCsvGuide,setShowCsvGuide]=useState(false);
+  const HOUSE_MAP={"abu bakr":"abuBakr","abubakr":"abuBakr","abubakr":"abuBakr","umar":"umar","uthman":"uthman","ali":"ali"};
+  const resolveHouse=(h="")=>HOUSE_MAP[h.toLowerCase().replace(/\s+/g,"")] || HOUSE_MAP[h.toLowerCase()] || "abuBakr";
+  const handleTeachersCSV=async(e)=>{
+    const file=e.target.files[0]; if(!file)return;
+    setCsvLoading(true); setCsvResult(null);
+    const text=await file.text();
+    const lines=text.split("\n").map(l=>l.trim()).filter(Boolean);
+    const isHeader=lines[0]?.toLowerCase().includes("name")||lines[0]?.toLowerCase().includes("teacher");
+    const dataLines=isHeader?lines.slice(1):lines;
+    let ok=0,skip=0,errs=[];
+    for(const line of dataLines){
+      const [name,subject,grade,employeeCode,house,phone,qualification]=line.split(",").map(s=>s?.trim());
+      if(!name){skip++;continue;}
+      try{
+        await addData("teachers",{
+          name, subject:subject||"",
+          grade:grade||"Grade 7",
+          employeeCode:employeeCode||"",
+          houseId:resolveHouse(house),
+          phone:phone||"",
+          qualification:qualification||"",
+          isActive:true,
+        });
+        ok++;
+      }catch(err){errs.push(`${name}: ${err.message}`);skip++;}
+    }
+    setCsvResult({ok,skip,errs});
+    setCsvLoading(false); e.target.value="";
+  };
   const filtered=teachers.filter(t=>{
     const matchQ=!q||t.name?.includes(q)||t.subject?.includes(q)||t.employeeCode?.includes(q);
     const matchG=filterGrade==="all"||t.grade===filterGrade;
@@ -37,11 +69,41 @@ function Teachers({teachers,addData}){
             </div>
           </div>
         </div>
-        <button onClick={()=>setShow(!show)} style={{display:"flex",alignItems:"center",gap:"8px",padding:"11px 22px",borderRadius:"12px",border:`1px solid ${G}`,background:show?`rgba(212,175,55,0.15)`:"transparent",color:G,fontWeight:"700",fontSize:"0.85rem",cursor:"pointer",fontFamily:"'Public Sans',sans-serif",transition:"all 0.2s"}}>
-          <span className="material-symbols-rounded" style={{fontSize:"20px"}}>{show?"close":"person_add"}</span>
-          {show?"Cancel":"New Teacher"}
-        </button>
+        <div style={{display:"flex",gap:"8px",flexWrap:"wrap",alignItems:"center"}}>
+          <button onClick={()=>setShowCsvGuide(!showCsvGuide)} style={{background:"rgba(99,202,183,0.1)",color:"#63cab7",border:"1px solid rgba(99,202,183,0.3)",borderRadius:"10px",padding:"9px 14px",fontSize:"0.75rem",fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>📋 CSV Format</button>
+          <label style={{display:"inline-flex",alignItems:"center",gap:"6px",background:"rgba(99,202,183,0.12)",color:"#63cab7",border:"1px solid rgba(99,202,183,0.4)",borderRadius:"10px",padding:"9px 16px",fontSize:"0.82rem",fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+            {csvLoading?"⏳ upload...":"📂 CSV Upload"}
+            <input type="file" accept=".csv,.txt" style={{display:"none"}} onChange={handleTeachersCSV} disabled={csvLoading}/>
+          </label>
+          <button onClick={()=>setShow(!show)} style={{display:"flex",alignItems:"center",gap:"8px",padding:"11px 22px",borderRadius:"12px",border:`1px solid ${G}`,background:show?`rgba(212,175,55,0.15)`:"transparent",color:G,fontWeight:"700",fontSize:"0.85rem",cursor:"pointer",fontFamily:"'Public Sans',sans-serif",transition:"all 0.2s"}}>
+            <span className="material-symbols-rounded" style={{fontSize:"20px"}}>{show?"close":"person_add"}</span>
+            {show?"Cancel":"New Teacher"}
+          </button>
+        </div>
       </div>
+
+      {/* CSV Format Guide */}
+      {showCsvGuide&&<div style={{background:"rgba(99,202,183,0.06)",border:"1px solid rgba(99,202,183,0.25)",borderRadius:"12px",padding:"14px 18px",marginBottom:"16px",direction:"ltr"}}>
+        <div style={{color:"#63cab7",fontWeight:700,fontSize:"13px",marginBottom:"8px"}}>📄 Teachers CSV Format (comma separated):</div>
+        <code style={{display:"block",background:"rgba(0,0,0,0.4)",padding:"10px",borderRadius:"8px",color:"#a3e6dc",fontFamily:"monospace",fontSize:"12px",lineHeight:"2",overflowX:"auto"}}>
+          name,subject,grade,employeeCode,house,phone,qualification<br/>
+          Muhammad Iqbal,Mathematics,Grade 7,TCH-001,Abu Bakr,0311-1111111,B.Ed<br/>
+          Abdullah Rehman,Quran,all,TCH-002,Umar,0322-2222222,<br/>
+          Fatima Noor,Science,Grade 8,TCH-003,Uthman,,M.Sc
+        </code>
+        <div style={{color:"#64748b",fontSize:"11px",marginTop:"8px"}}>
+          • house: Abu Bakr / Umar / Uthman / Ali &nbsp;•&nbsp; grade: Grade 6 / Grade 7 / all etc<br/>
+          • employeeCode, phone, qualification — optional &nbsp;•&nbsp; header row optional
+        </div>
+      </div>}
+
+      {/* CSV Result */}
+      {csvResult&&<div style={{background:csvResult.skip===0?"rgba(74,222,128,0.08)":"rgba(251,146,60,0.08)",border:`1px solid ${csvResult.skip===0?"rgba(74,222,128,0.3)":"rgba(251,146,60,0.3)"}`,borderRadius:"10px",padding:"12px 16px",marginBottom:"16px",display:"flex",alignItems:"center",gap:"12px",flexWrap:"wrap"}}>
+        <span style={{color:"#4ade80",fontWeight:700}}>✅ {csvResult.ok} اساتذہ شامل ہوگئے</span>
+        {csvResult.skip>0&&<span style={{color:"#fb923c",fontWeight:700}}>⚠️ {csvResult.skip} ناکام</span>}
+        {csvResult.errs.length>0&&<span style={{color:"#fca5a5",fontSize:"12px"}}>{csvResult.errs.slice(0,3).join(" • ")}</span>}
+        <button onClick={()=>setCsvResult(null)} style={{background:"none",border:"none",color:"#64748b",cursor:"pointer",marginLeft:"auto"}}>✕</button>
+      </div>}
 
       {/* ── Stats Bar ── */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:"14px",marginBottom:"28px"}}>
