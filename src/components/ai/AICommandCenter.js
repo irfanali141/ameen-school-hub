@@ -102,9 +102,10 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
       let msg = "";
 
       if (result.action === "add_fee") {
-        await supabase.from("fees").insert({
+        // addData auto-converts camelCase → snake_case to match DB columns
+        await addData("fees", {
           studentId: p.student_id,
-          student_name: p.student_name,
+          studentName: p.student_name,
           amount: parseFloat(p.amount) || 0,
           feeType: p.fee_type || p.feeType || "monthly",
           month: p.month || "",
@@ -115,11 +116,11 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
       }
 
       else if (result.action === "mark_fee_paid") {
-        const { data: fees } = await supabase.from("fees")
-          .select("id").eq("studentId", p.student_id).eq("status","pending").limit(1);
-        if (fees && fees.length > 0) {
-          await supabase.from("fees").update({ status:"paid", paid_date: new Date().toISOString().split("T")[0] })
-            .eq("id", fees[0].id);
+        // DB uses snake_case column names in direct queries
+        const { data: pendingFees } = await supabase.from("fees")
+          .select("id").eq("student_id", p.student_id).eq("status","pending").limit(1);
+        if (pendingFees && pendingFees.length > 0) {
+          await updateData("fees", pendingFees[0].id, { status:"paid", paidDate: new Date().toISOString().split("T")[0] });
           msg = `✅ ${p.student_name} کی فیس paid مارک ہوگئی`;
         } else {
           msg = `⚠️ ${p.student_name} کی کوئی pending فیس نہیں ملی`;
@@ -127,27 +128,27 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
       }
 
       else if (result.action === "add_result") {
-        await supabase.from("results").insert({
-          student_id: p.student_id,
-          student_name: p.student_name,
+        await addData("results", {
+          studentId: p.student_id,
+          studentName: p.student_name,
           subject: p.subject || "عام",
-          exam_name: p.exam_name || "ٹیسٹ",
+          examName: p.exam_name || p.examName || "ٹیسٹ",
           marks: parseFloat(p.marks) || 0,
-          total_marks: parseFloat(p.total_marks) || 100,
-          grade: p.result_grade || "",
-          exam_date: new Date().toISOString().split("T")[0],
+          totalMarks: parseFloat(p.total_marks) || 100,
+          grade: p.result_grade || p.grade || "",
+          examDate: new Date().toISOString().split("T")[0],
         });
         msg = `✅ ${p.student_name} کا نتیجہ (${p.marks}/${p.total_marks}) شامل ہوگیا`;
       }
 
       else if (result.action === "add_marks") {
-        await supabase.from("marks_entries").insert({
-          student_id: p.student_id,
-          student_name: p.student_name,
+        await addData("marks_entries", {
+          studentId: p.student_id,
+          studentName: p.student_name,
           subject: p.subject || "",
           marks: parseFloat(p.marks) || 0,
-          total_marks: parseFloat(p.total_marks) || 100,
-          exam_type: p.exam_type || "ٹیسٹ",
+          totalMarks: parseFloat(p.total_marks) || 100,
+          examType: p.exam_type || p.examType || "ٹیسٹ",
           grade: p.grade || "",
           date: new Date().toISOString().split("T")[0],
         });
@@ -160,9 +161,9 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
           h.name?.toLowerCase().includes((p.house_name||"").toLowerCase())
         );
         if (house) {
-          await supabase.from("houses").update({
+          await updateData("houses", house.id, {
             points: (house.points || 0) + (parseFloat(p.points) || 0)
-          }).eq("id", house.id);
+          });
           msg = `✅ ${p.house_name || house.name} کو ${p.points} پوائنٹ دیے گئے`;
         } else {
           msg = `⚠️ گھر نہیں ملا: ${p.house_name}`;
@@ -170,9 +171,9 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
       }
 
       else if (result.action === "add_attendance") {
-        await supabase.from("attendance").insert({
-          student_id: p.student_id,
-          student_name: p.student_name,
+        await addData("attendance", {
+          studentId: p.student_id,
+          studentName: p.student_name,
           status: p.status || "present",
           date: p.date || new Date().toISOString().split("T")[0],
           grade: p.grade || "",
@@ -186,7 +187,7 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
         if (p.canteenBalance !== undefined) updates.canteenBalance = p.canteenBalance;
         if (p.talent) updates.talent = p.talent;
         if (p.section) updates.section = p.section;
-        await supabase.from("students").update(updates).eq("id", p.student_id);
+        await updateData("students", p.student_id, updates);
         msg = `✅ ${p.student_name} کی معلومات update ہوگئی`;
       }
 
