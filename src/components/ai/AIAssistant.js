@@ -12,16 +12,18 @@ const SUBJECTS = [
 ];
 
 const TABS = [
-  { id:"lesson_plan",        icon:"📅", label:"سبق منصوبہ",    color:"#60a5fa",
-    desc:"AI کی مدد سے مکمل سبق منصوبہ بنائیں" },
-  { id:"mistake_analysis",   icon:"📖", label:"حفظ تجزیہ",     color:"#f59e0b",
-    desc:"حفظ ٹریکر سے غلطیاں لائیں اور AI تجزیہ کریں" },
-  { id:"parent_report",      icon:"👪", label:"والدین رپورٹ",   color:"#4ade80",
-    desc:"والدین کے لیے پروفیشنل اردو رپورٹ" },
-  { id:"homework_suggestion", icon:"📝",label:"ہوم ورک تجاویز", color:"#a78bfa",
-    desc:"مضمون کے مطابق تخلیقی ہوم ورک آئیڈیاز" },
-  { id:"class_summary",      icon:"📊", label:"جماعت خلاصہ",   color:"#38bdf8",
-    desc:"جماعت کی مجموعی صورتحال اور حکمت عملی" },
+  { id:"lesson_plan",        icon:"📅", label:"سبق منصوبہ",    color:"#60a5fa",  desc:"AI کی مدد سے مکمل سبق منصوبہ بنائیں" },
+  { id:"mistake_analysis",   icon:"📖", label:"حفظ تجزیہ",     color:"#f59e0b",  desc:"حفظ ٹریکر سے غلطیاں لائیں اور AI تجزیہ کریں" },
+  { id:"parent_report",      icon:"👪", label:"والدین رپورٹ",   color:"#4ade80",  desc:"والدین کے لیے پروفیشنل اردو رپورٹ" },
+  { id:"homework_suggestion",icon:"📝", label:"ہوم ورک تجاویز", color:"#a78bfa",  desc:"مضمون کے مطابق تخلیقی ہوم ورک آئیڈیاز" },
+  { id:"class_summary",      icon:"📊", label:"جماعت خلاصہ",   color:"#38bdf8",  desc:"جماعت کی مجموعی صورتحال اور حکمت عملی" },
+  { id:"behavior_report",    icon:"🏥", label:"رویہ رپورٹ",     color:"#f87171",  desc:"طالب علم کے رویے کا تجزیہ اور تربیتی منصوبہ" },
+  { id:"exam_questions",     icon:"📋", label:"امتحانی سوالات", color:"#fb923c",  desc:"کسی بھی مضمون کے امتحانی سوالات تیار کریں" },
+  { id:"tarbiyah_plan",      icon:"🌟", label:"تربیت پلان",     color:"#a3e635",  desc:"ماہانہ تربیتی منصوبہ اسلامی اصولوں کے مطابق" },
+  { id:"parent_message",     icon:"💬", label:"والدین پیغام",   color:"#34d399",  desc:"WhatsApp/SMS کے لیے مختصر والدین پیغام" },
+  { id:"house_speech",       icon:"🏆", label:"تقریر",          color:"#c084fc",  desc:"کسی بھی موضوع پر عمدہ اردو تقریر" },
+  { id:"certificate_text",   icon:"📜", label:"سرٹیفکیٹ",       color:"#fbbf24",  desc:"انعامی سرٹیفکیٹ کا رسمی متن" },
+  { id:"newsletter",         icon:"📆", label:"نیوز لیٹر",      color:"#22d3ee",  desc:"ماہانہ اسکول نیوز لیٹر اردو میں" },
 ];
 
 const inp = {
@@ -230,6 +232,13 @@ function TaskForm({ taskId, students, onGenerate }){
   const [pr, setPr] = useState({ studentName:"", grade:"", attendance:"", avgResult:"", tarbiyahNote:"", achievement:"", improvement:"" });
   const [hw, setHw] = useState({ subject:"", grade:"", topic:"", difficulty:"درمیانہ" });
   const [cs, setCs] = useState({ grade:"", subject:"", avgMarks:"", weakCount:"", hwMissing:"" });
+  const [br, setBr] = useState({ studentName:"", grade:"", issue:"", frequency:"کبھی کبھار", positive:"" });
+  const [eq, setEq] = useState({ subject:"", grade:"", topic:"", count:"10", qtype:"مختلف اقسام" });
+  const [tp, setTp] = useState({ studentName:"", grade:"", goal:"", duration:"ایک ماہ" });
+  const [pm, setPm] = useState({ studentName:"", msgType:"عام اطلاع", topic:"", tone:"گرمجوش" });
+  const [hs, setHs] = useState({ topic:"", grade:"", duration:"3", occasion:"عام اسمبلی" });
+  const [ct, setCt] = useState({ studentName:"", achievement:"", occasion:"سالانہ تقریبِ انعامات", date:"2025" });
+  const [nl, setNl] = useState({ month:"", events:"", achievements:"", upcoming:"" });
 
   if(taskId==="mistake_analysis") return (
     <HifzForm students={students} onGenerate={onGenerate}/>
@@ -363,6 +372,192 @@ function TaskForm({ taskId, students, onGenerate }){
         </div>
       </div>
       <GenBtn disabled={!cs.grade||!cs.subject} onClick={()=>onGenerate("class_summary",cs)}/>
+    </div>
+  );
+
+  if(taskId==="behavior_report") return (
+    <div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"14px"}}>
+        <div><label style={lbl}>طالب علم کا نام *</label>
+          <input value={br.studentName} onChange={e=>setBr(f=>({...f,studentName:e.target.value}))} placeholder="نام" style={inp}/>
+        </div>
+        <div><label style={lbl}>جماعت *</label>
+          <select value={br.grade} onChange={e=>setBr(f=>({...f,grade:e.target.value}))} style={{...inp,appearance:"none"}}>
+            <option value="">— منتخب کریں —</option>
+            {grades.map(g=><option key={g} value={g}>{g}</option>)}
+          </select>
+        </div>
+      </div>
+      <div style={row}><label style={lbl}>مسئلہ / رویہ *</label>
+        <input value={br.issue} onChange={e=>setBr(f=>({...f,issue:e.target.value}))} placeholder="مثال: کلاس میں شور، ہوم ورک نہ کرنا..." style={inp}/>
+      </div>
+      <div style={row}><label style={lbl}>تکرار</label>
+        <div style={{display:"flex",gap:"7px"}}>
+          {["روزانہ","ہفتہ وار","کبھی کبھار"].map(d=>(
+            <button key={d} onClick={()=>setBr(f=>({...f,frequency:d}))}
+              style={{flex:1,padding:"8px",borderRadius:"8px",border:"none",cursor:"pointer",fontFamily:"inherit",fontSize:"0.72rem",fontWeight:"700",
+                background:br.frequency===d?"rgba(248,113,113,0.2)":"rgba(255,255,255,0.04)",
+                color:br.frequency===d?"#f87171":"rgba(255,255,255,0.4)",
+                border:`1px solid ${br.frequency===d?"rgba(248,113,113,0.35)":"rgba(255,255,255,0.07)"}`}}>
+              {d}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div style={row}><label style={lbl}>مثبت پہلو (اختیاری)</label>
+        <input value={br.positive} onChange={e=>setBr(f=>({...f,positive:e.target.value}))} placeholder="مثال: ذہین، مددگار..." style={inp}/>
+      </div>
+      <GenBtn disabled={!br.studentName||!br.grade||!br.issue} onClick={()=>onGenerate("behavior_report",br)}/>
+    </div>
+  );
+
+  if(taskId==="exam_questions") return (
+    <div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"14px"}}>
+        <div><label style={lbl}>مضمون *</label>
+          <select value={eq.subject} onChange={e=>setEq(f=>({...f,subject:e.target.value}))} style={{...inp,appearance:"none"}}>
+            <option value="">— منتخب کریں —</option>
+            {SUBJECTS.map(s=><option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <div><label style={lbl}>جماعت *</label>
+          <select value={eq.grade} onChange={e=>setEq(f=>({...f,grade:e.target.value}))} style={{...inp,appearance:"none"}}>
+            <option value="">— منتخب کریں —</option>
+            {grades.map(g=><option key={g} value={g}>{g}</option>)}
+          </select>
+        </div>
+      </div>
+      <div style={row}><label style={lbl}>موضوع *</label>
+        <input value={eq.topic} onChange={e=>setEq(f=>({...f,topic:e.target.value}))} placeholder="مثال: نماز کے ارکان، کسر..." style={inp}/>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"14px"}}>
+        <div><label style={lbl}>سوالات کی تعداد</label>
+          <input type="number" value={eq.count} onChange={e=>setEq(f=>({...f,count:e.target.value}))} style={{...inp,direction:"ltr"}} min="5" max="30"/>
+        </div>
+        <div><label style={lbl}>قسم</label>
+          <select value={eq.qtype} onChange={e=>setEq(f=>({...f,qtype:e.target.value}))} style={{...inp,appearance:"none"}}>
+            {["مختلف اقسام","مختصر جوابی","طویل جوابی","MCQ","خالی جگہ"].map(q=><option key={q} value={q}>{q}</option>)}
+          </select>
+        </div>
+      </div>
+      <GenBtn disabled={!eq.subject||!eq.grade||!eq.topic} onClick={()=>onGenerate("exam_questions",eq)}/>
+    </div>
+  );
+
+  if(taskId==="tarbiyah_plan") return (
+    <div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"14px"}}>
+        <div><label style={lbl}>طالب علم (اختیاری)</label>
+          <input value={tp.studentName} onChange={e=>setTp(f=>({...f,studentName:e.target.value}))} placeholder="نام یا 'پوری جماعت'" style={inp}/>
+        </div>
+        <div><label style={lbl}>جماعت *</label>
+          <select value={tp.grade} onChange={e=>setTp(f=>({...f,grade:e.target.value}))} style={{...inp,appearance:"none"}}>
+            <option value="">— منتخب کریں —</option>
+            {grades.map(g=><option key={g} value={g}>{g}</option>)}
+          </select>
+        </div>
+      </div>
+      <div style={row}><label style={lbl}>تربیتی ہدف *</label>
+        <input value={tp.goal} onChange={e=>setTp(f=>({...f,goal:e.target.value}))} placeholder="مثال: نماز کی پابندی، سچ بولنا، ادب..." style={inp}/>
+      </div>
+      <div style={row}><label style={lbl}>مدت</label>
+        <div style={{display:"flex",gap:"7px"}}>
+          {["ایک ہفتہ","ایک ماہ","ایک سہ ماہی"].map(d=>(
+            <button key={d} onClick={()=>setTp(f=>({...f,duration:d}))}
+              style={{flex:1,padding:"8px",borderRadius:"8px",border:"none",cursor:"pointer",fontFamily:"inherit",fontSize:"0.68rem",fontWeight:"700",
+                background:tp.duration===d?"rgba(163,230,53,0.2)":"rgba(255,255,255,0.04)",
+                color:tp.duration===d?"#a3e635":"rgba(255,255,255,0.4)",
+                border:`1px solid ${tp.duration===d?"rgba(163,230,53,0.35)":"rgba(255,255,255,0.07)"}`}}>
+              {d}
+            </button>
+          ))}
+        </div>
+      </div>
+      <GenBtn disabled={!tp.grade||!tp.goal} onClick={()=>onGenerate("tarbiyah_plan",tp)}/>
+    </div>
+  );
+
+  if(taskId==="parent_message") return (
+    <div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"14px"}}>
+        <div><label style={lbl}>طالب علم کا نام *</label>
+          <input value={pm.studentName} onChange={e=>setPm(f=>({...f,studentName:e.target.value}))} placeholder="نام" style={inp}/>
+        </div>
+        <div><label style={lbl}>پیغام کی نوعیت</label>
+          <select value={pm.msgType} onChange={e=>setPm(f=>({...f,msgType:e.target.value}))} style={{...inp,appearance:"none"}}>
+            {["عام اطلاع","فیس یاددہانی","غیر حاضری","تعریفی پیغام","میٹنگ دعوت","امتحان اطلاع"].map(m=><option key={m} value={m}>{m}</option>)}
+          </select>
+        </div>
+      </div>
+      <div style={row}><label style={lbl}>پیغام کا موضوع *</label>
+        <input value={pm.topic} onChange={e=>setPm(f=>({...f,topic:e.target.value}))} placeholder="مثال: کل امتحان ہے، فیس جمع کرائیں..." style={inp}/>
+      </div>
+      <GenBtn disabled={!pm.studentName||!pm.topic} onClick={()=>onGenerate("parent_message",pm)}/>
+    </div>
+  );
+
+  if(taskId==="house_speech") return (
+    <div>
+      <div style={row}><label style={lbl}>تقریر کا موضوع *</label>
+        <input value={hs.topic} onChange={e=>setHs(f=>({...f,topic:e.target.value}))} placeholder="مثال: یومِ آزادی، ایمانداری، وقت کی اہمیت..." style={inp}/>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"10px",marginBottom:"14px"}}>
+        <div><label style={lbl}>جماعت/عمر</label>
+          <select value={hs.grade} onChange={e=>setHs(f=>({...f,grade:e.target.value}))} style={{...inp,appearance:"none"}}>
+            <option value="">عام</option>
+            {grades.map(g=><option key={g} value={g}>{g}</option>)}
+          </select>
+        </div>
+        <div><label style={lbl}>مدت (منٹ)</label>
+          <input type="number" value={hs.duration} onChange={e=>setHs(f=>({...f,duration:e.target.value}))} style={{...inp,direction:"ltr"}} min="1" max="15"/>
+        </div>
+        <div><label style={lbl}>مناسبت</label>
+          <select value={hs.occasion} onChange={e=>setHs(f=>({...f,occasion:e.target.value}))} style={{...inp,appearance:"none"}}>
+            {["عام اسمبلی","یومِ آزادی","عیدالفطر","میلادالنبی ﷺ","سالانہ جلسہ","دیگر"].map(o=><option key={o} value={o}>{o}</option>)}
+          </select>
+        </div>
+      </div>
+      <GenBtn disabled={!hs.topic} onClick={()=>onGenerate("house_speech",hs)}/>
+    </div>
+  );
+
+  if(taskId==="certificate_text") return (
+    <div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"14px"}}>
+        <div><label style={lbl}>طالب علم کا نام *</label>
+          <input value={ct.studentName} onChange={e=>setCt(f=>({...f,studentName:e.target.value}))} placeholder="نام" style={inp}/>
+        </div>
+        <div><label style={lbl}>کامیابی *</label>
+          <input value={ct.achievement} onChange={e=>setCt(f=>({...f,achievement:e.target.value}))} placeholder="مثال: اول انعام، حفظ مکمل..." style={inp}/>
+        </div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"14px"}}>
+        <div><label style={lbl}>مناسبت</label>
+          <input value={ct.occasion} onChange={e=>setCt(f=>({...f,occasion:e.target.value}))} placeholder="سالانہ تقریبِ انعامات" style={inp}/>
+        </div>
+        <div><label style={lbl}>سال</label>
+          <input value={ct.date} onChange={e=>setCt(f=>({...f,date:e.target.value}))} placeholder="2025" style={{...inp,direction:"ltr"}}/>
+        </div>
+      </div>
+      <GenBtn disabled={!ct.studentName||!ct.achievement} onClick={()=>onGenerate("certificate_text",ct)}/>
+    </div>
+  );
+
+  if(taskId==="newsletter") return (
+    <div>
+      <div style={row}><label style={lbl}>مہینہ *</label>
+        <input value={nl.month} onChange={e=>setNl(f=>({...f,month:e.target.value}))} placeholder="مثال: جنوری 2025" style={inp}/>
+      </div>
+      <div style={row}><label style={lbl}>اس ماہ کے اہم واقعات</label>
+        <input value={nl.events} onChange={e=>setNl(f=>({...f,events:e.target.value}))} placeholder="مثال: سائنس فیئر، اسپورٹس ڈے..." style={inp}/>
+      </div>
+      <div style={row}><label style={lbl}>کامیابیاں</label>
+        <input value={nl.achievements} onChange={e=>setNl(f=>({...f,achievements:e.target.value}))} placeholder="مثال: احمد نے ضلعی مقابلہ جیتا..." style={inp}/>
+      </div>
+      <div style={row}><label style={lbl}>آئندہ ماہ کے پروگرام</label>
+        <input value={nl.upcoming} onChange={e=>setNl(f=>({...f,upcoming:e.target.value}))} placeholder="مثال: امتحانات، والدین کا دن..." style={inp}/>
+      </div>
+      <GenBtn disabled={!nl.month} onClick={()=>onGenerate("newsletter",nl)}/>
     </div>
   );
 
