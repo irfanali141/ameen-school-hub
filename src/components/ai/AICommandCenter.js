@@ -103,20 +103,20 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
 
       if (result.action === "add_fee") {
         await supabase.from("fees").insert({
-          student_id: p.student_id,
+          studentId: p.student_id,
           student_name: p.student_name,
           amount: parseFloat(p.amount) || 0,
-          fee_type: p.fee_type || "ماہانہ فیس",
+          feeType: p.fee_type || p.feeType || "monthly",
           month: p.month || "",
           status: "pending",
-          due_date: p.due_date || new Date().toISOString().split("T")[0],
+          dueDate: p.due_date || p.dueDate || new Date().toISOString().split("T")[0],
         });
         msg = `✅ ${p.student_name} کی ${p.amount} روپے فیس شامل ہوگئی`;
       }
 
       else if (result.action === "mark_fee_paid") {
         const { data: fees } = await supabase.from("fees")
-          .select("id").eq("student_id", p.student_id).eq("status","pending").limit(1);
+          .select("id").eq("studentId", p.student_id).eq("status","pending").limit(1);
         if (fees && fees.length > 0) {
           await supabase.from("fees").update({ status:"paid", paid_date: new Date().toISOString().split("T")[0] })
             .eq("id", fees[0].id);
