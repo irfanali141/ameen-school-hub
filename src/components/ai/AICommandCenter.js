@@ -102,15 +102,17 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
       let msg = "";
 
       if (result.action === "add_fee") {
-        // addData auto-converts camelCase → snake_case to match DB columns
+        // Use exact DB column names: student_id, type, month(int), year, due_date
+        const feeMonth = p.month ? parseInt(p.month) : new Date().getMonth() + 1;
         await addData("fees", {
-          studentId: p.student_id,
-          studentName: p.student_name,
+          student_id: p.student_id,
+          student_name: p.student_name,
           amount: parseFloat(p.amount) || 0,
-          feeType: p.fee_type || p.feeType || "monthly",
-          month: p.month || "",
+          type: p.fee_type || p.type || "monthly",
+          month: isNaN(feeMonth) ? new Date().getMonth() + 1 : feeMonth,
+          year: new Date().getFullYear(),
           status: "pending",
-          dueDate: p.due_date || p.dueDate || new Date().toISOString().split("T")[0],
+          due_date: p.due_date || p.dueDate || null,
         });
         msg = `✅ ${p.student_name} کی ${p.amount} روپے فیس شامل ہوگئی`;
       }

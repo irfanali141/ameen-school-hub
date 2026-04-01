@@ -40,11 +40,19 @@ function FeeManagement({students,addData,updateData,fees:feesProp=[]}){
   
   const add=async()=>{
     if(!f.studentId||!f.amount)return;
-    const year=new Date().getFullYear();
-    const yearFees=fees.filter(fe=>fe.receipt_no?.startsWith(`AII-${year}-`));
-    const maxNum=yearFees.reduce((mx,fe)=>{const n=parseInt(fe.receipt_no?.split("-")[2]||"0",10);return Math.max(mx,n);},0);
-    const receipt_no=`AII-${year}-${String(maxNum+1).padStart(4,"0")}`;
-    await addData("fees",{...f,amount:Number(f.amount),receipt_no});
+    const st=students.find(s=>s.id===f.studentId);
+    // Parse month string "YYYY-MM" → integer month and year
+    const [yr,mo]=f.month?f.month.split("-").map(Number):[new Date().getFullYear(),new Date().getMonth()+1];
+    await addData("fees",{
+      student_id: f.studentId,
+      student_name: st?.name||"",
+      amount: Number(f.amount),
+      type: f.feeType,
+      month: mo||null,
+      year: yr||new Date().getFullYear(),
+      status: f.status,
+      due_date: f.dueDate||null,
+    });
     setShow(false);setF({studentId:"",feeType:"monthly",amount:3000,month:"",dueDate:"",status:"pending",notes:""});
   };
   const markPaid=async(id)=>{ try{ await updateData("fees",id,{status:"paid",paid_date:new Date().toISOString().slice(0,10)}); setFees(prev=>prev.map(f=>f.id===id?{...f,status:"paid",paid_date:new Date().toISOString().slice(0,10)}:f)); }catch(e){ console.error("markPaid error:",e.message); } };
@@ -131,7 +139,7 @@ function FeeManagement({students,addData,updateData,fees:feesProp=[]}){
           <tr key={fee.id} style={{borderBottom:"1px solid rgba(255,255,255,0.05)",background:i%2===0?"rgba(255,255,255,0.02)":"transparent"}}>
             <td style={{padding:"11px 16px",fontFamily:"'Courier New',monospace",fontWeight:"700",color:G,fontSize:"0.72rem",letterSpacing:"0.04em",direction:"ltr",whiteSpace:"nowrap"}}>{fee.receipt_no||"—"}</td>
             <td style={{padding:"11px 16px",fontWeight:"700",color:"#f1f5f9",fontSize:"0.82rem"}}>{st?.name||"—"}</td>
-            <td style={{padding:"11px 16px",color:"rgba(241,245,249,0.6)",fontSize:"0.75rem"}}>{feeTypes[fee.feeType]||fee.feeType}</td>
+            <td style={{padding:"11px 16px",color:"rgba(241,245,249,0.6)",fontSize:"0.75rem"}}>{feeTypes[fee.type||fee.feeType]||fee.type||fee.feeType}</td>
             <td style={{padding:"11px 16px",fontWeight:"800",color:G,fontSize:"0.85rem",direction:"ltr"}}>Rs. {(fee.amount||0).toLocaleString()}</td>
             <td style={{padding:"11px 16px",direction:"ltr",fontFamily:"monospace",color:"rgba(241,245,249,0.45)",fontSize:"0.68rem"}}>{fee.month||"—"}</td>
             <td style={{padding:"11px 16px"}}><span style={{padding:"3px 10px",borderRadius:"20px",fontSize:"0.62rem",fontWeight:"700",background:paid?"rgba(74,222,128,0.15)":"rgba(251,146,60,0.15)",color:paid?"#4ade80":"#fb923c",border:`1px solid ${paid?"rgba(74,222,128,0.3)":"rgba(251,146,60,0.3)"}`}}>{paid?"ادا":"باقی"}</span></td>
