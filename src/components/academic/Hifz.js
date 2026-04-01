@@ -30,6 +30,36 @@ function Hifz({students,addData,hifzLogs:logsProp=[]}){
   const [ayahErr,setAyahErr]=useState("");
   const [pendingOpen,setPendingOpen]=useState(true);
   const [f,setF]=useState({studentId:"",surah:"",ayahs:"",rating:3,type:"sabaq",notes:"",date:TODAY,manzilPara:""});
+  const [csvLoading,setCsvLoading]=useState(false);
+  const [csvResult,setCsvResult]=useState(null);
+  const [showCsvGuide,setShowCsvGuide]=useState(false);
+
+  const handleHifzCSV=async(e)=>{
+    const file=e.target.files[0]; if(!file)return;
+    setCsvLoading(true); setCsvResult(null);
+    const text=await file.text();
+    const lines=text.split("\n").map(l=>l.trim()).filter(Boolean);
+    const isHeader=lines[0]?.toLowerCase().includes("name")||lines[0]?.toLowerCase().includes("student")||lines[0]?.toLowerCase().includes("surah");
+    const dataLines=isHeader?lines.slice(1):lines;
+    let ok=0,skip=0,errs=[];
+    for(const line of dataLines){
+      const [nameOrCode,surah,ayahs,type,ratingStr,date]=line.split(",").map(s=>s?.trim());
+      if(!nameOrCode||!surah){skip++;continue;}
+      const st=students.find(s=>s.name?.toLowerCase().includes(nameOrCode.toLowerCase())||(s.studentCode||s.student_code)?.toLowerCase()===nameOrCode.toLowerCase());
+      if(!st){errs.push(`نہیں ملا: ${nameOrCode}`);skip++;continue;}
+      const validType=["sabaq","sabqi","manzil"].includes(type)?type:"sabaq";
+      try{
+        await addData("hifz_logs",{
+          studentId:st.id, surah, ayahs:ayahs||"",
+          type:validType, rating:parseInt(ratingStr)||3,
+          date:date||TODAY, notes:"",
+        });
+        ok++;
+      }catch(err){errs.push(`${st.name}: ${err.message}`);skip++;}
+    }
+    setCsvResult({ok,skip,errs});
+    setCsvLoading(false); e.target.value="";
+  };
 
   // ── Core Helpers ──────────────────────────────────────────────────────────
   const maxAyat=(s)=>SURAH_AYATS[s]||null;
@@ -447,8 +477,30 @@ function Hifz({students,addData,hifzLogs:logsProp=[]}){
           <button onClick={()=>setShow(!show)} style={{display:"flex",alignItems:"center",gap:"8px",padding:"11px 22px",borderRadius:"12px",border:`1px solid ${G}`,background:show?"rgba(212,175,55,0.15)":"transparent",color:G,fontWeight:"700",fontSize:"0.85rem",cursor:"pointer",fontFamily:"'Public Sans',sans-serif"}}>
             <span className="material-symbols-rounded" style={{fontSize:"20px"}}>{show?"close":"add_circle"}</span>{show?"Cancel":"New Entry"}
           </button>
+          <button onClick={()=>setShowCsvGuide(!showCsvGuide)} style={{background:"rgba(99,202,183,0.1)",color:"#63cab7",border:"1px solid rgba(99,202,183,0.3)",borderRadius:"10px",padding:"9px 14px",fontSize:"0.75rem",fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>📋 CSV</button>
+          <label style={{display:"inline-flex",alignItems:"center",gap:"6px",background:"rgba(99,202,183,0.12)",color:"#63cab7",border:"1px solid rgba(99,202,183,0.4)",borderRadius:"10px",padding:"9px 16px",fontSize:"0.82rem",fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+            {csvLoading?"⏳":"📂"} CSV Upload
+            <input type="file" accept=".csv,.txt" style={{display:"none"}} onChange={handleHifzCSV} disabled={csvLoading}/>
+          </label>
         </div>
       </div>
+
+      {showCsvGuide&&<div style={{background:"rgba(99,202,183,0.06)",border:"1px solid rgba(99,202,183,0.25)",borderRadius:"12px",padding:"14px 18px",marginBottom:"16px",direction:"ltr"}}>
+        <div style={{color:"#63cab7",fontWeight:700,fontSize:"13px",marginBottom:"8px"}}>📄 Hifz Logs CSV Format:</div>
+        <code style={{display:"block",background:"rgba(0,0,0,0.4)",padding:"10px",borderRadius:"8px",color:"#a3e6dc",fontFamily:"monospace",fontSize:"12px",lineHeight:"2",overflowX:"auto"}}>
+          studentName,surah,ayahs,type,rating,date<br/>
+          Ahmad Ali,سورة البقرة,1-10,sabaq,4,2024-04-01<br/>
+          Bilal Khan,سورة البقرة,1-10,sabqi,3,2024-04-01<br/>
+          Sara Noor,سورة آل عمران,50-60,manzil,5,2024-04-01
+        </code>
+        <div style={{color:"#64748b",fontSize:"11px",marginTop:"8px"}}>• type: sabaq / sabqi / manzil &nbsp;•&nbsp; rating: 1-5 &nbsp;•&nbsp; date optional &nbsp;•&nbsp; header row optional</div>
+      </div>}
+      {csvResult&&<div style={{background:csvResult.skip===0?"rgba(74,222,128,0.08)":"rgba(251,146,60,0.08)",border:`1px solid ${csvResult.skip===0?"rgba(74,222,128,0.3)":"rgba(251,146,60,0.3)"}`,borderRadius:"10px",padding:"12px 16px",marginBottom:"16px",display:"flex",alignItems:"center",gap:"12px",flexWrap:"wrap"}}>
+        <span style={{color:"#4ade80",fontWeight:700}}>✅ {csvResult.ok} حفظ records شامل ہوگئے</span>
+        {csvResult.skip>0&&<span style={{color:"#fb923c",fontWeight:700}}>⚠️ {csvResult.skip} ناکام</span>}
+        {csvResult.errs.length>0&&<span style={{color:"#fca5a5",fontSize:"12px"}}>{csvResult.errs.slice(0,3).join(" • ")}</span>}
+        <button onClick={()=>setCsvResult(null)} style={{background:"none",border:"none",color:"#64748b",cursor:"pointer",marginLeft:"auto"}}>✕</button>
+      </div>}
 
       {/* Today's summary bar */}
       <div style={{...glass,padding:"12px 20px",marginBottom:"16px",display:"flex",gap:"20px",flexWrap:"wrap",alignItems:"center",borderColor:"rgba(212,175,55,0.2)"}}>

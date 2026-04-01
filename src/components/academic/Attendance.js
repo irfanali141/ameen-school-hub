@@ -38,6 +38,34 @@ function Attendance({students,addData,teachers}){
   const getTeacherReport=(tid)=>{ const recs=tRecords.filter(r=>r.teacherId===tid); const present=recs.filter(r=>r.status==="present").length; const absent=recs.filter(r=>r.status==="absent").length; const late=recs.filter(r=>r.status==="late").length; const leave=recs.filter(r=>r.status==="leave").length; const total=recs.length; const pct=total>0?Math.round((present/total)*100):0; return {present,absent,late,leave,total,pct}; };
   const getTeacherLateHistory=(tid)=>tRecords.filter(r=>r.teacherId===tid&&r.status==="late").slice(0,10);
 
+  /* ── CSV Bulk Upload ── */
+  const [csvLoading,setCsvLoading]=useState(false);
+  const [csvResult,setCsvResult]=useState(null);
+  const [showCsvGuide,setShowCsvGuide]=useState(false);
+
+  const handleAttendanceCSV=async(e)=>{
+    const file=e.target.files[0]; if(!file)return;
+    setCsvLoading(true); setCsvResult(null);
+    const text=await file.text();
+    const lines=text.split("\n").map(l=>l.trim()).filter(Boolean);
+    const isHeader=lines[0]?.toLowerCase().includes("name")||lines[0]?.toLowerCase().includes("student")||lines[0]?.toLowerCase().includes("date");
+    const dataLines=isHeader?lines.slice(1):lines;
+    let ok=0,skip=0,errs=[];
+    for(const line of dataLines){
+      const [nameOrCode,date,status]=line.split(",").map(s=>s?.trim());
+      if(!nameOrCode||!date){skip++;continue;}
+      const st=students.find(s=>s.name?.toLowerCase().includes(nameOrCode.toLowerCase())||(s.studentCode||s.student_code)?.toLowerCase()===nameOrCode.toLowerCase());
+      if(!st){errs.push(`نہیں ملا: ${nameOrCode}`);skip++;continue;}
+      const validStatus=["present","absent","late"].includes(status)?status:"present";
+      try{
+        await addData("attendance",{studentId:st.id,studentName:st.name,date,status:validStatus,houseId:st.houseId,grade:st.grade,type:"student"});
+        ok++;
+      }catch(err){errs.push(`${st.name}: ${err.message}`);skip++;}
+    }
+    setCsvResult({ok,skip,errs});
+    setCsvLoading(false); e.target.value="";
+  };
+
   /* ── Design tokens (same as Dashboard) ── */
   const G="#d4af37";
   const glass={background:"rgba(255,255,255,0.07)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",border:"1px solid rgba(212,175,55,0.18)",borderRadius:"20px"};
@@ -91,15 +119,43 @@ function Attendance({students,addData,teachers}){
             <div style={{color:"white",fontSize:"1.6rem",fontWeight:"800",lineHeight:1.1}}>✅ Attendance</div>
             <div style={{color:"rgba(255,255,255,0.4)",fontSize:"0.68rem",marginTop:"4px"}}>{new Date(activeDate).toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}</div>
           </div>
-          {/* Main tab switcher */}
-          <div style={{display:"flex",gap:"8px",background:"rgba(255,255,255,0.05)",padding:"5px",borderRadius:"14px",border:"1px solid rgba(255,255,255,0.08)"}}>
-            {[["students","school","Students"],["teachers","supervisor_account","Teachers"]].map(([t,icon,l])=>(
-              <button key={t} onClick={()=>setMainTab(t)} style={{padding:"10px 20px",borderRadius:"10px",border:"none",cursor:"pointer",fontSize:"0.72rem",fontWeight:mainTab===t?"700":"500",background:mainTab===t?`linear-gradient(135deg,${G},#b8960a)`:"transparent",color:mainTab===t?"#0f172a":"rgba(255,255,255,0.5)",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"6px",transition:"all 0.2s ease"}}>
-                <span className="material-symbols-rounded" style={{fontSize:"16px"}}>{icon}</span>{l}
-              </button>
-            ))}
+          <div style={{display:"flex",flexDirection:"column",gap:"10px",alignItems:"flex-end"}}>
+            {/* Main tab switcher */}
+            <div style={{display:"flex",gap:"8px",background:"rgba(255,255,255,0.05)",padding:"5px",borderRadius:"14px",border:"1px solid rgba(255,255,255,0.08)"}}>
+              {[["students","school","Students"],["teachers","supervisor_account","Teachers"]].map(([t,icon,l])=>(
+                <button key={t} onClick={()=>setMainTab(t)} style={{padding:"10px 20px",borderRadius:"10px",border:"none",cursor:"pointer",fontSize:"0.72rem",fontWeight:mainTab===t?"700":"500",background:mainTab===t?`linear-gradient(135deg,${G},#b8960a)`:"transparent",color:mainTab===t?"#0f172a":"rgba(255,255,255,0.5)",fontFamily:"inherit",display:"flex",alignItems:"center",gap:"6px",transition:"all 0.2s ease"}}>
+                  <span className="material-symbols-rounded" style={{fontSize:"16px"}}>{icon}</span>{l}
+                </button>
+              ))}
+            </div>
+            {/* CSV Upload row */}
+            <div style={{display:"flex",gap:"8px"}}>
+              <button onClick={()=>setShowCsvGuide(!showCsvGuide)} style={{background:"rgba(99,202,183,0.1)",color:"#63cab7",border:"1px solid rgba(99,202,183,0.3)",borderRadius:"9px",padding:"7px 12px",fontSize:"0.72rem",fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>📋 CSV Format</button>
+              <label style={{display:"inline-flex",alignItems:"center",gap:"5px",background:"rgba(99,202,183,0.12)",color:"#63cab7",border:"1px solid rgba(99,202,183,0.4)",borderRadius:"9px",padding:"7px 14px",fontSize:"0.78rem",fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+                {csvLoading?"⏳":"📂"} CSV Upload
+                <input type="file" accept=".csv,.txt" style={{display:"none"}} onChange={handleAttendanceCSV} disabled={csvLoading}/>
+              </label>
+            </div>
           </div>
         </div>
+
+        {/* CSV Guide & Result */}
+        {showCsvGuide&&<div style={{background:"rgba(99,202,183,0.06)",border:"1px solid rgba(99,202,183,0.25)",borderRadius:"12px",padding:"14px 18px",marginBottom:"16px",direction:"ltr"}}>
+          <div style={{color:"#63cab7",fontWeight:700,fontSize:"13px",marginBottom:"8px"}}>📄 Attendance CSV Format (پرانا data enter کرنے کے لیے):</div>
+          <code style={{display:"block",background:"rgba(0,0,0,0.4)",padding:"10px",borderRadius:"8px",color:"#a3e6dc",fontFamily:"monospace",fontSize:"12px",lineHeight:"2",overflowX:"auto"}}>
+            studentName,date,status<br/>
+            Ahmad Ali,2024-04-01,present<br/>
+            Bilal Khan,2024-04-01,absent<br/>
+            Sara Noor,2024-04-01,late
+          </code>
+          <div style={{color:"#64748b",fontSize:"11px",marginTop:"8px"}}>• status: present / absent / late &nbsp;•&nbsp; date: YYYY-MM-DD &nbsp;•&nbsp; header row optional</div>
+        </div>}
+        {csvResult&&<div style={{background:csvResult.skip===0?"rgba(74,222,128,0.08)":"rgba(251,146,60,0.08)",border:`1px solid ${csvResult.skip===0?"rgba(74,222,128,0.3)":"rgba(251,146,60,0.3)"}`,borderRadius:"10px",padding:"12px 16px",marginBottom:"16px",display:"flex",alignItems:"center",gap:"12px",flexWrap:"wrap"}}>
+          <span style={{color:"#4ade80",fontWeight:700}}>✅ {csvResult.ok} حاضری records شامل ہوگئے</span>
+          {csvResult.skip>0&&<span style={{color:"#fb923c",fontWeight:700}}>⚠️ {csvResult.skip} ناکام</span>}
+          {csvResult.errs.length>0&&<span style={{color:"#fca5a5",fontSize:"12px"}}>{csvResult.errs.slice(0,3).join(" • ")}</span>}
+          <button onClick={()=>setCsvResult(null)} style={{background:"none",border:"none",color:"#64748b",cursor:"pointer",marginLeft:"auto"}}>✕</button>
+        </div>}
 
         {/* ══ STAT CARDS ══ */}
         <div style={{display:"grid",gridTemplateColumns:`repeat(${isStudents?4:5},1fr)`,gap:"14px",marginBottom:"24px"}}>

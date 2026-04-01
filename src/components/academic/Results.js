@@ -17,6 +17,41 @@ function Results({students,addData,results:resultsProp=[]}){
   const [examList,setExamList]=useState([]);
   const [manualExam,setManualExam]=useState(false);
   const [f,setF]=useState({studentId:"",exam:"",subject:"",totalMarks:100,obtainedMarks:0,grade:"",date:new Date().toISOString().split("T")[0]});
+  const [csvLoading,setCsvLoading]=useState(false);
+  const [csvResult,setCsvResult]=useState(null);
+  const [showCsvGuide,setShowCsvGuide]=useState(false);
+
+  const calcGrade=(pct)=>pct>=90?"A+":pct>=80?"A":pct>=70?"B":pct>=60?"C":pct>=50?"D":"F";
+  const handleResultsCSV=async(e)=>{
+    const file=e.target.files[0]; if(!file)return;
+    setCsvLoading(true); setCsvResult(null);
+    const text=await file.text();
+    const lines=text.split("\n").map(l=>l.trim()).filter(Boolean);
+    const isHeader=lines[0]?.toLowerCase().includes("name")||lines[0]?.toLowerCase().includes("student")||lines[0]?.toLowerCase().includes("exam");
+    const dataLines=isHeader?lines.slice(1):lines;
+    let ok=0,skip=0,errs=[];
+    for(const line of dataLines){
+      const [nameOrCode,exam,subject,totalMarksStr,obtainedMarksStr,date]=line.split(",").map(s=>s?.trim());
+      if(!nameOrCode||!exam){skip++;continue;}
+      const st=students.find(s=>s.name?.toLowerCase().includes(nameOrCode.toLowerCase())||(s.studentCode||s.student_code)?.toLowerCase()===nameOrCode.toLowerCase());
+      if(!st){errs.push(`نہیں ملا: ${nameOrCode}`);skip++;continue;}
+      const total=parseFloat(totalMarksStr)||100;
+      const obtained=parseFloat(obtainedMarksStr)||0;
+      if(obtained>total){errs.push(`${st.name}: حاصل (${obtained}) > کل (${total})`);skip++;continue;}
+      const pct=Math.round((obtained/total)*100);
+      try{
+        await addData("results",{
+          studentId:st.id, exam, subject:subject||"عام",
+          totalMarks:total, obtainedMarks:obtained,
+          percentage:pct, grade:calcGrade(pct),
+          date:date||new Date().toISOString().split("T")[0],
+        });
+        ok++;
+      }catch(err){errs.push(`${st.name}: ${err.message}`);skip++;}
+    }
+    setCsvResult({ok,skip,errs});
+    setCsvLoading(false); e.target.value="";
+  };
 
   useEffect(()=>{
     const ET={monthly:"ماہانہ",midterm:"وسط سال",annual:"سالانہ",quiz:"کوئز",hifz:"حفظ"};
@@ -274,10 +309,34 @@ function Results({students,addData,results:resultsProp=[]}){
             <p style={{margin:0,fontSize:"0.75rem",color:"rgba(212,175,55,0.7)",fontWeight:"500"}}>Academic Results • {results.length} entries</p>
           </div>
         </div>
-        <button onClick={()=>setShow(!show)} style={{display:"flex",alignItems:"center",gap:"8px",padding:"11px 22px",borderRadius:"12px",border:`1px solid ${G}`,background:show?"rgba(212,175,55,0.15)":"transparent",color:G,fontWeight:"700",fontSize:"0.85rem",cursor:"pointer",fontFamily:"'Public Sans',sans-serif"}}>
-          <span className="material-symbols-rounded" style={{fontSize:"20px"}}>{show?"close":"add_circle"}</span>{show?"Cancel":"New Result"}
-        </button>
+        <div style={{display:"flex",gap:"8px",flexWrap:"wrap",alignItems:"center"}}>
+          <button onClick={()=>setShowCsvGuide(!showCsvGuide)} style={{background:"rgba(99,202,183,0.1)",color:"#63cab7",border:"1px solid rgba(99,202,183,0.3)",borderRadius:"10px",padding:"9px 14px",fontSize:"0.75rem",fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>📋 CSV Format</button>
+          <label style={{display:"inline-flex",alignItems:"center",gap:"6px",background:"rgba(99,202,183,0.12)",color:"#63cab7",border:"1px solid rgba(99,202,183,0.4)",borderRadius:"10px",padding:"9px 16px",fontSize:"0.82rem",fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+            {csvLoading?"⏳ upload...":"📂 CSV Upload"}
+            <input type="file" accept=".csv,.txt" style={{display:"none"}} onChange={handleResultsCSV} disabled={csvLoading}/>
+          </label>
+          <button onClick={()=>setShow(!show)} style={{display:"flex",alignItems:"center",gap:"8px",padding:"11px 22px",borderRadius:"12px",border:`1px solid ${G}`,background:show?"rgba(212,175,55,0.15)":"transparent",color:G,fontWeight:"700",fontSize:"0.85rem",cursor:"pointer",fontFamily:"'Public Sans',sans-serif"}}>
+            <span className="material-symbols-rounded" style={{fontSize:"20px"}}>{show?"close":"add_circle"}</span>{show?"Cancel":"New Result"}
+          </button>
+        </div>
       </div>
+
+      {showCsvGuide&&<div style={{background:"rgba(99,202,183,0.06)",border:"1px solid rgba(99,202,183,0.25)",borderRadius:"12px",padding:"14px 18px",marginBottom:"16px",direction:"ltr"}}>
+        <div style={{color:"#63cab7",fontWeight:700,fontSize:"13px",marginBottom:"8px"}}>📄 Results CSV Format:</div>
+        <code style={{display:"block",background:"rgba(0,0,0,0.4)",padding:"10px",borderRadius:"8px",color:"#a3e6dc",fontFamily:"monospace",fontSize:"12px",lineHeight:"2",overflowX:"auto"}}>
+          studentName,exam,subject,totalMarks,obtainedMarks,date<br/>
+          Ahmad Ali,Mid Term 2024,Mathematics,100,85,2024-04-15<br/>
+          Bilal Khan,Mid Term 2024,Mathematics,100,72,2024-04-15<br/>
+          Sara Noor,Mid Term 2024,English,100,90,2024-04-15
+        </code>
+        <div style={{color:"#64748b",fontSize:"11px",marginTop:"8px"}}>• grade خودکار A+/A/B/C/D/F بنے گا &nbsp;•&nbsp; date optional (آج کی تاریخ لگے گی) &nbsp;•&nbsp; header row optional</div>
+      </div>}
+      {csvResult&&<div style={{background:csvResult.skip===0?"rgba(74,222,128,0.08)":"rgba(251,146,60,0.08)",border:`1px solid ${csvResult.skip===0?"rgba(74,222,128,0.3)":"rgba(251,146,60,0.3)"}`,borderRadius:"10px",padding:"12px 16px",marginBottom:"16px",display:"flex",alignItems:"center",gap:"12px",flexWrap:"wrap"}}>
+        <span style={{color:"#4ade80",fontWeight:700}}>✅ {csvResult.ok} نتائج شامل ہوگئے</span>
+        {csvResult.skip>0&&<span style={{color:"#fb923c",fontWeight:700}}>⚠️ {csvResult.skip} ناکام</span>}
+        {csvResult.errs.length>0&&<span style={{color:"#fca5a5",fontSize:"12px"}}>{csvResult.errs.slice(0,3).join(" • ")}</span>}
+        <button onClick={()=>setCsvResult(null)} style={{background:"none",border:"none",color:"#64748b",cursor:"pointer",marginLeft:"auto"}}>✕</button>
+      </div>}
 
       {/* Add Form */}
       {show&&(
