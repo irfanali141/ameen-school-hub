@@ -100,13 +100,18 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
 
     try {
       let msg = "";
+      // Resolve student name from students list if AI didn't return it
+      const resolveStudent = (id, name) => {
+        if (name && name !== "undefined") return name;
+        return students.find(s => s.id === id)?.name || id || "طالب علم";
+      };
 
       if (result.action === "add_fee") {
         // Use exact DB column names: student_id, type, month(int), year, due_date
         const feeMonth = p.month ? parseInt(p.month) : new Date().getMonth() + 1;
         await addData("fees", {
           student_id: p.student_id,
-          student_name: p.student_name,
+          student_name: resolveStudent(p.student_id, p.student_name),
           amount: parseFloat(p.amount) || 0,
           type: p.fee_type || p.type || "monthly",
           month: isNaN(feeMonth) ? new Date().getMonth() + 1 : feeMonth,
@@ -114,7 +119,7 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
           status: "pending",
           due_date: p.due_date || p.dueDate || null,
         });
-        msg = `✅ ${p.student_name} کی ${p.amount} روپے فیس شامل ہوگئی`;
+        msg = `✅ ${resolveStudent(p.student_id, p.student_name)} کی ${p.amount} روپے فیس شامل ہوگئی`;
       }
 
       else if (result.action === "mark_fee_paid") {
@@ -123,16 +128,16 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
           .select("id").eq("student_id", p.student_id).eq("status","pending").limit(1);
         if (pendingFees && pendingFees.length > 0) {
           await updateData("fees", pendingFees[0].id, { status:"paid", paidDate: new Date().toISOString().split("T")[0] });
-          msg = `✅ ${p.student_name} کی فیس paid مارک ہوگئی`;
+          msg = `✅ ${resolveStudent(p.student_id, p.student_name)} کی فیس paid مارک ہوگئی`;
         } else {
-          msg = `⚠️ ${p.student_name} کی کوئی pending فیس نہیں ملی`;
+          msg = `⚠️ ${resolveStudent(p.student_id, p.student_name)} کی کوئی pending فیس نہیں ملی`;
         }
       }
 
       else if (result.action === "add_result") {
         await addData("results", {
           studentId: p.student_id,
-          studentName: p.student_name,
+          studentName: resolveStudent(p.student_id, p.student_name),
           subject: p.subject || "عام",
           examName: p.exam_name || p.examName || "ٹیسٹ",
           marks: parseFloat(p.marks) || 0,
@@ -140,13 +145,13 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
           grade: p.result_grade || p.grade || "",
           examDate: new Date().toISOString().split("T")[0],
         });
-        msg = `✅ ${p.student_name} کا نتیجہ (${p.marks}/${p.total_marks}) شامل ہوگیا`;
+        msg = `✅ ${resolveStudent(p.student_id, p.student_name)} کا نتیجہ (${p.marks}/${p.total_marks}) شامل ہوگیا`;
       }
 
       else if (result.action === "add_marks") {
         await addData("marks_entries", {
           studentId: p.student_id,
-          studentName: p.student_name,
+          studentName: resolveStudent(p.student_id, p.student_name),
           subject: p.subject || "",
           marks: parseFloat(p.marks) || 0,
           totalMarks: parseFloat(p.total_marks) || 100,
@@ -154,7 +159,7 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
           grade: p.grade || "",
           date: new Date().toISOString().split("T")[0],
         });
-        msg = `✅ ${p.student_name} کے ${p.marks} نمبرات شامل ہوگئے`;
+        msg = `✅ ${resolveStudent(p.student_id, p.student_name)} کے ${p.marks} نمبرات شامل ہوگئے`;
       }
 
       else if (result.action === "add_house_points") {
@@ -175,12 +180,12 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
       else if (result.action === "add_attendance") {
         await addData("attendance", {
           studentId: p.student_id,
-          studentName: p.student_name,
+          studentName: resolveStudent(p.student_id, p.student_name),
           status: p.status || "present",
           date: p.date || new Date().toISOString().split("T")[0],
           grade: p.grade || "",
         });
-        msg = `✅ ${p.student_name} کی حاضری (${p.status}) لگ گئی`;
+        msg = `✅ ${resolveStudent(p.student_id, p.student_name)} کی حاضری (${p.status}) لگ گئی`;
       }
 
       else if (result.action === "update_student") {
@@ -190,7 +195,7 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
         if (p.talent) updates.talent = p.talent;
         if (p.section) updates.section = p.section;
         await updateData("students", p.student_id, updates);
-        msg = `✅ ${p.student_name} کی معلومات update ہوگئی`;
+        msg = `✅ ${resolveStudent(p.student_id, p.student_name)} کی معلومات update ہوگئی`;
       }
 
       else {

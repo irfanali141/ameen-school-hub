@@ -37,6 +37,41 @@ function FeeManagement({students,addData,updateData,fees:feesProp=[]}){
     setTimeout(()=>window.print(),50);
   };
   const [f,setF]=useState({studentId:"",feeType:"monthly",amount:3000,month:"",dueDate:"",status:"pending",notes:""});
+  const [bulkShow,setBulkShow]=useState(false);
+  const [bulkResult,setBulkResult]=useState(null);
+
+  const handleBulkCSV=async(e)=>{
+    const file=e.target.files[0]; if(!file)return;
+    const text=await file.text();
+    const lines=text.split("\n").map(l=>l.trim()).filter(Boolean);
+    // Skip header row if it starts with non-numeric / student name header
+    const dataLines=lines[0]?.toLowerCase().includes("name")||lines[0]?.toLowerCase().includes("student")?lines.slice(1):lines;
+    let ok=0,skip=0,errs=[];
+    for(const line of dataLines){
+      const [nameOrCode,amtStr,typeStr,monthStr]= line.split(",").map(s=>s?.trim());
+      if(!nameOrCode||!amtStr){skip++;continue;}
+      // Match student by name (partial, case-insensitive) or studentCode
+      const st=students.find(s=>
+        s.name?.toLowerCase().includes(nameOrCode.toLowerCase())||
+        s.studentCode?.toLowerCase()===nameOrCode.toLowerCase()
+      );
+      if(!st){errs.push(`نہیں ملا: ${nameOrCode}`);skip++;continue;}
+      const [yr,mo]=monthStr?monthStr.split("-").map(Number):[new Date().getFullYear(),new Date().getMonth()+1];
+      try{
+        await addData("fees",{
+          student_id:st.id, student_name:st.name,
+          amount:parseFloat(amtStr)||0,
+          type:typeStr||"monthly",
+          month:mo||new Date().getMonth()+1,
+          year:yr||new Date().getFullYear(),
+          status:"pending",
+        });
+        ok++;
+      }catch(err){errs.push(`خرابی ${st.name}: ${err.message}`);skip++;}
+    }
+    setBulkResult({ok,skip,errs});
+    e.target.value="";
+  };
   
   const add=async()=>{
     if(!f.studentId||!f.amount)return;
@@ -75,10 +110,38 @@ function FeeManagement({students,addData,updateData,fees:feesProp=[]}){
             <p style={{margin:0,fontSize:"0.75rem",color:"rgba(212,175,55,0.7)",fontWeight:"500"}}>Track and manage student fees</p>
           </div>
         </div>
-        <button onClick={()=>setShow(!show)} style={{display:"flex",alignItems:"center",gap:"8px",padding:"11px 22px",borderRadius:"12px",border:`1px solid ${G}`,background:show?"rgba(212,175,55,0.15)":"transparent",color:G,fontWeight:"700",fontSize:"0.85rem",cursor:"pointer",fontFamily:"'Public Sans',sans-serif"}}>
-          <span className="material-symbols-rounded" style={{fontSize:"20px"}}>{show?"close":"add_circle"}</span>{show?"Cancel":"New Fee"}
-        </button>
+        <div style={{display:"flex",gap:"10px",flexWrap:"wrap"}}>
+          <label style={{display:"flex",alignItems:"center",gap:"8px",padding:"11px 18px",borderRadius:"12px",border:"1px solid rgba(99,202,183,0.5)",background:"rgba(99,202,183,0.08)",color:"#63cab7",fontWeight:"700",fontSize:"0.82rem",cursor:"pointer",fontFamily:"'Public Sans',sans-serif"}}>
+            <span className="material-symbols-rounded" style={{fontSize:"18px"}}>upload_file</span>CSV Upload
+            <input type="file" accept=".csv,.txt" style={{display:"none"}} onChange={handleBulkCSV}/>
+          </label>
+          <button onClick={()=>setBulkShow(!bulkShow)} style={{padding:"11px 16px",borderRadius:"12px",border:"1px solid rgba(99,202,183,0.3)",background:"rgba(99,202,183,0.06)",color:"rgba(99,202,183,0.8)",fontWeight:"600",fontSize:"0.75rem",cursor:"pointer",fontFamily:"'Public Sans',sans-serif"}}>? Format</button>
+          <button onClick={()=>setShow(!show)} style={{display:"flex",alignItems:"center",gap:"8px",padding:"11px 22px",borderRadius:"12px",border:`1px solid ${G}`,background:show?"rgba(212,175,55,0.15)":"transparent",color:G,fontWeight:"700",fontSize:"0.85rem",cursor:"pointer",fontFamily:"'Public Sans',sans-serif"}}>
+            <span className="material-symbols-rounded" style={{fontSize:"20px"}}>{show?"close":"add_circle"}</span>{show?"Cancel":"New Fee"}
+          </button>
+        </div>
       </div>
+
+      {/* CSV Format Guide */}
+      {bulkShow&&<div style={{background:"rgba(99,202,183,0.08)",border:"1px solid rgba(99,202,183,0.3)",borderRadius:"12px",padding:"16px 20px",marginBottom:"16px",fontSize:"0.78rem",color:"#63cab7"}}>
+        <div style={{fontWeight:"700",marginBottom:"8px"}}>📄 CSV فائل کا format (کوما سے الگ):</div>
+        <code style={{display:"block",background:"rgba(0,0,0,0.3)",padding:"10px",borderRadius:"8px",color:"#a3e6dc",direction:"ltr",fontFamily:"monospace",lineHeight:"1.8"}}>
+          student_name,amount,type,YYYY-MM<br/>
+          Ahmad Ali,3000,monthly,2024-04<br/>
+          Bilal Khan,2500,monthly,2024-04<br/>
+          Sara Noor,3000,admission,
+        </code>
+        <div style={{marginTop:"8px",opacity:0.7}}>• پہلی row header ہو سکتی ہے (خود پہچانے گا) • type: monthly/admission/exam/hostel • YYYY-MM optional</div>
+      </div>}
+
+      {/* Bulk Result */}
+      {bulkResult&&<div style={{background: bulkResult.skip===0?"rgba(74,222,128,0.1)":"rgba(251,146,60,0.1)",border:`1px solid ${bulkResult.skip===0?"rgba(74,222,128,0.3)":"rgba(251,146,60,0.3)"}`,borderRadius:"12px",padding:"14px 18px",marginBottom:"16px",fontSize:"0.8rem"}}>
+        <span style={{color:"#4ade80",fontWeight:"700"}}>✅ {bulkResult.ok} کامیاب</span>
+        {bulkResult.skip>0&&<span style={{color:"#fb923c",fontWeight:"700",marginLeft:"16px"}}>⚠️ {bulkResult.skip} ناکام</span>}
+        {bulkResult.errs.length>0&&<div style={{marginTop:"8px",color:"#fca5a5",fontSize:"0.72rem"}}>{bulkResult.errs.slice(0,5).join(" • ")}</div>}
+        <button onClick={()=>setBulkResult(null)} style={{marginLeft:"16px",background:"none",border:"none",color:"#94a3b8",cursor:"pointer",fontSize:"0.75rem"}}>✕</button>
+      </div>}
+
       {/* Stats */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))",gap:"14px",marginBottom:"24px"}}>
         {[
