@@ -254,7 +254,7 @@ SMS/WhatsApp کے لیے موزوں ہو۔`;
   }
 }
 
-module.exports = async function handler(req, res) {
+const handler = async function (req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -267,6 +267,31 @@ module.exports = async function handler(req, res) {
 
   const { task, data } = req.body || {};
   if (!task || !data) return res.status(400).json({ error: "task and data required" });
+
+  // ── Voice transcription via Groq Whisper ──
+  if (task === "transcribe") {
+    try {
+      const buffer = Buffer.from(data.audio, "base64");
+      const fileType = data.mimeType || "audio/webm";
+      const ext = fileType.includes("mp4") ? "mp4" : fileType.includes("ogg") ? "ogg" : "webm";
+      const blob = new Blob([buffer], { type: fileType });
+      const formData = new FormData();
+      formData.append("file", blob, `rec.${ext}`);
+      formData.append("model", "whisper-large-v3-turbo");
+      formData.append("language", "ur");
+      formData.append("response_format", "json");
+      const wRes = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}` },
+        body: formData,
+      });
+      if (!wRes.ok) { const t = await wRes.text(); throw new Error(t); }
+      const wData = await wRes.json();
+      return res.json({ text: wData.text || "" });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
 
   try {
     const prompt = buildPrompt(task, data);
@@ -320,3 +345,6 @@ module.exports = async function handler(req, res) {
     }
   }
 };
+
+handler.config = { api: { bodyParser: { sizeLimit: "20mb" } } };
+module.exports = handler;

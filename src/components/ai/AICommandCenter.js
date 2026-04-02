@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "../../supabase";
 
 const G = "#d4af37", N = "#0f172a";
@@ -34,26 +34,85 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
   const [executing, setExec]  = useState(false);
   const [done, setDone]       = useState(false);
   const [error, setError]     = useState("");
-  const [csvTab, setCsvTab]   = useState(false);
+  const [activeTab, setActiveTab] = useState("ai");
   const [csvResult, setCsvResult] = useState(null);
   const [csvLoading, setCsvLoading] = useState(false);
+  const [csvProgress, setCsvProgress] = useState({ done: 0, total: 0 });
+  const [streamDots, setStreamDots] = useState("");
+  const mediaRecRef = useRef(null);
+  const [listening, setListening] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const [micError, setMicError] = useState("");
+  const [interimText, setInterimText] = useState("");
 
-  const handleCSV = async (e) => {
-    const file = e.target.files[0]; if (!file) return;
-    setCsvLoading(true); setCsvResult(null);
+  const TODAY = new Date().toISOString().split("T")[0];
+
+  // ── CSV Template download ──
+  const TEMPLATES = {
+    fees:       `student_name,amount,type,YYYY-MM\nAhmad Ali,3000,monthly,${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,"0")}\nBilal Khan,2500,monthly,${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,"0")}`,
+    students:   "name,fatherName,grade,section,studentCode,phone,talent,status\nAhmad Ali,Usman Ali,7,A,S001,0300-1234567,cricket,active\nBilal Khan,Tariq Khan,8,B,S002,,,active",
+    teachers:   "name,subject,grade,employeeCode,phone,qualification\nFatima Noor,Mathematics,7-9,T001,0301-1234567,MSc Math\nAli Hassan,Urdu,6-8,T002,0302-9876543,MA Urdu",
+    results:    `studentName,exam,subject,totalMarks,obtainedMarks,date\nAhmad Ali,Mid Term,Math,100,85,${TODAY}\nBilal Khan,Mid Term,Urdu,50,42,${TODAY}`,
+    attendance: `studentName,date,status\nAhmad Ali,${TODAY},present\nBilal Khan,${TODAY},absent\nSara Noor,${TODAY},late`,
+    hifz:       `studentName,surah,ayahs,type,rating,date\nAhmad Ali,Al-Baqarah,1-5,sabaq,4,${TODAY}\nBilal Khan,Al-Imran,10-15,sabqi,3,`,
+  };
+  const downloadTemplate = (type) => {
+    const blob = new Blob([TEMPLATES[type]], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `${type}_template.csv`;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+  };
+
+  // ── Role-based CSV tab visibility ──
+  const CSV_TABS_FOR_ROLE = {
+    director:    ["fees","students","teachers","results","attendance","hifz"],
+    admin:       ["fees","students","teachers","results","attendance","hifz"],
+    teacher:     ["results","attendance","hifz"],
+    finance:     ["fees"],
+    housemaster: ["hifz"],
+  };
+  const allowedCsvTabs = CSV_TABS_FOR_ROLE[userRole] || ["fees","students","teachers","results","attendance","hifz"];
+
+  const findStudent = (nameOrCode) =>
+    students.find(s =>
+      s.name?.toLowerCase().includes(nameOrCode.toLowerCase()) ||
+      s.studentCode?.toLowerCase() === nameOrCode.toLowerCase()
+    );
+
+  const calcGrade = (pct) =>
+    pct >= 90 ? "A+" : pct >= 80 ? "A" : pct >= 70 ? "B" : pct >= 60 ? "C" : pct >= 50 ? "D" : "F";
+
+  const runCSV = async (file, handler) => {
+    setCsvLoading(true); setCsvResult(null); setCsvProgress({ done: 0, total: 0 });
     const text = await file.text();
     const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
-    const dataLines = (lines[0]?.toLowerCase().includes("name") || lines[0]?.toLowerCase().includes("student"))
+    const header = lines[0]?.toLowerCase();
+    const dataLines = (header?.includes("name") || header?.includes("student") ||
+      header?.includes("teacher") || header?.includes("date"))
       ? lines.slice(1) : lines;
+    setCsvProgress({ done: 0, total: dataLines.length });
     let ok = 0, skip = 0, errs = [];
-    for (const line of dataLines) {
-      const [nameOrCode, amtStr, typeStr, monthStr] = line.split(",").map(s => s?.trim());
-      if (!nameOrCode || !amtStr) { skip++; continue; }
-      const st = students.find(s =>
-        s.name?.toLowerCase().includes(nameOrCode.toLowerCase()) ||
-        s.studentCode?.toLowerCase() === nameOrCode.toLowerCase()
-      );
-      if (!st) { errs.push(`نہیں ملا: ${nameOrCode}`); skip++; continue; }
+    for (let i = 0; i < dataLines.length; i++) {
+      const cols = dataLines[i].split(",").map(s => s?.trim());
+      const res = await handler(cols);
+      if (res === true) ok++;
+      else { skip++; if (typeof res === "string") errs.push(res); }
+      setCsvProgress({ done: i + 1, total: dataLines.length });
+    }
+    setCsvResult({ ok, skip, errs });
+    setCsvLoading(false);
+  };
+
+  // ── Fees CSV ──
+  const handleFeeCSV = (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    e.target.value = "";
+    runCSV(file, async ([nameOrCode, amtStr, typeStr, monthStr]) => {
+      if (!nameOrCode || !amtStr) return false;
+      const st = findStudent(nameOrCode);
+      if (!st) return `نہیں ملا: ${nameOrCode}`;
       const [yr, mo] = monthStr ? monthStr.split("-").map(Number)
         : [new Date().getFullYear(), new Date().getMonth() + 1];
       try {
@@ -65,19 +124,129 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
           year: yr || new Date().getFullYear(),
           status: "pending",
         });
-        ok++;
-      } catch (err) { errs.push(`${st.name}: ${err.message}`); skip++; }
-    }
-    setCsvResult({ ok, skip, errs });
-    setCsvLoading(false);
+        return true;
+      } catch (err) { return `${st.name}: ${err.message}`; }
+    });
+  };
+
+  // ── Students CSV ──
+  const handleStudentsCSV = (e) => {
+    const file = e.target.files[0]; if (!file) return;
     e.target.value = "";
+    runCSV(file, async ([name, fatherName, grade, section, studentCode, phone, talent, status]) => {
+      if (!name) return false;
+      // Duplicate check
+      const dup = students.find(s =>
+        s.name?.toLowerCase() === name.toLowerCase() ||
+        (studentCode && s.studentCode?.toLowerCase() === studentCode.toLowerCase())
+      );
+      if (dup) return `duplicate — پہلے سے موجود: ${name}`;
+      try {
+        await addData("students", {
+          name, fatherName: fatherName || "", grade: grade || "",
+          section: section || "", studentCode: studentCode || "",
+          phone: phone || "", talent: talent || "",
+          enrollmentStatus: status || "active", canteenBalance: 0,
+        });
+        return true;
+      } catch (err) { return `${name}: ${err.message}`; }
+    });
+  };
+
+  // ── Teachers CSV ──
+  const handleTeachersCSV = (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    e.target.value = "";
+    runCSV(file, async ([name, subject, grade, employeeCode, phone, qualification]) => {
+      if (!name) return false;
+      // Duplicate check
+      const dup = teachers.find(t =>
+        t.name?.toLowerCase() === name.toLowerCase() ||
+        (employeeCode && t.employeeCode?.toLowerCase() === employeeCode.toLowerCase())
+      );
+      if (dup) return `duplicate — پہلے سے موجود: ${name}`;
+      try {
+        await addData("teachers", {
+          name, subject: subject || "", grade: grade || "",
+          employeeCode: employeeCode || "", phone: phone || "",
+          qualification: qualification || "", status: "active",
+        });
+        return true;
+      } catch (err) { return `${name}: ${err.message}`; }
+    });
+  };
+
+  // ── Results CSV ──
+  const handleResultsCSV = (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    e.target.value = "";
+    runCSV(file, async ([nameOrCode, exam, subject, totalStr, obtainedStr, date]) => {
+      if (!nameOrCode || !totalStr || !obtainedStr) return false;
+      const st = findStudent(nameOrCode);
+      if (!st) return `نہیں ملا: ${nameOrCode}`;
+      const total = parseFloat(totalStr) || 100;
+      const obtained = parseFloat(obtainedStr) || 0;
+      const pct = Math.round((obtained / total) * 100);
+      try {
+        await addData("results", {
+          studentId: st.id, exam: exam || "ٹیسٹ", subject: subject || "عام",
+          totalMarks: total, obtainedMarks: obtained,
+          percentage: pct, grade: calcGrade(pct),
+          date: date || TODAY,
+        });
+        return true;
+      } catch (err) { return `${st.name}: ${err.message}`; }
+    });
+  };
+
+  // ── Attendance CSV ──
+  const handleAttendanceCSV = (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    e.target.value = "";
+    runCSV(file, async ([nameOrCode, date, statusStr]) => {
+      if (!nameOrCode) return false;
+      const st = findStudent(nameOrCode);
+      if (!st) return `نہیں ملا: ${nameOrCode}`;
+      const validStatus = ["present","absent","late","leave"].includes(statusStr?.toLowerCase())
+        ? statusStr.toLowerCase() : "present";
+      try {
+        await addData("attendance", {
+          studentId: st.id, studentName: st.name,
+          date: date || TODAY, status: validStatus,
+          grade: st.grade || "", type: "student",
+        });
+        return true;
+      } catch (err) { return `${st.name}: ${err.message}`; }
+    });
+  };
+
+  // ── Hifz CSV ──
+  const handleHifzCSV = (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    e.target.value = "";
+    runCSV(file, async ([nameOrCode, surah, ayahs, type, ratingStr, date]) => {
+      if (!nameOrCode || !surah) return false;
+      const st = findStudent(nameOrCode);
+      if (!st) return `نہیں ملا: ${nameOrCode}`;
+      const validType = ["sabaq","sabqi","manzil"].includes(type?.toLowerCase())
+        ? type.toLowerCase() : "sabaq";
+      try {
+        await addData("hifz_logs", {
+          studentId: st.id, surah, ayahs: ayahs || "",
+          type: validType, rating: parseInt(ratingStr) || 3,
+          date: date || TODAY, notes: "",
+        });
+        return true;
+      } catch (err) { return `${st.name}: ${err.message}`; }
+    });
   };
 
   const allowedActions = ROLE_ACTIONS[userRole] || [];
 
   const sendCommand = async () => {
     if (!command.trim()) return;
-    setLoading(true); setResult(null); setDone(false); setError("");
+    setLoading(true); setResult(null); setDone(false); setError(""); setStreamDots("");
+    const dotsInterval = setInterval(() => setStreamDots(d => d.length >= 3 ? "" : d + "·"), 400);
 
     try {
       const resp = await fetch("/api/ai", {
@@ -128,6 +297,7 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
     } catch (e) {
       setError("⚠️ خرابی: " + e.message);
     }
+    clearInterval(dotsInterval);
     setLoading(false);
   };
 
@@ -165,7 +335,7 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
         const { data: pendingFees } = await supabase.from("fees")
           .select("id").eq("student_id", p.student_id).eq("status","pending").limit(1);
         if (pendingFees && pendingFees.length > 0) {
-          await updateData("fees", pendingFees[0].id, { status:"paid", paidDate: new Date().toISOString().split("T")[0] });
+          await updateData("fees", pendingFees[0].id, { status:"paid", paid_date: new Date().toISOString().split("T")[0] });
           msg = `✅ ${resolveStudent(p.student_id, p.student_name)} کی فیس paid مارک ہوگئی`;
         } else {
           msg = `⚠️ ${resolveStudent(p.student_id, p.student_name)} کی کوئی pending فیس نہیں ملی`;
@@ -256,6 +426,74 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
 
   const cancel = () => { setResult(null); setDone(false); setError(""); };
 
+  // ── Voice Input ──
+  // ── Voice: MediaRecorder → Groq Whisper (Google پر depend نہیں) ──
+  const startListening = () => {
+    setMicError(""); setInterimText("");
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setMicError("آپ کا browser recording support نہیں کرتا — Chrome/Edge استعمال کریں"); return;
+    }
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        // بہترین format جو browser support کرے
+        const mimeType = ["audio/webm;codecs=opus","audio/webm","audio/ogg","audio/mp4"]
+          .find(t => MediaRecorder.isTypeSupported(t)) || "";
+        const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+        const chunks = [];
+        setListening(true);
+        recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+        recorder.onstop = async () => {
+          stream.getTracks().forEach(t => t.stop());
+          setListening(false);
+          setTranscribing(true);
+          try {
+            const blob = new Blob(chunks, { type: mimeType || "audio/webm" });
+            // blob → base64
+            const base64 = await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result.split(",")[1]);
+              reader.onerror = reject;
+              reader.readAsDataURL(blob);
+            });
+            const resp = await fetch("/api/ai", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ task: "transcribe", data: { audio: base64, mimeType: blob.type } }),
+            });
+            const contentType = resp.headers.get("content-type") || "";
+            if (contentType.includes("text/html")) {
+              // npm start میں API کام نہیں کرتی
+              setMicError("⚠️ آواز کے لیے terminal میں: vercel dev چلائیں (npm start کی جگہ)");
+              setTranscribing(false);
+              return;
+            }
+            const data = await resp.json();
+            if (data.text) {
+              setCommand(prev => prev ? prev + " " + data.text : data.text);
+            } else {
+              setMicError(data.error || "آواز سمجھ نہیں آئی، دوبارہ کوشش کریں");
+            }
+          } catch (err) {
+            setMicError("خرابی: " + err.message);
+          }
+          setTranscribing(false);
+        };
+        recorder.start(1000); // ہر سیکنڈ chunk بھیجے — memory میں اکٹھا نہ ہو
+        mediaRecRef.current = recorder;
+        // 15 سیکنڈ بعد خود بخود بند — بہت بڑی فائل نہ بنے
+        setTimeout(() => { if (mediaRecRef.current?.state === "recording") mediaRecRef.current.stop(); }, 15000);
+      })
+      .catch(err => {
+        setMicError(err.name === "NotAllowedError"
+          ? "Microphone کی اجازت دیں — browser کے address bar میں 🔒 icon پر click کریں"
+          : "Microphone نہیں ملا: " + err.message);
+      });
+  };
+
+  const stopListening = () => {
+    mediaRecRef.current?.stop();
+  };
+
   const EXAMPLES = [
     "احمد علی کی 5000 روپے ماہانہ فیس شامل کرو",
     "محمد عمر کی فیس paid مارک کرو",
@@ -286,104 +524,236 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
       </div>
 
       {/* Tab Toggle */}
-      <div style={{ display:"flex", gap:8, marginBottom:16 }}>
-        <button onClick={()=>setCsvTab(false)}
-          style={{ padding:"9px 20px", borderRadius:9, border:"none", cursor:"pointer",
-            fontFamily:"inherit", fontWeight:700, fontSize:13,
-            background: !csvTab ? G : "rgba(255,255,255,0.06)",
-            color: !csvTab ? N : "#64748b" }}>
-          🤖 AI حکم
-        </button>
-        <button onClick={()=>setCsvTab(true)}
-          style={{ padding:"9px 20px", borderRadius:9, border:"none", cursor:"pointer",
-            fontFamily:"inherit", fontWeight:700, fontSize:13,
-            background: csvTab ? G : "rgba(255,255,255,0.06)",
-            color: csvTab ? N : "#64748b" }}>
-          📂 فائل سے fees
-        </button>
+      <div style={{ display:"flex", gap:6, marginBottom:16, flexWrap:"wrap" }}>
+        {[
+          { id:"ai",         label:"🤖 AI حکم",   always: true },
+          { id:"fees",       label:"💰 Fees",      always: false },
+          { id:"students",   label:"🎓 طلبہ",      always: false },
+          { id:"teachers",   label:"👩‍🏫 اساتذہ",   always: false },
+          { id:"results",    label:"📊 نتائج",     always: false },
+          { id:"attendance", label:"📋 حاضری",     always: false },
+          { id:"hifz",       label:"📖 حفظ",       always: false },
+        ].filter(tab => tab.always || allowedCsvTabs.includes(tab.id))
+         .map(tab => (
+          <button key={tab.id} onClick={() => { setActiveTab(tab.id); setCsvResult(null); }}
+            style={{ padding:"8px 16px", borderRadius:9, border:"none", cursor:"pointer",
+              fontFamily:"inherit", fontWeight:700, fontSize:12,
+              background: activeTab === tab.id ? G : "rgba(255,255,255,0.06)",
+              color: activeTab === tab.id ? N : "#64748b" }}>
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      {/* CSV Upload Panel */}
-      {csvTab && (
-        <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(212,175,55,0.2)",
-          borderRadius:14, padding:20, marginBottom:20 }}>
-          <div style={{ color:G, fontWeight:700, fontSize:15, marginBottom:4 }}>📂 CSV فائل سے ایک ساتھ فیس ڈالیں</div>
-          <div style={{ color:"#64748b", fontSize:12, marginBottom:16 }}>ایک CSV فائل میں سارے طلبہ کی fees لکھ کر upload کریں</div>
+      {/* CSV Upload Panels */}
+      {activeTab !== "ai" && (() => {
+        const PANELS = {
+          fees: {
+            title: "💰 CSV فائل سے ایک ساتھ fees ڈالیں",
+            desc: "سارے طلبہ کی fees ایک CSV میں لکھ کر upload کریں",
+            format: `student_name,amount,type,YYYY-MM\nAhmad Ali,3000,monthly,2024-04\nBilal Khan,2500,monthly,2024-04\nSara Noor,3000,admission,`,
+            notes: "• type: monthly / admission / exam / hostel / transport\n• YYYY-MM optional — نہ لکھیں تو آج کا مہینہ",
+            handler: handleFeeCSV,
+            okLabel: "fees",
+          },
+          students: {
+            title: "🎓 CSV فائل سے طلبہ شامل کریں",
+            desc: "نئے طلبہ کی فہرست CSV میں بنا کر ایک ساتھ upload کریں",
+            format: `name,fatherName,grade,section,studentCode,phone,talent,status\nAhmad Ali,Usman Ali,7,A,S001,0300-1234567,cricket,active\nBilal Khan,Tariq Khan,8,B,S002,,,active`,
+            notes: "• status: active / inactive (default: active)\n• studentCode optional",
+            handler: handleStudentsCSV,
+            okLabel: "طلبہ",
+          },
+          teachers: {
+            title: "👩‍🏫 CSV فائل سے اساتذہ شامل کریں",
+            desc: "اساتذہ کی فہرست CSV میں بنا کر upload کریں",
+            format: `name,subject,grade,employeeCode,phone,qualification\nFatima Noor,Mathematics,7-9,T001,0301-1234567,MSc Math\nAli Hassan,Urdu,6-8,T002,0302-9876543,MA Urdu`,
+            notes: "• grade: teaching grade range\n• qualification optional",
+            handler: handleTeachersCSV,
+            okLabel: "اساتذہ",
+          },
+          results: {
+            title: "📊 CSV فائل سے نتائج شامل کریں",
+            desc: "امتحانی نتائج ایک CSV میں لکھ کر upload کریں",
+            format: `studentName,exam,subject,totalMarks,obtainedMarks,date\nAhmad Ali,Mid Term,Math,100,85,2024-04-10\nBilal Khan,Mid Term,Urdu,50,42,2024-04-10`,
+            notes: "• grade خود calculate ہو گا (A+/A/B/C/D/F)\n• date optional — نہ لکھیں تو آج کی تاریخ",
+            handler: handleResultsCSV,
+            okLabel: "نتائج",
+          },
+          attendance: {
+            title: "📋 CSV فائل سے حاضری ڈالیں",
+            desc: "ایک دن کی پوری کلاس کی حاضری CSV سے ڈالیں",
+            format: `studentName,date,status\nAhmad Ali,2024-04-10,present\nBilal Khan,2024-04-10,absent\nSara Noor,2024-04-10,late`,
+            notes: "• status: present / absent / late / leave\n• date optional — نہ لکھیں تو آج",
+            handler: handleAttendanceCSV,
+            okLabel: "حاضری records",
+          },
+          hifz: {
+            title: "📖 CSV فائل سے حفظ logs ڈالیں",
+            desc: "حفظ کی روزانہ entries CSV سے ڈالیں",
+            format: `studentName,surah,ayahs,type,rating,date\nAhmad Ali,Al-Baqarah,1-5,sabaq,4,2024-04-10\nBilal Khan,Al-Imran,10-15,sabqi,3,`,
+            notes: "• type: sabaq / sabqi / manzil\n• rating: 1-5 (default 3)\n• date optional — نہ لکھیں تو آج",
+            handler: handleHifzCSV,
+            okLabel: "حفظ records",
+          },
+        };
+        const p = PANELS[activeTab];
+        if (!p) return null;
+        return (
+          <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(212,175,55,0.2)",
+            borderRadius:14, padding:20, marginBottom:20 }}>
+            <div style={{ color:G, fontWeight:700, fontSize:15, marginBottom:4 }}>{p.title}</div>
+            <div style={{ color:"#64748b", fontSize:12, marginBottom:16 }}>{p.desc}</div>
 
-          {/* Format guide */}
-          <div style={{ background:"rgba(99,202,183,0.06)", border:"1px solid rgba(99,202,183,0.2)",
-            borderRadius:10, padding:"12px 16px", marginBottom:16, direction:"ltr" }}>
-            <div style={{ color:"#63cab7", fontWeight:700, fontSize:12, marginBottom:8 }}>📄 CSV Format:</div>
-            <code style={{ display:"block", background:"rgba(0,0,0,0.4)", padding:"10px 14px",
-              borderRadius:8, color:"#a3e6dc", fontFamily:"monospace", fontSize:12, lineHeight:2 }}>
-              student_name,amount,type,YYYY-MM<br/>
-              Ahmad Ali,3000,monthly,2024-04<br/>
-              Bilal Khan,2500,monthly,2024-04<br/>
-              Sara Noor,3000,admission,
-            </code>
-            <div style={{ color:"#64748b", fontSize:11, marginTop:8 }}>
-              • type: monthly / admission / exam / hostel / transport<br/>
-              • YYYY-MM optional (نہ لکھیں تو آج کا مہینہ)<br/>
-              • Header row ہو یا نہ ہو — خود سمجھ جائے گا
-            </div>
-          </div>
-
-          {/* Upload button */}
-          <label style={{ display:"inline-flex", alignItems:"center", gap:10,
-            padding:"12px 28px", borderRadius:10, cursor:"pointer",
-            background:`linear-gradient(135deg,${G},#b8960a)`, color:N,
-            fontWeight:700, fontSize:14, fontFamily:"inherit" }}>
-            {csvLoading ? "⏳ upload ہو رہا ہے..." : "📂 CSV فائل منتخب کریں"}
-            <input type="file" accept=".csv,.txt" style={{display:"none"}}
-              onChange={handleCSV} disabled={csvLoading}/>
-          </label>
-
-          {/* Result */}
-          {csvResult && (
-            <div style={{ marginTop:16, padding:"14px 18px", borderRadius:10,
-              background: csvResult.skip===0 ? "rgba(74,222,128,0.1)" : "rgba(251,146,60,0.1)",
-              border: `1px solid ${csvResult.skip===0 ? "rgba(74,222,128,0.3)" : "rgba(251,146,60,0.3)"}` }}>
-              <div style={{ fontWeight:700, fontSize:14 }}>
-                <span style={{ color:"#4ade80" }}>✅ {csvResult.ok} fees کامیابی سے شامل ہوگئیں</span>
-                {csvResult.skip > 0 && <span style={{ color:"#fb923c", marginRight:16 }}> ⚠️ {csvResult.skip} ناکام</span>}
+            {/* Format guide */}
+            <div style={{ background:"rgba(99,202,183,0.06)", border:"1px solid rgba(99,202,183,0.2)",
+              borderRadius:10, padding:"12px 16px", marginBottom:16, direction:"ltr" }}>
+              <div style={{ color:"#63cab7", fontWeight:700, fontSize:12, marginBottom:8 }}>📄 CSV Format:</div>
+              <code style={{ display:"block", background:"rgba(0,0,0,0.4)", padding:"10px 14px",
+                borderRadius:8, color:"#a3e6dc", fontFamily:"monospace", fontSize:11.5, lineHeight:1.9,
+                whiteSpace:"pre-wrap", wordBreak:"break-all" }}>
+                {p.format}
+              </code>
+              <div style={{ color:"#64748b", fontSize:11, marginTop:8, whiteSpace:"pre-line" }}>
+                {p.notes}{"\n"}• Header row ہو یا نہ ہو — خود سمجھ جائے گا
               </div>
-              {csvResult.errs.length > 0 && (
-                <div style={{ color:"#fca5a5", fontSize:12, marginTop:8 }}>
-                  {csvResult.errs.slice(0,5).join(" • ")}
-                </div>
-              )}
             </div>
-          )}
-        </div>
-      )}
+
+            {/* Buttons row: Upload + Template Download */}
+            <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"center" }}>
+              <label style={{ display:"inline-flex", alignItems:"center", gap:10,
+                padding:"12px 24px", borderRadius:10, cursor: csvLoading ? "not-allowed" : "pointer",
+                background: csvLoading ? "#334155" : `linear-gradient(135deg,${G},#b8960a)`,
+                color: csvLoading ? "#64748b" : N,
+                fontWeight:700, fontSize:14, fontFamily:"inherit" }}>
+                {csvLoading ? `⏳ ${csvProgress.done}/${csvProgress.total} ہو رہا ہے...` : "📂 CSV فائل منتخب کریں"}
+                <input type="file" accept=".csv,.txt" style={{display:"none"}}
+                  onChange={p.handler} disabled={csvLoading}/>
+              </label>
+              <button onClick={() => downloadTemplate(activeTab)}
+                style={{ padding:"12px 20px", borderRadius:10, border:"1px solid rgba(99,202,183,0.4)",
+                  background:"rgba(99,202,183,0.08)", color:"#63cab7",
+                  fontWeight:700, fontSize:13, fontFamily:"inherit", cursor:"pointer" }}>
+                📥 Template Download
+              </button>
+            </div>
+
+            {/* Progress bar */}
+            {csvLoading && csvProgress.total > 0 && (
+              <div style={{ marginTop:12, background:"rgba(255,255,255,0.06)", borderRadius:6, height:8, overflow:"hidden" }}>
+                <div style={{
+                  height:"100%", borderRadius:6, transition:"width 0.2s",
+                  background:`linear-gradient(90deg,${G},#4ade80)`,
+                  width: `${Math.round((csvProgress.done / csvProgress.total) * 100)}%`
+                }}/>
+              </div>
+            )}
+
+            {/* Result */}
+            {csvResult && (
+              <div style={{ marginTop:14, padding:"14px 18px", borderRadius:10,
+                background: csvResult.skip===0 ? "rgba(74,222,128,0.1)" : "rgba(251,146,60,0.1)",
+                border: `1px solid ${csvResult.skip===0 ? "rgba(74,222,128,0.3)" : "rgba(251,146,60,0.3)"}` }}>
+                <div style={{ fontWeight:700, fontSize:14 }}>
+                  <span style={{ color:"#4ade80" }}>✅ {csvResult.ok} {p.okLabel} کامیابی سے شامل ہوگئے</span>
+                  {csvResult.skip > 0 && <span style={{ color:"#fb923c", marginRight:16 }}> ⚠️ {csvResult.skip} ناکام</span>}
+                </div>
+                {csvResult.errs.length > 0 && (
+                  <div style={{ color:"#fca5a5", fontSize:12, marginTop:10,
+                    maxHeight:140, overflowY:"auto", lineHeight:1.9,
+                    background:"rgba(0,0,0,0.2)", borderRadius:8, padding:"8px 12px" }}>
+                    {csvResult.errs.map((e, i) => (
+                      <div key={i}>• {e}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Command Input */}
-      {!csvTab && <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(212,175,55,0.2)",
+      {activeTab === "ai" && <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(212,175,55,0.2)",
         borderRadius:14, padding:20, marginBottom:20 }}>
-        <label style={{ fontSize:13, color:"rgba(212,175,55,0.8)", fontWeight:700,
-          marginBottom:10, display:"block" }}>
-          📝 اردو میں حکم لکھیں
-        </label>
+
+        {/* Label row */}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+          <label style={{ fontSize:13, color:"rgba(212,175,55,0.8)", fontWeight:700 }}>
+            📝 اردو میں حکم لکھیں یا بولیں
+          </label>
+          {/* Mic button — click to start, click again to stop */}
+          <button
+            onClick={listening ? stopListening : startListening}
+            disabled={loading || transcribing}
+            title={listening ? "روکیں" : transcribing ? "AI سمجھ رہا ہے..." : "آواز سے حکم دیں"}
+            style={{
+              width:44, height:44, borderRadius:"50%", border:"none",
+              cursor: (loading || transcribing) ? "not-allowed" : "pointer",
+              background: listening ? "rgba(239,68,68,0.25)" : transcribing ? "rgba(212,175,55,0.15)" : "rgba(212,175,55,0.12)",
+              display:"flex", alignItems:"center", justifyContent:"center",
+              fontSize:20, transition:"all 0.2s",
+              boxShadow: listening ? "0 0 0 6px rgba(239,68,68,0.2)" : "none",
+            }}>
+            {transcribing ? "⏳" : listening ? "⏹️" : "🎙️"}
+          </button>
+        </div>
+
+        {/* Listening / Transcribing indicator */}
+        {(listening || transcribing) && (
+          <div style={{ background: transcribing ? "rgba(212,175,55,0.08)" : "rgba(239,68,68,0.08)",
+            border: `1px solid ${transcribing ? "rgba(212,175,55,0.3)" : "rgba(239,68,68,0.3)"}`,
+            borderRadius:9, padding:"12px 16px", marginBottom:10 }}>
+            {listening && (
+              <div style={{ color:"#f87171", fontSize:13, fontWeight:600, marginBottom: interimText ? 8 : 0 }}>
+                🔴 سن رہا ہوں — بولیں &nbsp;
+                <span style={{ color:"#64748b", fontWeight:400, fontSize:11 }}>(⏹️ button سے روکیں)</span>
+              </div>
+            )}
+            {transcribing && (
+              <div style={{ color:G, fontSize:13, fontWeight:600 }}>
+                ⏳ Whisper AI آواز سمجھ رہا ہے…
+              </div>
+            )}
+            {interimText && (
+              <div style={{ color:"#94a3b8", fontSize:13, fontStyle:"italic", direction:"rtl" }}>
+                {interimText}…
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Mic error */}
+        {micError && (
+          <div style={{ background:"rgba(251,146,60,0.1)", border:"1px solid rgba(251,146,60,0.3)",
+            borderRadius:9, padding:"8px 14px", marginBottom:10,
+            color:"#fb923c", fontSize:12 }}>
+            ⚠️ {micError}
+          </div>
+        )}
+
         <textarea value={command} onChange={e => setCommand(e.target.value)}
           rows={3} placeholder="مثال: احمد علی کی 5000 روپے فیس شامل کرو..."
           onKeyDown={e => { if(e.key==="Enter" && e.ctrlKey) sendCommand(); }}
-          style={{ ...inp, resize:"none", lineHeight:1.6 }}/>
+          style={{ ...inp, resize:"none", lineHeight:1.6,
+            border: listening ? "1px solid rgba(239,68,68,0.5)" : "1px solid rgba(212,175,55,0.25)" }}/>
+
         <div style={{ display:"flex", justifyContent:"space-between",
           alignItems:"center", marginTop:10 }}>
-          <span style={{ color:"#475569", fontSize:11 }}>Ctrl+Enter سے بھیجیں</span>
+          <span style={{ color:"#475569", fontSize:11 }}>Ctrl+Enter سے بھیجیں • 🎙️ سے بولیں</span>
           <button onClick={sendCommand} disabled={!command.trim() || loading}
             style={{ background:(!command.trim()||loading)?"#334155":G,
               color:(!command.trim()||loading)?"#64748b":N,
               border:"none", borderRadius:9, padding:"10px 24px",
               fontWeight:700, cursor:(!command.trim()||loading)?"not-allowed":"pointer",
               fontSize:14, fontFamily:"inherit" }}>
-            {loading ? "⏳ سوچ رہا ہے..." : "🤖 AI سے پوچھیں"}
+            {loading ? `⏳ سوچ رہا ہے${streamDots}` : "🤖 AI سے پوچھیں"}
           </button>
         </div>
       </div>}
 
       {/* Error */}
-      {error && (
+      {activeTab === "ai" && error && (
         <div style={{ background:"rgba(248,113,113,0.1)", border:"1px solid rgba(248,113,113,0.3)",
           borderRadius:10, padding:"12px 16px", marginBottom:16, color:"#f87171", fontSize:13 }}>
           {error}
@@ -391,7 +761,7 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
       )}
 
       {/* AI Result — Confirmation */}
-      {result && !done && (
+      {activeTab === "ai" && result && !done && (
         <div style={{ background:"rgba(255,255,255,0.05)", border:`1px solid ${G}40`,
           borderRadius:14, padding:20, marginBottom:20 }}>
 
@@ -478,7 +848,7 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
       )}
 
       {/* Success */}
-      {done && result?._successMsg && (
+      {activeTab === "ai" && done && result?._successMsg && (
         <div style={{ background:"rgba(74,222,128,0.1)",
           border:"1px solid rgba(74,222,128,0.3)",
           borderRadius:12, padding:"16px 20px", marginBottom:20,
@@ -496,7 +866,7 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
       )}
 
       {/* Examples */}
-      {!result && !loading && (
+      {activeTab === "ai" && !result && !loading && (
         <div style={{ background:"rgba(255,255,255,0.03)",
           border:"1px solid rgba(255,255,255,0.07)",
           borderRadius:12, padding:16, marginBottom:20 }}>
@@ -520,7 +890,7 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
       )}
 
       {/* History */}
-      {history.length > 0 && (
+      {activeTab === "ai" && history.length > 0 && (
         <div>
           <div style={{ color:"#64748b", fontSize:12, fontWeight:700,
             marginBottom:10 }}>📜 حالیہ احکامات</div>
