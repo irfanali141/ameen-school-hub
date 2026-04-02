@@ -119,7 +119,11 @@ export default function HomeworkHub({ students, user, userRole, teachers }){
       assigned_by: user?.email || "staff",
       created_at:  new Date().toISOString(),
     });
-    if(!error) await load();
+    if(error){
+      alert("ہوم ورک محفوظ نہیں ہوا:\n" + error.message);
+      throw error;
+    }
+    await load();
   };
 
   // ── Delete homework ──────────────────────────────────────────────────────────

@@ -52,16 +52,21 @@ export default function AddHomework({ students, onSave, onClose }){
     const e = validate();
     if(e){ setErr(e); return; }
     setSaving(true); setErr("");
-    if(form.grade === "all_grades"){
-      // Bulk: assign to every grade
-      for(const g of grades){
-        await onSave({ ...form, grade: g, total_marks: Number(form.total_marks)||10 });
+    try {
+      if(form.grade === "all_grades"){
+        // Bulk: assign to every grade
+        for(const g of grades){
+          await onSave({ ...form, grade: g, total_marks: Number(form.total_marks)||10 });
+        }
+      } else {
+        await onSave({ ...form, total_marks: Number(form.total_marks)||10 });
       }
-    } else {
-      await onSave({ ...form, total_marks: Number(form.total_marks)||10 });
+      onClose();
+    } catch(err) {
+      setErr("محفوظ نہیں ہوا: " + (err?.message || "دوبارہ کوشش کریں"));
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    onClose();
   };
 
   // Days until due
