@@ -55,6 +55,7 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
     results:    `studentName,exam,subject,totalMarks,obtainedMarks,date\nAhmad Ali,Mid Term,Math,100,85,${TODAY}\nBilal Khan,Mid Term,Urdu,50,42,${TODAY}`,
     attendance: `studentName,date,status\nAhmad Ali,${TODAY},present\nBilal Khan,${TODAY},absent\nSara Noor,${TODAY},late`,
     hifz:       `studentName,surah,ayahs,type,rating,date\nAhmad Ali,Al-Baqarah,1-5,sabaq,4,${TODAY}\nBilal Khan,Al-Imran,10-15,sabqi,3,`,
+    homework:   `grade,subject,title,description,due_date,total_marks\nGrade 7,ریاضی,صفحہ 15-18 حل کریں,مسائل حل کریں,${new Date(Date.now()+3*86400000).toISOString().split("T")[0]},10\nGrade 8,اردو,مضمون لکھیں,,${new Date(Date.now()+5*86400000).toISOString().split("T")[0]},20`,
   };
   const downloadTemplate = (type) => {
     const blob = new Blob([TEMPLATES[type]], { type: "text/csv;charset=utf-8;" });
@@ -67,13 +68,13 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
 
   // ── Role-based CSV tab visibility ──
   const CSV_TABS_FOR_ROLE = {
-    director:    ["fees","students","teachers","results","attendance","hifz"],
-    admin:       ["fees","students","teachers","results","attendance","hifz"],
-    teacher:     ["results","attendance","hifz"],
+    director:    ["fees","students","teachers","results","attendance","hifz","homework"],
+    admin:       ["fees","students","teachers","results","attendance","hifz","homework"],
+    teacher:     ["results","attendance","hifz","homework"],
     finance:     ["fees"],
     housemaster: ["hifz"],
   };
-  const allowedCsvTabs = CSV_TABS_FOR_ROLE[userRole] || ["fees","students","teachers","results","attendance","hifz"];
+  const allowedCsvTabs = CSV_TABS_FOR_ROLE[userRole] || ["fees","students","teachers","results","attendance","hifz","homework"];
 
   const findStudent = (nameOrCode) =>
     students.find(s =>
@@ -217,6 +218,28 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
         });
         return true;
       } catch (err) { return `${st.name}: ${err.message}`; }
+    });
+  };
+
+  // ── Homework CSV ──
+  const handleHomeworkCSV = (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    e.target.value = "";
+    runCSV(file, async ([grade, subject, title, description, due_date, total_marks]) => {
+      if (!grade || !subject || !title || !due_date) return `مکمل نہیں: ${title||"؟"}`;
+      try {
+        const { supabase: sb } = await import("../../supabase");
+        const { error } = await sb.from("homework").insert({
+          grade, subject, title,
+          description: description || "",
+          due_date,
+          total_marks: parseInt(total_marks) || 10,
+          assigned_by: "csv_upload",
+          created_at: new Date().toISOString(),
+        });
+        if (error) throw new Error(error.message);
+        return true;
+      } catch (err) { return `${title}: ${err.message}`; }
     });
   };
 
@@ -533,6 +556,7 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
           { id:"results",    label:"📊 نتائج",     always: false },
           { id:"attendance", label:"📋 حاضری",     always: false },
           { id:"hifz",       label:"📖 حفظ",       always: false },
+          { id:"homework",   label:"📝 ہوم ورک",   always: false },
         ].filter(tab => tab.always || allowedCsvTabs.includes(tab.id))
          .map(tab => (
           <button key={tab.id} onClick={() => { setActiveTab(tab.id); setCsvResult(null); }}
@@ -595,6 +619,14 @@ export default function AICommandCenter({ students, teachers, houses, userRole, 
             notes: "• type: sabaq / sabqi / manzil\n• rating: 1-5 (default 3)\n• date optional — نہ لکھیں تو آج",
             handler: handleHifzCSV,
             okLabel: "حفظ records",
+          },
+          homework: {
+            title: "📝 CSV فائل سے ہوم ورک شامل کریں",
+            desc: "ایک ساتھ کئی جماعتوں کا ہوم ورک CSV سے ڈالیں",
+            format: `grade,subject,title,description,due_date,total_marks\nGrade 7,ریاضی,صفحہ 15-18 حل کریں,مسائل حل کریں,2024-04-20,10\nGrade 8,اردو,مضمون لکھیں,,2024-04-22,20`,
+            notes: "• due_date: YYYY-MM-DD format\n• total_marks optional (default 10)\n• description optional",
+            handler: handleHomeworkCSV,
+            okLabel: "ہوم ورک",
           },
         };
         const p = PANELS[activeTab];

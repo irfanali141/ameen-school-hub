@@ -13,6 +13,8 @@ function Students({students,addData,results=[],fees=[],hifzLogs=[],classes=[],se
   const [q,setQ]=useState("");
   const [filter,setFilter]=useState("all");
   const [filterGrade,setFilterGrade]=useState("all");
+  const [filterHouse,setFilterHouse]=useState("all");
+  const [sortBy,setSortBy]=useState("name");
   const [f,setF]=useState({name:"",fatherName:"",grade:"",section:"",houseId:"abuBakr",studentCode:"",canteenBalance:0,talent:"",phone:"",enrollmentStatus:"active",photoUrl:""});
   const [uploading,setUploading]=useState(false);
   const [uploadError,setUploadError]=useState(null);
@@ -102,8 +104,24 @@ function Students({students,addData,results=[],fees=[],hifzLogs=[],classes=[],se
     const matchQ=!q||s.name?.toLowerCase().includes(ql)||(s.studentCode||s.student_code)?.toLowerCase().includes(ql)||(s.fatherName||s.father_name)?.toLowerCase().includes(ql)||s.roll_no?.toLowerCase().includes(ql);
     const matchF=filter==="all"||(filter==="active"&&s.enrollmentStatus==="active")||(filter==="inactive"&&s.enrollmentStatus!=="active");
     const matchG=filterGrade==="all"||s.grade===filterGrade;
-    return matchQ&&matchF&&matchG;
+    const matchH=filterHouse==="all"||s.houseId===filterHouse;
+    return matchQ&&matchF&&matchG&&matchH;
+  }).sort((a,b)=>{
+    if(sortBy==="name") return (a.name||"").localeCompare(b.name||"");
+    if(sortBy==="grade") return (a.grade||"").localeCompare(b.grade||"");
+    if(sortBy==="fee"){
+      const aFee=fees.some(f=>f.student_id===a.id&&f.status==="pending")?1:0;
+      const bFee=fees.some(f=>f.student_id===b.id&&f.status==="pending")?1:0;
+      return bFee-aFee; // pending والے پہلے
+    }
+    return 0;
   });
+
+  // House-wise counts
+  const houseCounts=(HOUSES||[]).map(h=>({
+    ...h,
+    count: students.filter(s=>s.houseId===h.id&&s.enrollmentStatus==="active").length
+  }));
 
   // Use dynamic classes/sections from DB; fall back to hardcoded if none created yet
   const FALLBACK_GRADES=["Grade 6","Grade 7","Grade 8","Grade 9","Grade 10"];
@@ -170,17 +188,38 @@ function Students({students,addData,results=[],fees=[],hifzLogs=[],classes=[],se
         <button onClick={()=>setCsvResult(null)} style={{background:"none",border:"none",color:"#64748b",cursor:"pointer",marginLeft:"auto"}}>✕</button>
       </div>}
 
+      {/* House-wise stats bar */}
+      {houseCounts.length>0&&<div style={{display:"flex",gap:"8px",marginBottom:"14px",flexWrap:"wrap"}}>
+        {houseCounts.map(h=>(
+          <div key={h.id} onClick={()=>setFilterHouse(filterHouse===h.id?"all":h.id)}
+            style={{display:"flex",alignItems:"center",gap:"6px",padding:"6px 14px",borderRadius:"20px",cursor:"pointer",
+              background: filterHouse===h.id ? h.color+"40" : "rgba(255,255,255,0.05)",
+              border:`1px solid ${filterHouse===h.id ? h.color : "rgba(255,255,255,0.1)"}`,
+              transition:"all 0.2s"}}>
+            <span style={{width:8,height:8,borderRadius:"50%",background:h.color,display:"inline-block"}}/>
+            <span style={{color: filterHouse===h.id ? h.color : "rgba(255,255,255,0.5)",fontSize:"0.72rem",fontWeight:600}}>{h.nameEn}</span>
+            <span style={{color: filterHouse===h.id ? h.color : "rgba(255,255,255,0.35)",fontSize:"0.7rem",fontWeight:700}}>{h.count}</span>
+          </div>
+        ))}
+        {filterHouse!=="all"&&<button onClick={()=>setFilterHouse("all")} style={{background:"none",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"20px",padding:"6px 12px",color:"#64748b",fontSize:"0.7rem",cursor:"pointer",fontFamily:"inherit"}}>✕ Clear</button>}
+      </div>}
+
       <div style={{display:"flex",gap:"10px",marginBottom:"16px",flexWrap:"wrap"}}>
         <input value={q} onChange={e=>setQ(e.target.value)} placeholder="🔍 Search by name, code, father's name..."
           style={{...inp,flex:1,minWidth:"200px",background:"rgba(255,255,255,0.08)"}}/>
-        <select value={filter} onChange={e=>setFilter(e.target.value)} style={{...inp,width:"140px",background:"rgba(255,255,255,0.08)"}}>
+        <select value={filter} onChange={e=>setFilter(e.target.value)} style={{...inp,width:"130px",background:"rgba(255,255,255,0.08)"}}>
           <option value="all">All Students</option>
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
         </select>
-        <select value={filterGrade} onChange={e=>setFilterGrade(e.target.value)} style={{...inp,width:"140px",background:"rgba(255,255,255,0.08)"}}>
+        <select value={filterGrade} onChange={e=>setFilterGrade(e.target.value)} style={{...inp,width:"130px",background:"rgba(255,255,255,0.08)"}}>
           <option value="all">All Grades</option>
           {grades.map(g=><option key={g} value={g}>{g}</option>)}
+        </select>
+        <select value={sortBy} onChange={e=>setSortBy(e.target.value)} style={{...inp,width:"130px",background:"rgba(255,255,255,0.08)"}}>
+          <option value="name">Sort: Name</option>
+          <option value="grade">Sort: Grade</option>
+          <option value="fee">Sort: Fee Due</option>
         </select>
       </div>
 
@@ -188,8 +227,11 @@ function Students({students,addData,results=[],fees=[],hifzLogs=[],classes=[],se
         {filtered.length===0&&<div style={{color:"rgba(255,255,255,0.4)",padding:"40px",textAlign:"center",gridColumn:"1/-1"}} className="ur">کوئی طالب علم نہیں ملا</div>}
         {filtered.map(s=>{
           const house=HOUSES?.find(h=>h.id===s.houseId);
+          const pendingFees=fees.filter(f=>f.student_id===s.id&&f.status==="pending");
+          const hasPending=pendingFees.length>0;
           return(
-            <div key={s.id} style={{...glass,padding:"16px",display:"flex",gap:"14px",alignItems:"flex-start"}}>
+            <div key={s.id} style={{...glass,padding:"16px",display:"flex",gap:"14px",alignItems:"flex-start",
+              border: hasPending ? "1px solid rgba(251,146,60,0.35)" : "1px solid rgba(255,255,255,0.12)"}}>
               <div style={{flexShrink:0}}>
                 {s.photoUrl?(
                   <img src={s.photoUrl} alt={s.name} style={{width:"52px",height:"52px",borderRadius:"50%",objectFit:"cover",border:`2px solid ${G}`}}/>
@@ -209,6 +251,7 @@ function Students({students,addData,results=[],fees=[],hifzLogs=[],classes=[],se
                     {s.enrollmentStatus==="active"?"Active":"Inactive"}
                   </span>
                   {house&&<span style={{background:house.color+"30",color:house.color,borderRadius:"8px",padding:"2px 8px",fontSize:"0.65rem",fontWeight:600}}>{house.nameEn}</span>}
+                  {hasPending&&<span style={{background:"rgba(251,146,60,0.15)",color:"#fb923c",borderRadius:"8px",padding:"2px 8px",fontSize:"0.65rem",fontWeight:700}}>💰 {pendingFees.length} Due</span>}
                 </div>
                 {s.phone&&<div style={{color:"rgba(255,255,255,0.4)",fontSize:"0.68rem",marginTop:"4px"}}>📞 {s.phone}</div>}
                 <div style={{display:"flex",gap:"6px",marginTop:"10px"}}>

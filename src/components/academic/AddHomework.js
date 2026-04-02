@@ -40,7 +40,7 @@ export default function AddHomework({ students, onSave, onClose }){
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
 
   const validate = () => {
-    if(!form.grade)       return "جماعت منتخب کریں";
+    if(!form.grade)       return "جماعت منتخب کریں (یا تمام جماعتیں)";
     if(!form.subject)     return "مضمون منتخب کریں";
     if(!form.title.trim())return "عنوان درج کریں";
     if(!form.due_date)    return "آخری تاریخ درج کریں";
@@ -52,7 +52,14 @@ export default function AddHomework({ students, onSave, onClose }){
     const e = validate();
     if(e){ setErr(e); return; }
     setSaving(true); setErr("");
-    await onSave({ ...form, total_marks: Number(form.total_marks)||10 });
+    if(form.grade === "all_grades"){
+      // Bulk: assign to every grade
+      for(const g of grades){
+        await onSave({ ...form, grade: g, total_marks: Number(form.total_marks)||10 });
+      }
+    } else {
+      await onSave({ ...form, total_marks: Number(form.total_marks)||10 });
+    }
     setSaving(false);
     onClose();
   };
@@ -103,8 +110,14 @@ export default function AddHomework({ students, onSave, onClose }){
               <select value={form.grade} onChange={e=>set("grade",e.target.value)}
                 style={{...inp,appearance:"none"}}>
                 <option value="">— منتخب کریں —</option>
+                <option value="all_grades">🌐 تمام جماعتیں (Bulk)</option>
                 {grades.map(g=><option key={g} value={g}>{g}</option>)}
               </select>
+              {form.grade==="all_grades"&&(
+                <div style={{fontSize:"0.6rem",color:"#facc15",marginTop:4,fontWeight:700}}>
+                  ⚡ تمام {grades.length} جماعتوں کو ایک ساتھ assign ہوگا
+                </div>
+              )}
             </div>
             <div>
               <label style={lbl}>مضمون *</label>
@@ -159,14 +172,28 @@ export default function AddHomework({ students, onSave, onClose }){
           {/* Students count preview */}
           {form.grade&&(
             <div style={{padding:"10px 14px",borderRadius:"9px",marginBottom:"14px",
-              background:"rgba(96,165,250,0.08)",border:"1px solid rgba(96,165,250,0.15)",
+              background: form.grade==="all_grades"?"rgba(250,204,21,0.07)":"rgba(96,165,250,0.08)",
+              border:`1px solid ${form.grade==="all_grades"?"rgba(250,204,21,0.2)":"rgba(96,165,250,0.15)"}`,
               direction:"rtl"}}>
-              <span style={{fontSize:"0.7rem",color:"#60a5fa",fontWeight:"700"}}>
-                👥 {students.filter(s=>s.grade===form.grade).length} طلبہ
-              </span>
-              <span style={{fontSize:"0.65rem",color:"rgba(255,255,255,0.4)",marginRight:"6px"}}>
-                — {form.grade} جماعت
-              </span>
+              {form.grade==="all_grades"?(
+                <>
+                  <span style={{fontSize:"0.7rem",color:"#facc15",fontWeight:700}}>
+                    ⚡ {students.length} طلبہ — تمام جماعتیں
+                  </span>
+                  <span style={{fontSize:"0.62rem",color:"rgba(255,255,255,0.35)",marginRight:8}}>
+                    ({grades.length} جماعتوں میں {grades.length} الگ ہوم ورک بنیں گے)
+                  </span>
+                </>
+              ):(
+                <>
+                  <span style={{fontSize:"0.7rem",color:"#60a5fa",fontWeight:700}}>
+                    👥 {students.filter(s=>s.grade===form.grade).length} طلبہ
+                  </span>
+                  <span style={{fontSize:"0.65rem",color:"rgba(255,255,255,0.4)",marginRight:6}}>
+                    — {form.grade} جماعت
+                  </span>
+                </>
+              )}
             </div>
           )}
 

@@ -50,6 +50,8 @@ export default function HomeworkHub({ students, user, userRole, teachers }){
   const [viewingHW,    setViewingHW]    = useState(null); // SubmissionView
   const [gradeFilter,  setGradeFilter]  = useState("all");
   const [subjectFilter,setSubjectFilter]= useState("all");
+  const [csvLoading,   setCsvLoading]   = useState(false);
+  const [csvResult,    setCsvResult]    = useState(null);
 
   const isStaff   = !["parent","student"].includes(userRole);
   const isStudent = userRole === "student";
@@ -78,6 +80,37 @@ export default function HomeworkHub({ students, user, userRole, teachers }){
   };
 
   useEffect(()=>{ load(); },[]);
+
+  // ── CSV bulk upload ─────────────────────────────────────────────────────────
+  const handleCSV = async (e) => {
+    const file = e.target.files[0]; if(!file) return;
+    e.target.value = "";
+    setCsvLoading(true); setCsvResult(null);
+    const text = await file.text();
+    const lines = text.split("\n").map(l=>l.trim()).filter(Boolean);
+    const header = lines[0]?.toLowerCase();
+    const dataLines = (header.includes("grade")||header.includes("subject")||header.includes("title"))
+      ? lines.slice(1) : lines;
+    const today = new Date().toISOString().split("T")[0];
+    let ok=0, skip=0, errs=[];
+    for(const line of dataLines){
+      const [grade,subject,title,description,due_date,total_marks] = line.split(",").map(s=>s?.trim());
+      if(!grade||!subject||!title||!due_date){ skip++; errs.push(`مکمل نہیں: ${title||line.slice(0,20)}`); continue; }
+      const { error } = await supabase.from("homework").insert({
+        grade, subject, title,
+        description: description||"",
+        due_date,
+        total_marks: parseInt(total_marks)||10,
+        assigned_by: user?.email||"staff",
+        created_at: new Date().toISOString(),
+      });
+      if(error){ errs.push(`${title}: ${error.message}`); skip++; }
+      else ok++;
+    }
+    setCsvResult({ok,skip,errs});
+    setCsvLoading(false);
+    if(ok>0) await load();
+  };
 
   // ── Save new homework ────────────────────────────────────────────────────────
   const saveHomework = async (form) => {
@@ -176,14 +209,24 @@ export default function HomeworkHub({ students, user, userRole, teachers }){
         </div>
 
         {isStaff&&(
-          <button onClick={()=>setShowAdd(true)}
-            style={{padding:"10px 20px",borderRadius:"10px",border:"none",
-              background:`linear-gradient(135deg,${G},#b8960a)`,
-              color:N,fontSize:"0.8rem",fontWeight:"800",cursor:"pointer",
-              fontFamily:"inherit",display:"flex",alignItems:"center",gap:"7px",
-              boxShadow:"0 4px 14px rgba(212,175,55,0.3)"}}>
-            <span style={{fontSize:"1rem"}}>+</span> نیا ہوم ورک
-          </button>
+          <div style={{display:"flex",gap:"8px",flexWrap:"wrap",alignItems:"center"}}>
+            {/* CSV Upload */}
+            <label style={{display:"inline-flex",alignItems:"center",gap:"6px",padding:"9px 14px",
+              borderRadius:"10px",cursor:csvLoading?"not-allowed":"pointer",
+              background:"rgba(99,202,183,0.1)",color:"#63cab7",
+              border:"1px solid rgba(99,202,183,0.3)",fontSize:"0.75rem",fontWeight:700,fontFamily:"inherit"}}>
+              {csvLoading?"⏳...":"📂 CSV"}
+              <input type="file" accept=".csv,.txt" style={{display:"none"}} onChange={handleCSV} disabled={csvLoading}/>
+            </label>
+            <button onClick={()=>setShowAdd(true)}
+              style={{padding:"10px 20px",borderRadius:"10px",border:"none",
+                background:`linear-gradient(135deg,${G},#b8960a)`,
+                color:N,fontSize:"0.8rem",fontWeight:"800",cursor:"pointer",
+                fontFamily:"inherit",display:"flex",alignItems:"center",gap:"7px",
+                boxShadow:"0 4px 14px rgba(212,175,55,0.3)"}}>
+              <span style={{fontSize:"1rem"}}>+</span> نیا ہوم ورک
+            </button>
+          </div>
         )}
       </div>
 
@@ -208,6 +251,77 @@ export default function HomeworkHub({ students, user, userRole, teachers }){
           </div>
         ))}
       </div>
+
+      {/* ── CSV result ── */}
+      {csvResult&&(
+        <div style={{marginBottom:"14px",padding:"12px 16px",borderRadius:"10px",
+          background:csvResult.skip===0?"rgba(74,222,128,0.08)":"rgba(251,146,60,0.08)",
+          border:`1px solid ${csvResult.skip===0?"rgba(74,222,128,0.3)":"rgba(251,146,60,0.3)"}`,
+          display:"flex",alignItems:"center",gap:"12px",flexWrap:"wrap",direction:"rtl"}}>
+          <span style={{color:"#4ade80",fontWeight:700,fontSize:"0.8rem"}}>✅ {csvResult.ok} ہوم ورک شامل ہوئے</span>
+          {csvResult.skip>0&&<span style={{color:"#fb923c",fontWeight:700,fontSize:"0.8rem"}}>⚠️ {csvResult.skip} ناکام</span>}
+          {csvResult.errs.slice(0,3).map((e,i)=><span key={i} style={{color:"#fca5a5",fontSize:"0.68rem"}}>{e}</span>)}
+          <button onClick={()=>setCsvResult(null)} style={{marginRight:"auto",background:"none",border:"none",color:"#64748b",cursor:"pointer"}}>✕</button>
+        </div>
+      )}
+
+      {/* ── CSV Format hint (collapsed) ── */}
+      {isStaff&&!homework.length&&(
+        <div style={{marginBottom:"14px",padding:"12px 16px",borderRadius:"10px",direction:"ltr",
+          background:"rgba(99,202,183,0.05)",border:"1px solid rgba(99,202,183,0.15)"}}>
+          <div style={{color:"#63cab7",fontWeight:700,fontSize:"0.72rem",marginBottom:6}}>📄 Homework CSV Format:</div>
+          <code style={{display:"block",background:"rgba(0,0,0,0.3)",padding:"8px 12px",borderRadius:7,
+            color:"#a3e6dc",fontFamily:"monospace",fontSize:"0.68rem",lineHeight:1.9}}>
+            grade,subject,title,description,due_date,total_marks{"\n"}
+            Grade 7,ریاضی,صفحہ 15-18,مسائل حل کریں,2024-04-20,10{"\n"}
+            Grade 8,اردو,مضمون لکھیں,,2024-04-22,20
+          </code>
+        </div>
+      )}
+
+      {/* ── Subject filter pills ── */}
+      {subjects.length>0&&(
+        <div style={{display:"flex",gap:"6px",marginBottom:"14px",flexWrap:"wrap"}}>
+          <button onClick={()=>setSubjectFilter("all")}
+            style={{padding:"5px 14px",borderRadius:"20px",border:"none",cursor:"pointer",fontFamily:"inherit",
+              fontSize:"0.68rem",fontWeight:700,
+              background:subjectFilter==="all"?G:"rgba(255,255,255,0.06)",
+              color:subjectFilter==="all"?N:"rgba(255,255,255,0.45)"}}>
+            تمام مضامین
+          </button>
+          {subjects.map(s=>(
+            <button key={s} onClick={()=>setSubjectFilter(subjectFilter===s?"all":s)}
+              style={{padding:"5px 14px",borderRadius:"20px",border:"none",cursor:"pointer",fontFamily:"inherit",
+                fontSize:"0.68rem",fontWeight:600,
+                background:subjectFilter===s?"rgba(212,175,55,0.2)":"rgba(255,255,255,0.05)",
+                color:subjectFilter===s?G:"rgba(255,255,255,0.4)",
+                border:`1px solid ${subjectFilter===s?"rgba(212,175,55,0.4)":"rgba(255,255,255,0.08)"}`,
+                transition:"all 0.15s"}}>
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* ── Tomorrow deadline reminder banner ── */}
+      {(()=>{
+        const tmr = homework.filter(h=>{
+          const today2=new Date(); today2.setHours(0,0,0,0);
+          const due2=new Date(h.due_date); due2.setHours(0,0,0,0);
+          return Math.ceil((due2-today2)/86400000)===1;
+        });
+        return tmr.length>0&&tab!=="overdue"?(
+          <div style={{marginBottom:"14px",padding:"10px 16px",borderRadius:"10px",cursor:"pointer",
+            background:"rgba(250,204,21,0.07)",border:"1px solid rgba(250,204,21,0.25)",
+            display:"flex",alignItems:"center",gap:"10px",direction:"rtl"}}
+            onClick={()=>setTab("active")}>
+            <span>🟠</span>
+            <span style={{fontSize:"0.73rem",fontWeight:700,color:"#facc15"}}>
+              {tmr.length} ہوم ورک کی deadline کل ہے — {tmr.map(h=>h.title).join("، ")}
+            </span>
+          </div>
+        ):null;
+      })()}
 
       {/* ── Filters (teacher/director only) ── */}
       {isStaff&&(homework.length>0)&&(
