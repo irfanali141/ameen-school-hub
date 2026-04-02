@@ -24,6 +24,7 @@ import ClassAnalytics from "./components/academic/ClassAnalytics";
 import TranscriptRequest from "./components/academic/TranscriptRequest";
 import ReportCard from "./components/academic/ReportCard";
 import EvaluationScales from "./components/academic/EvaluationScales";
+import EvaluationCenter from "./components/evaluation/EvaluationCenter";
 import ClassesAndSections from "./components/academic/ClassesAndSections";
 import DMC from "./components/academic/DMC";
 import CurriculumHub from "./components/academic/CurriculumHub";
@@ -123,6 +124,7 @@ const TRANS = {
       notifications:"📱 اطلاعات", noticeboard:"📌 نوٹس بورڈ", events:"🎭 ایونٹس",
       classrooms:"🏫 جماعتیں و شعبے", students:"🎓 طلبہ", hifz:"📖 حفظ", results:"📊 نتائج", marks:"✏️ نمبرات",
       reportcard:"📋 رپورٹ کارڈ", dmc:"🎓 DMC", transcript:"📜 ٹرانسکرپٹ", evaluationscales:"🎯 تشخیصی پیمانے",
+      evalcenter:"📊 تشخیص و HVS",
       welfare:"💬 طلبہ فلاح", hpri:"⚠️ HPRI", health:"🏥 صحت",
       hostel:"🏠 ہوسٹل", transport:"🚌 ٹرانسپورٹ", houses:"🏠 گھر",
       hvs:"🏅 HVS", superhouse:"🏆 سپر ہاوس", duties:"📋 ڈیوٹی چیک لسٹ", grandtotal:"🏆 ۳۰۰ مارکس", superannual:"🏆 سالانہ ۴۰۰", tarbiyah:"🌟 تربیت",
@@ -164,6 +166,7 @@ const TRANS = {
       notifications:"📱 Notifications", noticeboard:"📌 Notice Board", events:"🎭 Events",
       classrooms:"🏫 Classes & Sections", students:"🎓 Students", hifz:"📖 Hifz", results:"📊 Results", marks:"✏️ Marks",
       reportcard:"📋 Report Card", dmc:"🎓 DMC", transcript:"📜 Transcript", evaluationscales:"🎯 Evaluation Scales",
+      evalcenter:"📊 Evaluation & HVS",
       welfare:"💬 Welfare", hpri:"⚠️ HPRI", health:"🏥 Health",
       hostel:"🏠 Hostel", transport:"🚌 Transport", houses:"🏠 Houses",
       hvs:"🏅 HVS", superhouse:"🏆 Super House", duties:"📋 Duty Checklist", grandtotal:"🏆 Grand 300", superannual:"🏆 Annual 400", tarbiyah:"🌟 Tarbiyah",
@@ -205,6 +208,7 @@ const TRANS = {
       notifications:"📱 الإشعارات", noticeboard:"📌 لوحة الإعلانات", events:"🎭 الفعاليات",
       classrooms:"🏫 الفصول والشعب", students:"🎓 الطلاب", hifz:"📖 الحفظ", results:"📊 النتائج", marks:"✏️ الدرجات",
       reportcard:"📋 كشف الدرجات", dmc:"🎓 DMC", transcript:"📜 السجل", evaluationscales:"🎯 مقاييس التقييم",
+      evalcenter:"📊 التقييم و HVS",
       welfare:"💬 الرعاية", hpri:"⚠️ HPRI", health:"🏥 الصحة",
       hostel:"🏠 السكن", transport:"🚌 المواصلات", houses:"🏠 البيوت",
       hvs:"🏅 HVS", superhouse:"🏆 سوبر هاوس", duties:"📋 قائمة الواجبات", grandtotal:"🏆 المجموع 300", superannual:"🏆 السنوي 400", tarbiyah:"🌟 التربية",
@@ -300,7 +304,7 @@ const NAV_GROUPS = [
       {id:"marks",label:t.pages.marks},
       {id:"reportcard",label:t.pages.reportcard},
       {id:"dmc",label:t.pages.dmc},
-      {id:"evaluationscales",label:t.pages.evaluationscales},
+      {id:"evalcenter",label:t.pages.evalcenter},
       {id:"transcript",label:t.pages.transcript},
       {id:"welfare",label:t.pages.welfare},
       {id:"hpri",label:t.pages.hpri},
@@ -313,7 +317,6 @@ const NAV_GROUPS = [
     id: "house", label: t.nav.house, color: "#854d0e",
     pages: [
       {id:"houses",label:t.pages.houses},
-      {id:"hvs",label:t.pages.hvs},
       {id:"superhouse",label:t.pages.superhouse},
       {id:"duties",label:t.pages.duties},
       {id:"grandtotal",label:t.pages.grandtotal},
@@ -627,6 +630,7 @@ const NAV_GROUPS = [
       {canAccess(page)&&<>
       {page==="dashboard"&&<Dashboard students={students} teachers={teachers} houses={houses} hvsLogs={hvs} fees={fees} results={results} setPage={setPage}/>}
       {page==="hvs"&&<HVSEntry students={students} houses={houses} addData={addData} updateHousePoints={updateHousePoints} hvsLogs={hvs} userRole={uRole}/>}
+      {page==="evalcenter"&&<EvaluationCenter students={students} houses={houses} addData={addData} updateHousePoints={updateHousePoints} hvsLogs={hvs} userRole={uRole}/>}
       {page==="classrooms"&&<ClassesAndSections/>}
       {page==="students"&&<Students students={students} addData={addData} results={results} fees={fees} hifzLogs={hifzLogs} classes={dbClasses} sections={dbSections}/>}
       {page==="teachers"&&<Teachers teachers={teachers} addData={addData}/>}
@@ -679,6 +683,7 @@ const NAV_GROUPS = [
       {page==="reportcard"&&<ReportCard students={students} results={results} fees={fees} addData={addData}/>}
       {page==="dmc"&&<DMC students={students} results={results} fees={fees}/>}
       {page==="evaluationscales"&&<EvaluationScales addData={addData} students={students}/>}
+
       {page==="welfare"&&<WelfareFeedback students={students} addData={addData}/>}
       {page==="pride"&&<PrideMessages students={students} teachers={teachers} addData={addData}/>}
       {page==="ethics"&&<TarbiyahEthics students={students} addData={addData}/>}
