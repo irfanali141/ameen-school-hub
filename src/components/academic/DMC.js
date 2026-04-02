@@ -118,15 +118,33 @@ ${(()=>{
               <div style={{fontFamily:"'Cinzel Decorative','Cinzel',serif",fontSize:"1.1rem",fontWeight:"900",color:C.gold,letterSpacing:"0.04em"}}>AMEEN ISLAMIC INSTITUTE</div>
               <div style={{fontSize:"0.55rem",color:"#888",letterSpacing:"0.22em",marginTop:"2px"}}>SWAT • KPK • PAKISTAN</div>
             </div>
-            {/* House Badge */}
-            {h.id ? (
-              <div style={{flexShrink:0,textAlign:"center"}}>
-                <div style={{width:"70px",height:"70px",borderRadius:"50%",background:h.gradient,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",border:`3px solid ${h.color}`,boxShadow:`0 0 0 4px ${h.color}25,0 6px 20px rgba(0,0,0,0.15)`}}>
-                  <div style={{fontSize:"1.5rem",lineHeight:1}}>{h.emoji}</div>
+            {/* House Badge — circular seal style */}
+            {h.id ? (()=>{
+              const hIcon = h.id==="abuBakr"?"⚖️":h.id==="umar"?"🗡️":h.id==="uthman"?"📖":"⚔️";
+              const hName = (h.nameEn||"").toUpperCase()+" HOUSE";
+              const topText = "AMEEN ISLAMIC INSTITUTE";
+              return (
+                <div style={{flexShrink:0,textAlign:"center"}}>
+                  <svg width="96" height="96" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <path id={`ta-${h.id}`} d="M 10,48 a 38,38 0 1,1 76,0" fill="none"/>
+                      <path id={`ba-${h.id}`} d="M 10,48 a 38,38 0 0,0 76,0" fill="none"/>
+                    </defs>
+                    <circle cx="48" cy="48" r="46" fill={h.color}/>
+                    <circle cx="48" cy="48" r="46" fill="none" stroke="white" strokeWidth="2"/>
+                    <circle cx="48" cy="48" r="37" fill="none" stroke="white" strokeWidth="1" strokeDasharray="3,2"/>
+                    <circle cx="48" cy="48" r="28" fill="none" stroke="white" strokeWidth="1.5"/>
+                    <text x="48" y="56" textAnchor="middle" fontSize="22" fill="white">{hIcon}</text>
+                    <text fontSize="6.5" fill="white" fontFamily="Arial" fontWeight="bold" letterSpacing="1.2">
+                      <textPath href={`#ta-${h.id}`} startOffset="8%">{topText}</textPath>
+                    </text>
+                    <text fontSize="7" fill="white" fontFamily="Arial" fontWeight="bold" letterSpacing="1">
+                      <textPath href={`#ba-${h.id}`} startOffset="12%">{hName}</textPath>
+                    </text>
+                  </svg>
                 </div>
-                <div style={{fontSize:"0.52rem",fontWeight:"800",color:h.color,marginTop:"4px",letterSpacing:"0.05em"}}>{h.nameEn?.toUpperCase()} HOUSE</div>
-              </div>
-            ) : (
+              );
+            })() : (
               <div style={{width:"70px",height:"70px",borderRadius:"50%",background:`linear-gradient(135deg,${C.gold},${C.goldDark})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.5rem",flexShrink:0}}>🏫</div>
             )}
           </div>
