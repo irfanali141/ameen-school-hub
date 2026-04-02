@@ -1,6 +1,7 @@
 /* eslint-disable */
 import { useState, useEffect } from "react";
 import { C, S, hBadge, pBar, HOUSES, sLabel } from "../../constants";
+import logo from "../../logo.png";
 
 function ReportCard({students,results,fees,addData}){
   const [selStudent,setSelStudent]=useState(null); const [q,setQ]=useState(""); const [term,setTerm]=useState("Annual 2026");
@@ -25,9 +26,9 @@ function ReportCard({students,results,fees,addData}){
           {/* decorative circles */}
           <div style={{position:"absolute",top:"-40px",right:"-40px",width:"180px",height:"180px",borderRadius:"50%",background:"rgba(212,175,55,0.06)",pointerEvents:"none"}}/>
           <div style={{position:"absolute",bottom:"-30px",left:"-30px",width:"140px",height:"140px",borderRadius:"50%",background:"rgba(212,175,55,0.04)",pointerEvents:"none"}}/>
-          {/* emblem */}
-          <div style={{width:"64px",height:"64px",borderRadius:"50%",background:`linear-gradient(135deg,${C.gold},#b8960a)`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 14px",fontSize:"1.8rem",boxShadow:`0 0 0 6px rgba(212,175,55,0.15),0 8px 24px rgba(0,0,0,0.4)`}}>
-            ☪
+          {/* school logo */}
+          <div style={{width:"90px",height:"90px",borderRadius:"50%",margin:"0 auto 14px",boxShadow:`0 0 0 4px rgba(212,175,55,0.3),0 8px 28px rgba(0,0,0,0.5)`,overflow:"hidden",background:"#fff"}}>
+            <img src={logo} alt="AII Logo" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
           </div>
           <div style={{fontFamily:"'Cinzel Decorative','Cinzel',serif",fontSize:"1.4rem",fontWeight:"900",color:C.gold,letterSpacing:"0.06em",marginBottom:"4px",textShadow:"0 2px 12px rgba(212,175,55,0.4)"}}>
             AMEEN SCHOOL HUB
