@@ -1,6 +1,7 @@
 /* eslint-disable */
 import { useState, useEffect } from "react";
 import { C, S, hBadge, pBar, HOUSES, sLabel } from "../../constants";
+import logo from "../../logo.png";
 
 function DMC({students,results,fees}){
   const [q,setQ]=useState("");
@@ -108,14 +109,26 @@ ${(()=>{
       </div>
       <div id="dmc-print-area" style={{background:C.white,borderRadius:"20px",overflow:"hidden",boxShadow:"0 8px 32px rgba(0,0,0,0.12)",maxWidth:"820px",margin:"0 auto",padding:"24px 28px",border:`3px solid ${C.gold}40`}}>
         <div style={{textAlign:"center",borderBottom:`3px double ${C.gold}`,paddingBottom:"14px",marginBottom:"16px"}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"16px",marginBottom:"8px"}}>
-            <div style={{width:"50px",height:"50px",borderRadius:"50%",background:`conic-gradient(${C.gold},#e4b030,${C.gold})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.3rem"}}>☪</div>
-            <div>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:"1.1rem",fontWeight:"900",color:C.gold}}>AMEEN ISLAMIC INSTITUTE</div>
-              <div style={{fontFamily:"'Cinzel',serif",fontSize:"0.55rem",color:"#888",letterSpacing:"0.2em"}}>SWAT • KPK • PAKISTAN</div>
-              <div style={{fontSize:"0.75rem",fontWeight:"700",color:C.navy,marginTop:"2px"}}>Ameen Islamic Institute</div>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"20px",marginBottom:"8px"}}>
+            {/* School Logo */}
+            <div style={{width:"70px",height:"70px",borderRadius:"50%",overflow:"hidden",border:`3px solid ${C.gold}`,boxShadow:`0 0 0 4px ${C.gold}25,0 6px 20px rgba(0,0,0,0.15)`,flexShrink:0}}>
+              <img src={logo} alt="AII Logo" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
             </div>
-            <div style={{width:"50px",height:"50px",borderRadius:"50%",background:h.gradient||`linear-gradient(135deg,${C.gold},${C.goldDark})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.4rem"}}>{h.emoji||"🏫"}</div>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontFamily:"'Cinzel Decorative','Cinzel',serif",fontSize:"1.1rem",fontWeight:"900",color:C.gold,letterSpacing:"0.04em"}}>AMEEN ISLAMIC INSTITUTE</div>
+              <div style={{fontSize:"0.55rem",color:"#888",letterSpacing:"0.22em",marginTop:"2px"}}>SWAT • KPK • PAKISTAN</div>
+            </div>
+            {/* House Badge */}
+            {h.id ? (
+              <div style={{flexShrink:0,textAlign:"center"}}>
+                <div style={{width:"70px",height:"70px",borderRadius:"50%",background:h.gradient,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",border:`3px solid ${h.color}`,boxShadow:`0 0 0 4px ${h.color}25,0 6px 20px rgba(0,0,0,0.15)`}}>
+                  <div style={{fontSize:"1.5rem",lineHeight:1}}>{h.emoji}</div>
+                </div>
+                <div style={{fontSize:"0.52rem",fontWeight:"800",color:h.color,marginTop:"4px",letterSpacing:"0.05em"}}>{h.nameEn?.toUpperCase()} HOUSE</div>
+              </div>
+            ) : (
+              <div style={{width:"70px",height:"70px",borderRadius:"50%",background:`linear-gradient(135deg,${C.gold},${C.goldDark})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.5rem",flexShrink:0}}>🏫</div>
+            )}
           </div>
           <div style={{display:"inline-block",border:`2px solid ${C.gold}`,padding:"4px 24px",borderRadius:"4px"}}>
             <div style={{fontSize:"0.82rem",fontWeight:"900",color:C.navy}}>DETAIL MARKS CERTIFICATE</div>
