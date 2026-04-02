@@ -51,6 +51,10 @@ export default function HifzDashboard({ students=[], userRole, addData }) {
   const [offlineCount, setOfflineCount] = useState(offlineQ.keys().length);
   const [syncing,   setSyncing]   = useState(false);
   const [syncMsg,   setSyncMsg]   = useState("");
+  const [csvLoading,setCsvLoading]= useState(false);
+  const [csvResult, setCsvResult] = useState(null);
+  const [showCsvFmt,setShowCsvFmt]= useState(false);
+  const TODAY_STR = new Date().toISOString().split("T")[0];
 
   // Online/offline listeners
   useEffect(() => {
@@ -64,6 +68,74 @@ export default function HifzDashboard({ students=[], userRole, addData }) {
   // Set default classTab once grades are known
   useEffect(() => { if (!classTab && CLASSES.length) setClassTab(CLASSES[0]); }, [CLASSES.length]);
   useEffect(() => { if (classTab) loadData(); }, [classTab]);
+
+  // ── CSV bulk upload ──────────────────────────────────────────────────────────
+  const handleCSV = async (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    e.target.value = "";
+    setCsvLoading(true); setCsvResult(null);
+    const text = await file.text();
+    const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+    const header = lines[0]?.toLowerCase();
+    const dataLines = (header.includes("name")||header.includes("student")||header.includes("surah"))
+      ? lines.slice(1) : lines;
+    let ok=0, skip=0, errs=[];
+    for (const line of dataLines) {
+      const [nameOrCode, surah, ayahs, type, ratingStr, date] = line.split(",").map(s=>s?.trim());
+      if (!nameOrCode || !surah) { skip++; continue; }
+      const st = students.find(s =>
+        s.name?.toLowerCase().includes(nameOrCode.toLowerCase()) ||
+        (s.studentCode||s.student_code)?.toLowerCase() === nameOrCode.toLowerCase()
+      );
+      if (!st) { errs.push(`نہیں ملا: ${nameOrCode}`); skip++; continue; }
+      const validType = ["sabaq","sabqi","manzil"].includes(type?.toLowerCase()) ? type.toLowerCase() : "sabaq";
+      const { error } = await supabase.from("hifz_logs").insert({
+        student_id: st.id, surah, ayahs: ayahs||"",
+        type: validType, rating: parseInt(ratingStr)||3,
+        date: date||TODAY_STR, notes: "",
+      });
+      if (error) { errs.push(`${st.name}: ${error.message}`); skip++; }
+      else ok++;
+    }
+    setCsvResult({ ok, skip, errs });
+    setCsvLoading(false);
+  };
+
+  // ── Class Report print ───────────────────────────────────────────────────────
+  const printClassReport = () => {
+    const classStudents = students.filter(s => s.grade === classTab);
+    const rows = classStudents.map(s => {
+      const log = todayLogs.find(l => l.student_id === s.id);
+      const streak = streaks.find(st => st.student_id === s.id);
+      return `<tr style="border-bottom:1px solid #eee">
+        <td style="padding:6px 10px">${s.name||"—"}</td>
+        <td style="padding:6px 10px">${log?.surah||"—"}</td>
+        <td style="padding:6px 10px">${log?.ayahs||"—"}</td>
+        <td style="padding:6px 10px">${log?.type||"—"}</td>
+        <td style="padding:6px 10px;text-align:center">${log?.rating||"—"}</td>
+        <td style="padding:6px 10px;text-align:center">${streak?.current_streak||0} 🔥</td>
+      </tr>`;
+    }).join("");
+    const win = window.open("","_blank");
+    win.document.write(`
+      <html><head><title>Hifz Report - ${classTab}</title>
+      <style>body{font-family:Arial;direction:rtl;padding:20px}
+      table{width:100%;border-collapse:collapse;font-size:13px}
+      th{background:#1B4332;color:#fff;padding:8px 10px}
+      tr:nth-child(even){background:#f9f9f9}</style></head>
+      <body>
+        <h2 style="text-align:center">حفظ رپورٹ — ${classTab} — ${TODAY_STR}</h2>
+        <p style="text-align:center;color:#666">امین اسلامک اسکول | کل طلبہ: ${classStudents.length}</p>
+        <table>
+          <thead><tr>
+            <th>طالب علم</th><th>سورہ</th><th>آیات</th><th>نوع</th><th>ریٹنگ</th><th>Streak</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </body></html>`);
+    win.document.close();
+    win.print();
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -156,7 +228,8 @@ export default function HifzDashboard({ students=[], userRole, addData }) {
             <div style={{ color:"white", fontSize:"1.4rem", fontWeight:800, marginBottom:4 }}>🕌 حفظ ڈیشبورڈ</div>
             <div style={{ color:"rgba(255,255,255,0.45)", fontSize:"0.7rem", fontFamily:"'Noto Nastaliq Urdu','Segoe UI',sans-serif", direction:"rtl" }}>{todayStr}</div>
           </div>
-          <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
+          <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"center" }}>
+            {/* Stats */}
             {[
               { label:"حاضر", value:`${present}/${total}`, color:"#4ade80" },
               { label:"تصدیق شدہ", value:verified, color:G },
@@ -168,8 +241,60 @@ export default function HifzDashboard({ students=[], userRole, addData }) {
                 <div style={{ color:"rgba(255,255,255,0.4)", fontSize:"0.6rem", fontFamily:"'Noto Nastaliq Urdu',sans-serif", direction:"rtl" }}>{s.label}</div>
               </div>
             ))}
+
+            {/* Class Report button */}
+            <button onClick={printClassReport}
+              style={{ padding:"9px 16px", borderRadius:10, border:"1px solid rgba(212,175,55,0.35)",
+                background:"rgba(212,175,55,0.08)", color:G, fontWeight:700,
+                fontSize:"0.72rem", cursor:"pointer", fontFamily:"inherit", whiteSpace:"nowrap" }}>
+              🖨 Class Report
+            </button>
+
+            {/* CSV Format toggle */}
+            <button onClick={()=>setShowCsvFmt(p=>!p)}
+              style={{ padding:"9px 14px", borderRadius:10, border:"1px solid rgba(99,202,183,0.3)",
+                background:"rgba(99,202,183,0.07)", color:"#63cab7", fontWeight:700,
+                fontSize:"0.72rem", cursor:"pointer", fontFamily:"inherit" }}>
+              📋 CSV Format
+            </button>
+
+            {/* CSV Upload */}
+            <label style={{ padding:"9px 16px", borderRadius:10, cursor: csvLoading?"not-allowed":"pointer",
+              background: csvLoading?"#334155":`linear-gradient(135deg,${G},#b8960a)`,
+              color: csvLoading?"#64748b":N, fontWeight:700,
+              fontSize:"0.72rem", fontFamily:"inherit", whiteSpace:"nowrap",
+              display:"inline-flex", alignItems:"center", gap:6 }}>
+              {csvLoading ? `⏳ ${csvLoading}...` : "📂 CSV Upload"}
+              <input type="file" accept=".csv,.txt" style={{display:"none"}} onChange={handleCSV} disabled={csvLoading}/>
+            </label>
           </div>
         </div>
+
+        {/* CSV Format guide */}
+        {showCsvFmt && (
+          <div style={{ ...glass, padding:"14px 18px", marginBottom:16, direction:"ltr" }}>
+            <div style={{ color:"#63cab7", fontWeight:700, fontSize:"0.75rem", marginBottom:8 }}>📄 Hifz CSV Format:</div>
+            <code style={{ display:"block", background:"rgba(0,0,0,0.4)", padding:"10px 14px",
+              borderRadius:8, color:"#a3e6dc", fontFamily:"monospace", fontSize:"0.7rem", lineHeight:1.9,
+              whiteSpace:"pre" }}>{`studentName,surah,ayahs,type,rating,date\nAhmad Ali,البقرة,1-5,sabaq,4,${TODAY_STR}\nBilal Khan,آل عمران,10-15,sabqi,3,`}</code>
+            <div style={{ color:"#64748b", fontSize:"0.65rem", marginTop:8, direction:"rtl" }}>
+              • type: sabaq / sabqi / manzil &nbsp;•&nbsp; rating: 1-5 &nbsp;•&nbsp; date optional
+            </div>
+          </div>
+        )}
+
+        {/* CSV Result */}
+        {csvResult && (
+          <div style={{ marginBottom:14, padding:"12px 16px", borderRadius:10,
+            background: csvResult.skip===0?"rgba(74,222,128,0.08)":"rgba(251,146,60,0.08)",
+            border:`1px solid ${csvResult.skip===0?"rgba(74,222,128,0.3)":"rgba(251,146,60,0.3)"}`,
+            display:"flex", alignItems:"center", gap:12, flexWrap:"wrap", direction:"rtl" }}>
+            <span style={{ color:"#4ade80", fontWeight:700, fontSize:"0.8rem" }}>✅ {csvResult.ok} entries شامل ہوئے</span>
+            {csvResult.skip>0 && <span style={{ color:"#fb923c", fontWeight:700, fontSize:"0.8rem" }}>⚠️ {csvResult.skip} ناکام</span>}
+            {csvResult.errs.slice(0,3).map((e,i)=><span key={i} style={{ color:"#fca5a5", fontSize:"0.68rem" }}>{e}</span>)}
+            <button onClick={()=>setCsvResult(null)} style={{ marginRight:"auto", background:"none", border:"none", color:"#64748b", cursor:"pointer" }}>✕</button>
+          </div>
+        )}
 
         {/* Main tabs */}
         <div style={{ display:"flex", gap:4, background:"rgba(255,255,255,0.04)", padding:4, borderRadius:12, marginBottom:20, flexWrap:"wrap" }}>

@@ -296,7 +296,6 @@ const NAV_GROUPS = [
       {id:"classrooms",label:t.pages.classrooms},
       {id:"students",label:t.pages.students},
       {id:"homeworkhub",label:t.pages.homeworkhub},
-      {id:"hifz",label:t.pages.hifz},
       {id:"results",label:t.pages.results},
       {id:"marks",label:t.pages.marks},
       {id:"reportcard",label:t.pages.reportcard},
@@ -631,7 +630,7 @@ const NAV_GROUPS = [
       {page==="classrooms"&&<ClassesAndSections/>}
       {page==="students"&&<Students students={students} addData={addData} results={results} fees={fees} hifzLogs={hifzLogs} classes={dbClasses} sections={dbSections}/>}
       {page==="teachers"&&<Teachers teachers={teachers} addData={addData}/>}
-      {page==="hifz"&&<Hifz students={students} addData={addData} hifzLogs={hifzLogs}/>}
+      {page==="hifz"&&(()=>{setPage("madrasa");return null;})()}
       {page==="houses"&&<Houses houses={houses} hvsLogs={hvs} students={students} userRole={uRole}/>}
       {page==="timetable"&&<Timetable/>}
       {page==="fees"&&<FeeManagement students={students} addData={addData} fees={fees} updateData={updateData}/>}
