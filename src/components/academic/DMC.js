@@ -18,14 +18,20 @@ function DMC({students,results,fees}){
   const printDMC=()=>{
     const el=document.getElementById("dmc-print-area");
     if(!el)return;
+    const h2=HOUSES.find(x=>x.id===selStudent?.houseId)||{};
+    const houseLogo = HOUSE_LOGOS[h2.id]||"";
     const win=window.open("","_blank","width=900,height=1100");
     win.document.write(`<!DOCTYPE html><html dir="ltr" lang="ur"><head><meta charset="UTF-8"/><title>DMC — ${selStudent?.name||"Student"}</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Segoe UI',sans-serif;direction:rtl;background:white;color:#1e293b;padding:8mm 12mm;}
-h1{text-align:center;color:#b7860b;font-size:20px;margin-bottom:4px;}
-.sub{text-align:center;font-size:10px;color:#888;letter-spacing:0.2em;margin-bottom:10px;}
-.title-box{text-align:center;border:2px solid #b7860b;display:inline-block;padding:4px 24px;border-radius:4px;margin:8px auto;display:block;width:fit-content;}
+.hdr{display:flex;align-items:center;justify-content:center;gap:20px;padding-bottom:12px;border-bottom:3px double #b7860b;margin-bottom:12px;}
+.hdr-logo{width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #b7860b;}
+.hdr-house{width:80px;height:80px;border-radius:50%;object-fit:cover;}
+.hdr-mid{text-align:center;}
+.hdr-mid h1{font-size:18px;font-weight:900;color:#b7860b;letter-spacing:0.04em;margin:0;}
+.hdr-mid .sub{font-size:9px;color:#888;letter-spacing:0.18em;margin-top:3px;}
+.title-box{text-align:center;border:2px solid #b7860b;display:block;width:fit-content;padding:4px 24px;border-radius:4px;margin:10px auto;}
 .title-box p{font-size:14px;font-weight:900;color:#1e293b;}
 .info{display:grid;grid-template-columns:1fr 1fr;gap:5px 20px;padding:10px 14px;background:#fafaf8;border:1px solid #e9e4d8;border-radius:8px;margin:12px 0;}
 .info-row{display:flex;gap:6px;font-size:12px;}
@@ -50,8 +56,14 @@ tfoot tr{background:#f5e9c8;font-weight:900;}
 .pass{color:#16a34a;font-weight:700;} .fail{color:#dc2626;font-weight:700;}
 @media print{body{padding:5mm 8mm;}}
 </style></head><body>
-<h1>☪ AMEEN ISLAMIC INSTITUTE</h1>
-<div class="sub">SWAT • KHYBER PAKHTUNKHWA • AMEEN ISLAMIC INSTITUTE</div>
+<div class="hdr">
+  <img src="${logo}" class="hdr-logo" alt="AII Logo"/>
+  <div class="hdr-mid">
+    <h1>AMEEN ISLAMIC INSTITUTE</h1>
+    <div class="sub">SWAT &bull; KPK &bull; PAKISTAN</div>
+  </div>
+  ${houseLogo?`<img src="${houseLogo}" class="hdr-house" alt="House Logo"/>`:`<div style="width:80px"></div>`}
+</div>
 <div class="title-box"><p>DETAIL MARKS CERTIFICATE</p></div>
 <div style="text-align:center;font-size:12px;color:#666;margin-bottom:10px;">${term}</div>
 <div class="info">
