@@ -11,7 +11,7 @@ const TABS = [
   { id:"hvs",    icon:"🏆", label:"House Valor System",  sub:"HVS · Group Scoring · All Roles" },
 ];
 
-export default function EvaluationCenter({ students, houses, addData, updateData, updateHousePoints, hvsLogs, userRole }) {
+export default function EvaluationCenter({ students, houses, addData, updateData, updateHousePoints, hvsLogs, userRole, results, hifzLogsData, attendanceLogs }) {
   const [tab, setTab] = useState("scales");
 
   return (
@@ -59,6 +59,9 @@ export default function EvaluationCenter({ students, houses, addData, updateData
           updateHousePoints={updateHousePoints}
           hvsLogs={hvsLogs}
           userRole={userRole}
+          results={results}
+          hifzLogsData={hifzLogsData}
+          attendanceLogs={attendanceLogs}
         />
       )}
     </div>

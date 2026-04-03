@@ -250,6 +250,7 @@ export default function App(){
   const [students,setStudents]=useState([]); const [teachers,setTeachers]=useState([]);
   const [houses,setHouses]=useState([]); const [hvs,setHvs]=useState([]);
   const [fees,setFees]=useState([]); const [results,setResults]=useState([]); const [hifzLogs,setHifzLogs]=useState([]);
+  const [attendance,setAttendance]=useState([]);
   const [dbClasses,setDbClasses]=useState([]); const [dbSections,setDbSections]=useState([]);
 
   useEffect(()=>{ return onAuthStateChanged(async u=>{ setUser(u); setLoading(false); if(u){ await seedDB(); } }); },[]);
@@ -272,6 +273,7 @@ export default function App(){
     const s5=subscribeToTable("fees",setFees);
     const s6=subscribeToTable("results",setResults); const s7=subscribeToTable("hifz_logs",setHifzLogs);
     const s8=subscribeToTable("classes",setDbClasses); const s9=subscribeToTable("sections",setDbSections);
+    const s10=subscribeToTable("attendance",setAttendance);
     return()=>{s1();s2();s3();s4();s5();s6();s7();s8();s9();};
   },[user]);
 
@@ -629,8 +631,8 @@ const NAV_GROUPS = [
       {!canAccess(page)&&<div style={{padding:"60px",textAlign:"center",color:C.red,fontSize:"1.1rem",fontWeight:"700"}}>⛔ You do not have access to this page</div>}
       {canAccess(page)&&<>
       {page==="dashboard"&&<Dashboard students={students} teachers={teachers} houses={houses} hvsLogs={hvs} fees={fees} results={results} setPage={setPage}/>}
-      {page==="hvs"&&<HVSEntry students={students} houses={houses} addData={addData} updateHousePoints={updateHousePoints} hvsLogs={hvs} userRole={uRole}/>}
-      {page==="evalcenter"&&<EvaluationCenter students={students} houses={houses} addData={addData} updateHousePoints={updateHousePoints} hvsLogs={hvs} userRole={uRole}/>}
+      {page==="hvs"&&<HVSEntry students={students} houses={houses} addData={addData} updateHousePoints={updateHousePoints} hvsLogs={hvs} userRole={uRole} results={results} hifzLogsData={hifzLogs} attendanceLogs={attendance}/>}
+      {page==="evalcenter"&&<EvaluationCenter students={students} houses={houses} addData={addData} updateHousePoints={updateHousePoints} hvsLogs={hvs} userRole={uRole} results={results} hifzLogsData={hifzLogs} attendanceLogs={attendance}/>}
       {page==="classrooms"&&<ClassesAndSections/>}
       {page==="students"&&<Students students={students} addData={addData} results={results} fees={fees} hifzLogs={hifzLogs} classes={dbClasses} sections={dbSections}/>}
       {page==="teachers"&&<Teachers teachers={teachers} addData={addData}/>}

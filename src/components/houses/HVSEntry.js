@@ -288,7 +288,8 @@ function SubAccordion({ catId, subs, values, onChange, catTotal, catMax, roleCol
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function HVSEntry({ students=[], addData, updateHousePoints, hvsLogs=[], userRole="" }) {
+export default function HVSEntry({ students=[], addData, updateHousePoints, hvsLogs=[], userRole="",
+  results=[], hifzLogsData=[], attendanceLogs=[] }) {
 
   // If the logged-in user has a specific entry role, lock the tab to it
   // housemaster → "housemaster", madrasa → "madrasa", teacher → "teacher", others → null (all tabs)
@@ -308,9 +309,11 @@ export default function HVSEntry({ students=[], addData, updateHousePoints, hvsL
   const [teacherScores, setTeacherScores] = useState({ilm:0});
   const [madrasaScores, setMadrasaScores] = useState({akhlaq:0, qiyadat:0, josh:0});
 
-  // ── Auto score source data ──
-  const [attLogs, setAttLogs]   = useState([]);
-  const [hifzLogs, setHifzLogs] = useState([]);
+  // ── Auto score source data — prefer props from App.js, fallback to internal fetch ──
+  const [attLogsLocal,  setAttLogsLocal]  = useState([]);
+  const [hifzLogsLocal, setHifzLogsLocal] = useState([]);
+  const attLogs  = attendanceLogs.length  ? attendanceLogs  : attLogsLocal;
+  const hifzLogs = hifzLogsData.length    ? hifzLogsData    : hifzLogsLocal;
 
   // ── Exception state ──
   const [exceptions, setExceptions]   = useState([]);
@@ -345,10 +348,10 @@ export default function HVSEntry({ students=[], addData, updateHousePoints, hvsL
   const [watchList, setWatchList]   = useState([]);
   const [wlScores, setWlScores]     = useState({});   // wl.id → individual score (0-50)
 
-  // ── Fetch attendance + hifz + watch_list on mount ──
+  // ── Fetch attendance + hifz only if not provided via props ──
   useEffect(() => {
-    getData("attendance").then(d => { if(d && !d.error) setAttLogs(d); });
-    getData("hifz_logs").then(d  => { if(d && !d.error) setHifzLogs(d); });
+    if (!attendanceLogs.length) getData("attendance").then(d => { if(d && !d.error) setAttLogsLocal(d); });
+    if (!hifzLogsData.length)   getData("hifz_logs").then(d  => { if(d && !d.error) setHifzLogsLocal(d); });
     getData("watch_list").then(d => { if(d && !d.error) setWatchList(d); });
   }, []);
 
@@ -396,6 +399,18 @@ export default function HVSEntry({ students=[], addData, updateHousePoints, hvsL
     return Math.round((completed / classStudents.length) * 10);
   }, [hifzLogs, selectedClass, entryDate, students]);
 
+  // ── Auto: Ilm (Academic Results) → 0-25 from results table ──
+  const ilmAuto = useMemo(() => {
+    if (!selectedClass || !results.length) return null; // null = no data, keep manual
+    const classStudents = students.filter(s => s.grade === selectedClass);
+    if (!classStudents.length) return null;
+    const ids = new Set(classStudents.map(s => s.id));
+    const classResults = results.filter(r => ids.has(r.studentId || r.student_id));
+    if (!classResults.length) return null;
+    const avgPct = classResults.reduce((s,r) => s + (r.percentage || 0), 0) / classResults.length;
+    return Math.min(25, Math.round((avgPct / 100) * 25));
+  }, [results, selectedClass, students]);
+
   // ── Effective scores (sub-fields override slider when any sub > 0) ──
   const effectiveHmScores = useMemo(() => {
     const result = { ...hmScores };
@@ -429,7 +444,9 @@ export default function HVSEntry({ students=[], addData, updateHousePoints, hvsL
 
   // ── Totals ──
   const hmTotal      = HM_CATS.reduce((s,c) => s + (effectiveHmScores[c.id]||0), 0);
-  const teacherTotal = (effectiveTeacherScores.ilm||0) + haziriAuto;
+  // ilmAuto overrides manual slider when results data available
+  const effectiveIlm = ilmAuto !== null ? ilmAuto : (effectiveTeacherScores.ilm||0);
+  const teacherTotal = effectiveIlm + haziriAuto;
   const madrasaTotal = MADRASA_CATS.reduce((s,c) =>
     s + (c.auto ? diniIlmAuto : (effectiveMadrasaScores[c.id]||0)), 0);
 
@@ -539,8 +556,8 @@ export default function HVSEntry({ students=[], addData, updateHousePoints, hvsL
         if (subScores[c.id]) sub_scores[c.id] = subScores[c.id];
       });
     } else if (role === "teacher") {
-      group_scores.ilm    = effectiveTeacherScores.ilm||0;
-      group_scores.haziri = haziriAuto;
+      group_scores.ilm    = effectiveIlm;   // auto from results if available, else manual
+      group_scores.haziri = haziriAuto;     // auto from attendance
       if (subScores["ilm"]) sub_scores["ilm"] = subScores["ilm"];
     } else {
       MADRASA_CATS.forEach(c => {
@@ -1094,13 +1111,20 @@ export default function HVSEntry({ students=[], addData, updateHousePoints, hvsL
             return (
               <div key={cat.id}>
                 <Slider cat={cat}
-                  value={effectiveTeacherScores[cat.id]||0}
+                  value={cat.id==="ilm" ? effectiveIlm : (effectiveTeacherScores[cat.id]||0)}
                   onChange={v => {
+                    if (cat.id==="ilm" && ilmAuto!==null) return; // blocked: auto from results
                     setTeacherScores(p => ({...p, [cat.id]:v}));
                     if (hasSubs && anySubFilled) setSubScores(p => ({...p, [cat.id]:{}}));
                   }}
-                  autoValue={cat.id==="haziri" ? haziriAuto : undefined}
+                  autoValue={cat.id==="haziri" ? haziriAuto : cat.id==="ilm" ? ilmAuto : undefined}
                   roleColor={currentRole?.color}/>
+                {cat.id==="ilm" && ilmAuto!==null && (
+                  <div style={{fontSize:"0.62rem",color:"#4ade80",marginTop:"4px",padding:"4px 10px",
+                    background:"rgba(74,222,128,0.08)",borderRadius:"6px",border:"1px solid rgba(74,222,128,0.2)"}}>
+                    ✅ Auto from Results — class avg: {Math.round((effectiveIlm/25)*100)}% → {effectiveIlm}/25
+                  </div>
+                )}
                 {hasSubs && (
                   <SubAccordion
                     catId={cat.id}
