@@ -2,6 +2,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { getData, updateData } from "../../supabase";
 import { C, HOUSES, HVS_TOTAL, sLabel } from "../../constants";
+import houseAbuBakr from "../../assets/1769748237732.png";
+import houseUmar    from "../../assets/1769748315462.png";
+import houseUthman  from "../../assets/1769748410371.png";
+import houseAli     from "../../assets/1769748548928.png";
+const HOUSE_LOGOS = { abuBakr:houseAbuBakr, umar:houseUmar, uthman:houseUthman, ali:houseAli };
 
 // ─── Category Definitions ─────────────────────────────────────────────────────
 
@@ -747,18 +752,85 @@ export default function HVSEntry({ students=[], addData, updateHousePoints, hvsL
       `}</style>
 
       {/* ── Header ── */}
-      <div style={{ display:"flex", alignItems:"center", gap:"14px", marginBottom:"24px" }}>
-        <div style={{ width:"46px", height:"46px", borderRadius:"14px", flexShrink:0,
-          background:"linear-gradient(135deg,#d4af37,#b8960a)",
-          display:"flex", alignItems:"center", justifyContent:"center",
-          boxShadow:"0 4px 20px rgba(212,175,55,0.4)", fontSize:"1.4rem" }}>🏅</div>
-        <div>
-          <h2 style={{ margin:0, fontSize:"1.35rem", fontWeight:"800", color:"#f1f5f9" }}>HVS Group Entry</h2>
-          <p style={{ margin:0, fontSize:"0.7rem", color:"rgba(212,175,55,0.7)" }}>
-            House Values Scoring — Group Rating System • Student Score = Group Score ± Exception
-          </p>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:"14px", marginBottom:"20px", flexWrap:"wrap" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:"14px" }}>
+          <div style={{ width:"52px", height:"52px", borderRadius:"16px", flexShrink:0,
+            background:"linear-gradient(135deg,#d4af37,#b8960a)",
+            display:"flex", alignItems:"center", justifyContent:"center",
+            boxShadow:"0 4px 20px rgba(212,175,55,0.4)", fontSize:"1.6rem" }}>🏆</div>
+          <div>
+            <h2 style={{ margin:0, fontSize:"1.35rem", fontWeight:"800", color:"#f1f5f9" }}>House Valor System</h2>
+            <p style={{ margin:0, fontSize:"0.68rem", color:"rgba(212,175,55,0.6)" }}>
+              Group Scoring · Auto-linked: Attendance + Hifz + Results · Per student = Group Score ± Exception
+            </p>
+          </div>
+        </div>
+        {/* Month label */}
+        <div style={{ background:"rgba(212,175,55,0.1)", border:"1px solid rgba(212,175,55,0.25)",
+          borderRadius:"10px", padding:"7px 14px", fontSize:"0.7rem", color:"rgba(212,175,55,0.8)", fontWeight:"700" }}>
+          📅 {new Date().toLocaleString("en",{month:"long",year:"numeric"})}
         </div>
       </div>
+
+      {/* ── All Houses at a Glance ── */}
+      {(()=>{
+        const now2 = new Date();
+        const monthLogs = hvsLogs.filter(l => {
+          const d = l.created_at ? new Date(l.created_at) : null;
+          return d && d.getFullYear()===now2.getFullYear() && d.getMonth()===now2.getMonth();
+        });
+        const houseScores = HOUSES.map(h => {
+          const hLogs = monthLogs.filter(l => (l.houseId||l.house_id)===h.id);
+          const total  = hLogs.reduce((s,l) => {
+            const gs = l.group_scores||l.scores||{};
+            return s + Object.values(gs).filter(v=>typeof v==="number").reduce((a,b)=>a+b,0);
+          }, 0);
+          return { ...h, monthTotal:total };
+        }).sort((a,b) => b.monthTotal - a.monthTotal);
+        const maxScore = Math.max(...houseScores.map(h=>h.monthTotal), 1);
+        return (
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"10px", marginBottom:"20px" }}>
+            {houseScores.map((h, i) => (
+              <div key={h.id} onClick={() => { setSelectedHouse(h.id); setRole("housemaster"); }}
+                style={{ background: selectedHouse===h.id && role==="housemaster"
+                  ? `linear-gradient(135deg,${h.color}30,${h.color}15)`
+                  : "rgba(255,255,255,0.04)",
+                  border:`2px solid ${selectedHouse===h.id && role==="housemaster" ? h.color : "rgba(255,255,255,0.08)"}`,
+                  borderRadius:"14px", padding:"14px 12px", cursor:"pointer",
+                  transition:"all 0.2s", textAlign:"center" }}>
+                {/* rank badge */}
+                <div style={{ fontSize:"0.55rem", fontWeight:"900", color: i===0?"#fbbf24":i===1?"rgba(255,255,255,0.5)":i===2?"#cd7f32":"rgba(255,255,255,0.3)",
+                  marginBottom:"6px", letterSpacing:"0.08em" }}>
+                  {i===0?"🥇":i===1?"🥈":i===2?"🥉":"  "} #{i+1}
+                </div>
+                {/* house logo */}
+                <div style={{ width:"52px", height:"52px", borderRadius:"50%", overflow:"hidden",
+                  margin:"0 auto 8px", border:`2px solid ${h.color}60`,
+                  boxShadow:`0 0 12px ${h.color}30` }}>
+                  <img src={HOUSE_LOGOS[h.id]} alt={h.nameEn}
+                    style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+                </div>
+                <div style={{ fontSize:"0.72rem", fontWeight:"800", color:h.color, marginBottom:"4px" }}>
+                  {h.nameEn}
+                </div>
+                {/* score */}
+                <div style={{ fontSize:"1.3rem", fontWeight:"900", color:"#f1f5f9", lineHeight:1 }}>
+                  {h.monthTotal}
+                </div>
+                <div style={{ fontSize:"0.55rem", color:"rgba(255,255,255,0.3)", marginBottom:"8px" }}>
+                  pts this month
+                </div>
+                {/* mini bar */}
+                <div style={{ height:"4px", background:"rgba(255,255,255,0.06)", borderRadius:"2px", overflow:"hidden" }}>
+                  <div style={{ width:`${(h.monthTotal/maxScore)*100}%`, height:"100%",
+                    background:`linear-gradient(90deg,${h.color},${h.color}88)`,
+                    borderRadius:"2px", transition:"width 0.5s" }}/>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
 
       {/* ── 3-day Weakness Alerts ── */}
       {weakAlerts.length > 0 && (
@@ -959,23 +1031,43 @@ export default function HVSEntry({ students=[], addData, updateHousePoints, hvsL
           const h = HOUSES.find(x => x.id===selectedHouse)||{};
           return (
             <div style={{ background:`${h.color||G}12`, border:`1px solid ${h.color||G}30`,
-              borderRadius:"12px", padding:"12px 16px", marginBottom:"20px",
-              display:"flex", alignItems:"center", gap:"12px" }}>
-              <span style={{ fontSize:"1.8rem" }}>{h.emoji}</span>
-              <div>
-                <div style={{ fontWeight:"800", color:h.color||G, fontSize:"0.88rem" }}>{h.nameEn}</div>
-                <div style={{ fontSize:"0.6rem", color:"rgba(255,255,255,0.35)", marginTop:"2px" }}>
+              borderRadius:"14px", padding:"14px 18px", marginBottom:"20px",
+              display:"flex", alignItems:"center", gap:"14px" }}>
+              {/* House logo */}
+              <div style={{ width:"60px", height:"60px", borderRadius:"50%", overflow:"hidden",
+                border:`2px solid ${h.color||G}`, boxShadow:`0 0 16px ${h.color||G}40`, flexShrink:0 }}>
+                <img src={HOUSE_LOGOS[h.id]||""} alt={h.nameEn}
+                  style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+              </div>
+              <div style={{ flex:1 }}>
+                <div style={{ fontWeight:"800", color:h.color||G, fontSize:"1rem" }}>{h.nameEn} House</div>
+                <div style={{ fontSize:"0.62rem", color:"rgba(255,255,255,0.35)", marginTop:"2px" }}>
                   {students.filter(s=>s.houseId===selectedHouse).length} students in this house
                 </div>
                 <div style={{ fontSize:"0.68rem", color:"rgba(74,222,128,0.85)", marginTop:"4px", fontWeight:"700" }}>
                   ✦ This score applies to all house students
                 </div>
               </div>
-              <div style={{ marginRight:"auto", textAlign:"center", background:"rgba(255,255,255,0.06)",
-                borderRadius:"10px", padding:"8px 14px" }}>
-                <div style={{ fontSize:"1.6rem", fontWeight:"900", color:G }}>{done ? savedTotal : hmTotal}</div>
-                <div style={{ fontSize:"0.6rem", color:"rgba(255,255,255,0.35)" }}>/{HM_MAX}</div>
-              </div>
+              {/* Score ring */}
+              {(()=>{
+                const score = done ? savedTotal : hmTotal;
+                const pct = Math.round((score/HM_MAX)*100);
+                const ringColor = pct>=80?h.color||G:pct>=60?"#facc15":"#f87171";
+                const r=28, circ=2*Math.PI*r, dash=circ*(pct/100);
+                return (
+                  <div style={{ textAlign:"center", position:"relative", flexShrink:0 }}>
+                    <svg width="80" height="80" viewBox="0 0 80 80">
+                      <circle cx="40" cy="40" r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="7"/>
+                      <circle cx="40" cy="40" r={r} fill="none" stroke={ringColor} strokeWidth="7"
+                        strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
+                        style={{ transform:"rotate(-90deg)", transformOrigin:"center", transition:"stroke-dasharray 0.5s" }}/>
+                      <text x="40" y="37" textAnchor="middle" fontSize="14" fontWeight="900" fill="#f1f5f9">{score}</text>
+                      <text x="40" y="50" textAnchor="middle" fontSize="8" fill="rgba(255,255,255,0.4)">/{HM_MAX}</text>
+                    </svg>
+                    <div style={{ fontSize:"0.55rem", color:ringColor, fontWeight:"800", marginTop:"-4px" }}>{pct}%</div>
+                  </div>
+                );
+              })()}
             </div>
           );
         })() : (
@@ -993,15 +1085,27 @@ export default function HVSEntry({ students=[], addData, updateHousePoints, hvsL
                 {students.filter(s=>s.grade===selectedClass).length} students in this class
               </div>
             </div>
-            <div style={{ textAlign:"center", background:"rgba(255,255,255,0.06)",
-              borderRadius:"10px", padding:"8px 14px" }}>
-              <div style={{ fontSize:"1.6rem", fontWeight:"900", color:G }}>
-                {done ? savedTotal : (role==="teacher" ? teacherTotal : madrasaTotal)}
-              </div>
-              <div style={{ fontSize:"0.6rem", color:"rgba(255,255,255,0.35)" }}>
-                /{role==="teacher" ? TEACHER_MAX : `${MADRASA_MAX}+auto`}
-              </div>
-            </div>
+            {/* Score ring teacher/madrasa */}
+            {(()=>{
+              const score = done ? savedTotal : (role==="teacher" ? teacherTotal : madrasaTotal);
+              const max   = role==="teacher" ? TEACHER_MAX : (MADRASA_MAX + diniIlmAuto);
+              const pct   = max>0?Math.round((score/max)*100):0;
+              const rc    = currentRole?.color||G;
+              const r2=28, c2=2*Math.PI*r2, d2=c2*(pct/100);
+              return (
+                <div style={{ textAlign:"center", flexShrink:0 }}>
+                  <svg width="80" height="80" viewBox="0 0 80 80">
+                    <circle cx="40" cy="40" r={r2} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="7"/>
+                    <circle cx="40" cy="40" r={r2} fill="none" stroke={rc} strokeWidth="7"
+                      strokeDasharray={`${d2} ${c2}`} strokeLinecap="round"
+                      style={{ transform:"rotate(-90deg)", transformOrigin:"center" }}/>
+                    <text x="40" y="37" textAnchor="middle" fontSize="14" fontWeight="900" fill="#f1f5f9">{score}</text>
+                    <text x="40" y="50" textAnchor="middle" fontSize="8" fill="rgba(255,255,255,0.4)">/{max}</text>
+                  </svg>
+                  <div style={{ fontSize:"0.55rem", color:rc, fontWeight:"800", marginTop:"-4px" }}>{pct}%</div>
+                </div>
+              );
+            })()}
           </div>
         )}
 
