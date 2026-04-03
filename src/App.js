@@ -407,7 +407,7 @@ const NAV_GROUPS = [
     {id:"alumni",label:t.pages.alumni},{id:"visitors",label:t.pages.visitors},
     {id:"seating",label:t.pages.seating},{id:"faculty_dev",label:t.pages.faculty_dev},
     {id:"curriculum",label:t.pages.curriculum},{id:"marks",label:t.pages.marks},
-    {id:"reportcard",label:t.pages.reportcard},{id:"dmc",label:t.pages.dmc},{id:"evaluationscales",label:t.pages.evaluationscales},{id:"welfare",label:t.pages.welfare},
+    {id:"reportcard",label:t.pages.reportcard},{id:"dmc",label:t.pages.dmc},{id:"evaluationscales",label:t.pages.evaluationscales},{id:"evalcenter",label:t.pages.evalcenter},{id:"welfare",label:t.pages.welfare},
     {id:"pride",label:t.pages.pride},
     {id:"ethics",label:t.pages.ethics},
     {id:"lessons",label:t.pages.lessons},{id:"analytics",label:t.pages.analytics},
