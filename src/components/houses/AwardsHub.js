@@ -76,9 +76,9 @@ export default function AwardsHub({ role, students = [], hvsLogs = [], hifzLogs 
   const loadWinners = async () => {
     setLoading(true);
     try {
-      const { data } = await supabase.from("awards_winners").select("*").order("created_at", { ascending: false });
+      const { data } = await supabase.from("award_winners").select("*").order("created_at", { ascending: false });
       setWinners(data || []);
-    } catch (e) { console.error("awards_winners:", e.message); }
+    } catch (e) { console.error("award_winners:", e.message); }
     setLoading(false);
   };
 
@@ -176,7 +176,7 @@ export default function AwardsHub({ role, students = [], hvsLogs = [], hifzLogs 
     if (!CAN_APPROVE.includes(role)) return;
     try {
       await supabase.from("award_nominations").update({ status: "approved" }).eq("id", nom.id);
-      await supabase.from("awards_winners").insert([{
+      await supabase.from("award_winners").insert([{
         award_key:    nom.award_key,
         award_title:  nom.award_title,
         winner_name:  nom.student_name,

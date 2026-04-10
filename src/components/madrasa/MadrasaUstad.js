@@ -218,7 +218,7 @@ function DiniAwardsTab({ students, hifzLogs, nominations, userRole, onRefresh })
   const approveNomination = async (nom) => {
     try {
       await supabase.from("award_nominations").update({ status:"approved" }).eq("id", nom.id);
-      await supabase.from("awards_winners").insert([{
+      await supabase.from("award_winners").insert([{
         award_key:   nom.award_key,
         award_title: nom.award_title,
         winner_name: nom.student_name,
