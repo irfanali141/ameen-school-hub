@@ -1,110 +1,106 @@
 /* eslint-disable */
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import "./hover.css";
-import { supabase, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, addData as sbAddData, getData, updateData, subscribeToTable } from "./supabase";
+import { useSchool } from "./contexts/SchoolContext";
 import { C, S, hBadge, pBar, HOUSES, HVS_CATS, HVS_TOTAL, RATING, DEMO, ROLE_PAGES, SEED_S, SEED_T, MONTHS, TIMETABLE, DAYS, DAYS_UR } from "./constants";
-import seedDB from "./utils/seedDB";
+import ModuleShell from "./components/ui/ModuleShell";
 
-// Auth components
+// Always-needed (auth screen + sidebar logo — never lazy)
 import Login, { AIILogo, HouseBadge } from "./components/auth/Login";
-
-// Academic components
-import Dashboard from "./components/academic/Dashboard";
-import Students from "./components/academic/Students";
-import Hifz from "./components/academic/Hifz";
-import Attendance from "./components/academic/Attendance";
-import Results from "./components/academic/Results";
-import Notifications from "./components/academic/Notifications";
-import Timetable from "./components/academic/Timetable";
-import Events from "./components/academic/Events";
-import Library from "./components/academic/Library";
-import ExamSchedule from "./components/academic/ExamSchedule";
-import ExamSeating from "./components/academic/ExamSeating";
-import ClassAnalytics from "./components/academic/ClassAnalytics";
-import TranscriptRequest from "./components/academic/TranscriptRequest";
-import ReportCard from "./components/academic/ReportCard";
-import EvaluationScales from "./components/academic/EvaluationScales";
-import EvaluationCenter from "./components/evaluation/EvaluationCenter";
-import ClassesAndSections from "./components/academic/ClassesAndSections";
-import DMC from "./components/academic/DMC";
-import CurriculumHub from "./components/academic/CurriculumHub";
-import MarksEntry from "./components/academic/MarksEntry";
-import Reports from "./components/academic/Reports";
-
-// House components
-import Houses from "./components/houses/Houses";
-import HVSEntry from "./components/houses/HVSEntry";
-import TarbiyahEthics from "./components/houses/TarbiyahEthics";
-import TarbiyahDiary from "./components/houses/TarbiyahDiary";
-import SuperHouseDashboard from "./components/houses/SuperHouseDashboard";
-import WeeklyDutyChecklist from "./components/houses/WeeklyDutyChecklist";
-import GrandTotalDashboard from "./components/houses/GrandTotalDashboard";
-import SuperHouseAnnual from "./components/houses/SuperHouseAnnual";
-import InvestigationHub from "./components/houses/InvestigationHub";
-import InvestigationCase from "./components/houses/InvestigationCase";
-import IncidentLog from "./components/houses/IncidentLog";
-import WeaknessMatrix from "./components/houses/WeaknessMatrix";
-import MonthlyPlanner from "./components/houses/MonthlyPlanner";
-import SocietySystem from "./components/houses/SocietySystem";
-import LeadershipRoles from "./components/houses/LeadershipRoles";
-import HouseTemplates from "./components/houses/HouseTemplates";
-import HouseBazaar from "./components/houses/HouseBazaar";
-import SitaraAmeen from "./components/houses/SitaraAmeen";
-import Phase2Plan from "./components/admin/Phase2Plan";
-import WatchList from "./components/houses/WatchList";
-import HouseReportingChain from "./components/houses/HouseReportingChain";
-
-// Finance components
-import FeeManagement from "./components/finance/FeeManagement";
-import SalaryManagement from "./components/finance/SalaryManagement";
-import SalarySlips from "./components/finance/SalarySlips";
-import DonationHub from "./components/finance/DonationHub";
-
-// Staff components
-import Teachers from "./components/staff/Teachers";
-import StaffPerformance from "./components/staff/StaffPerformance";
-import LessonPlans from "./components/staff/LessonPlans";
-import TeacherLeave from "./components/staff/TeacherLeave";
-import LearningMaterials from "./components/staff/LearningMaterials";
-import FacultyDevelopment from "./components/staff/FacultyDevelopment";
-
-// Admin components
-import Transport from "./components/admin/Transport";
-import NoticeBoard from "./components/admin/NoticeBoard";
-import HostelManagement from "./components/admin/HostelManagement";
-import MeetingMinutes from "./components/admin/MeetingMinutes";
-import LogisticsTracker from "./components/admin/LogisticsTracker";
-import VisitorHub from "./components/admin/VisitorHub";
-import RegistrarHub from "./components/admin/RegistrarHub";
-import ReportingChain from "./components/admin/ReportingChain";
-
-// Portal components
-import ParentPortal from "./components/portals/ParentPortal";
-import DirectorPortal from "./components/portals/DirectorPortal";
-import AlumniPortal from "./components/portals/AlumniPortal";
-import ParentMessaging from "./components/portals/ParentMessaging";
-import HomeworkHub      from "./components/academic/HomeworkHub";
-import AIAssistant     from "./components/ai/AIAssistant";
-import QuizHub         from "./components/academic/QuizHub";
-import SchemeOfStudies from "./components/academic/SchemeOfStudies";
-import AcademicCalendar from "./components/academic/AcademicCalendar";
-import TermBreakup     from "./components/academic/TermBreakup";
-import SchoolDecorPlans from "./components/admin/SchoolDecorPlans";
-import ChatSystem      from "./components/communication/ChatSystem";
-import ETube           from "./components/academic/ETube";
-import AICommandCenter from "./components/ai/AICommandCenter";
-
-// Welfare components
-import StudentHealth from "./components/welfare/StudentHealth";
-import WelfareFeedback from "./components/welfare/WelfareFeedback";
-import PrideMessages from "./components/welfare/PrideMessages";
-import HPRISystem from "./components/welfare/HPRISystem";
-
-// Madrasa components
-import MadrasaModule from "./components/madrasa/MadrasaModule";
-
-// Utility components
 import NotificationBell from "./components/NotificationBell";
+
+// Lazy-loaded page components (loaded only when the page is first visited)
+const Dashboard        = lazy(() => import("./components/academic/Dashboard"));
+const Students         = lazy(() => import("./components/academic/Students"));
+const Hifz             = lazy(() => import("./components/academic/Hifz"));
+const Attendance       = lazy(() => import("./components/academic/Attendance"));
+const Results          = lazy(() => import("./components/academic/Results"));
+const Notifications    = lazy(() => import("./components/academic/Notifications"));
+const Timetable        = lazy(() => import("./components/academic/Timetable"));
+const Events           = lazy(() => import("./components/academic/Events"));
+const Library          = lazy(() => import("./components/academic/Library"));
+const ExamSchedule     = lazy(() => import("./components/academic/ExamSchedule"));
+const ExamSeating      = lazy(() => import("./components/academic/ExamSeating"));
+const ClassAnalytics   = lazy(() => import("./components/academic/ClassAnalytics"));
+const TranscriptRequest= lazy(() => import("./components/academic/TranscriptRequest"));
+const ReportCard       = lazy(() => import("./components/academic/ReportCard"));
+const EvaluationScales = lazy(() => import("./components/academic/EvaluationScales"));
+const EvaluationCenter = lazy(() => import("./components/evaluation/EvaluationCenter"));
+const ClassesAndSections=lazy(() => import("./components/academic/ClassesAndSections"));
+const DMC              = lazy(() => import("./components/academic/DMC"));
+const CurriculumHub    = lazy(() => import("./components/academic/CurriculumHub"));
+const MarksEntry       = lazy(() => import("./components/academic/MarksEntry"));
+const Reports          = lazy(() => import("./components/academic/Reports"));
+const HomeworkHub      = lazy(() => import("./components/academic/HomeworkHub"));
+const QuizHub          = lazy(() => import("./components/academic/QuizHub"));
+const SchemeOfStudies  = lazy(() => import("./components/academic/SchemeOfStudies"));
+const AcademicCalendar = lazy(() => import("./components/academic/AcademicCalendar"));
+const TermBreakup      = lazy(() => import("./components/academic/TermBreakup"));
+const ETube            = lazy(() => import("./components/academic/ETube"));
+
+const Houses           = lazy(() => import("./components/houses/Houses"));
+const HVSEntry         = lazy(() => import("./components/houses/HVSEntry"));
+const TarbiyahEthics   = lazy(() => import("./components/houses/TarbiyahEthics"));
+const TarbiyahDiary    = lazy(() => import("./components/houses/TarbiyahDiary"));
+const SuperHouseDashboard=lazy(()=> import("./components/houses/SuperHouseDashboard"));
+const WeeklyDutyChecklist=lazy(()=> import("./components/houses/WeeklyDutyChecklist"));
+const GrandTotalDashboard=lazy(()=> import("./components/houses/GrandTotalDashboard"));
+const SuperHouseAnnual = lazy(() => import("./components/houses/SuperHouseAnnual"));
+const InvestigationHub = lazy(() => import("./components/houses/InvestigationHub"));
+const InvestigationCase= lazy(() => import("./components/houses/InvestigationCase"));
+const IncidentLog      = lazy(() => import("./components/houses/IncidentLog"));
+const WeaknessMatrix   = lazy(() => import("./components/houses/WeaknessMatrix"));
+const MonthlyPlanner   = lazy(() => import("./components/houses/MonthlyPlanner"));
+const SocietySystem    = lazy(() => import("./components/houses/SocietySystem"));
+const LeadershipRoles  = lazy(() => import("./components/houses/LeadershipRoles"));
+const HouseTemplates   = lazy(() => import("./components/houses/HouseTemplates"));
+const HouseBazaar      = lazy(() => import("./components/houses/HouseBazaar"));
+const SitaraAmeen      = lazy(() => import("./components/houses/SitaraAmeen"));
+const WatchList        = lazy(() => import("./components/houses/WatchList"));
+const HouseReportingChain=lazy(()=> import("./components/houses/HouseReportingChain"));
+
+const FeeManagement    = lazy(() => import("./components/finance/FeeManagement"));
+const SalaryManagement = lazy(() => import("./components/finance/SalaryManagement"));
+const SalarySlips      = lazy(() => import("./components/finance/SalarySlips"));
+const DonationHub      = lazy(() => import("./components/finance/DonationHub"));
+
+const Teachers         = lazy(() => import("./components/staff/Teachers"));
+const StaffPerformance = lazy(() => import("./components/staff/StaffPerformance"));
+const LessonPlans      = lazy(() => import("./components/staff/LessonPlans"));
+const TeacherLeave     = lazy(() => import("./components/staff/TeacherLeave"));
+const LearningMaterials= lazy(() => import("./components/staff/LearningMaterials"));
+const FacultyDevelopment=lazy(() => import("./components/staff/FacultyDevelopment"));
+
+const Transport        = lazy(() => import("./components/admin/Transport"));
+const NoticeBoard      = lazy(() => import("./components/admin/NoticeBoard"));
+const HostelManagement = lazy(() => import("./components/admin/HostelManagement"));
+const MeetingMinutes   = lazy(() => import("./components/admin/MeetingMinutes"));
+const LogisticsTracker = lazy(() => import("./components/admin/LogisticsTracker"));
+const VisitorHub       = lazy(() => import("./components/admin/VisitorHub"));
+const RegistrarHub     = lazy(() => import("./components/admin/RegistrarHub"));
+const ReportingChain   = lazy(() => import("./components/admin/ReportingChain"));
+const SchoolDecorPlans = lazy(() => import("./components/admin/SchoolDecorPlans"));
+const Phase2Plan       = lazy(() => import("./components/admin/Phase2Plan"));
+
+const ParentPortal     = lazy(() => import("./components/portals/ParentPortal"));
+const DirectorPortal   = lazy(() => import("./components/portals/DirectorPortal"));
+const AlumniPortal     = lazy(() => import("./components/portals/AlumniPortal"));
+const ParentMessaging  = lazy(() => import("./components/portals/ParentMessaging"));
+
+const AIAssistant      = lazy(() => import("./components/ai/AIAssistant"));
+const AICommandCenter  = lazy(() => import("./components/ai/AICommandCenter"));
+
+const ChatSystem       = lazy(() => import("./components/communication/ChatSystem"));
+
+const StudentHealth    = lazy(() => import("./components/welfare/StudentHealth"));
+const WelfareFeedback  = lazy(() => import("./components/welfare/WelfareFeedback"));
+const PrideMessages    = lazy(() => import("./components/welfare/PrideMessages"));
+const HPRISystem       = lazy(() => import("./components/welfare/HPRISystem"));
+
+const MadrasaModule    = lazy(() => import("./components/madrasa/MadrasaModule"));
+const HifzDashboard    = lazy(() => import("./components/madrasa/HifzDashboard"));
+const MadrasaUstad     = lazy(() => import("./components/madrasa/MadrasaUstad"));
+const AwardsHub        = lazy(() => import("./components/houses/AwardsHub"));
 
 
 // ===================== TRANSLATIONS =====================
@@ -148,7 +144,8 @@ const TRANS = {
       schooldecor:"🎨 اسکول سجاوٹ",
       chat:"💬 چیٹ",
       etube:"📺 E-Tube",
-      aicommand:"🤖 AI کمانڈ"
+      aicommand:"🤖 AI کمانڈ",
+      awardshub:"🏆 ایوارڈز ہب"
     }
   },
   en: {
@@ -190,7 +187,8 @@ const TRANS = {
       schooldecor:"🎨 School Decor Plans",
       chat:"💬 Chat",
       etube:"📺 E-Tube",
-      aicommand:"🤖 AI Command"
+      aicommand:"🤖 AI Command",
+      awardshub:"🏆 Awards Hub"
     }
   },
   ar: {
@@ -232,55 +230,54 @@ const TRANS = {
       schooldecor:"🎨 خطط الديكور",
       chat:"💬 الدردشة",
       etube:"📺 E-Tube",
-      aicommand:"🤖 مركز الأوامر"
+      aicommand:"🤖 مركز الأوامر",
+      awardshub:"🏆 مركز الجوائز"
     }
   }
 };
 // ===================== MAIN APP =====================
 export default function App(){
-  const [user,setUser]=useState(null); const [loading,setLoading]=useState(true);
-  const [err,setErr]=useState(""); const [lLoading,setLL]=useState(false);
-  const [page,setPageState]=useState(()=>{const h=window.location.hash.slice(1);return h||"dashboard";});
-  const setPage=(p)=>{window.location.hash=p;setPageState(p);};
+  // ── All shared data & auth from SchoolContext ──
+  const {
+    user, loading, authErr, role: uRole,
+    login: ctxLogin, logout,
+    students, teachers, houses, hvsLogs: hvs, fees, results,
+    hifzLogs, attendance, evalScales, dbClasses, dbSections,
+    feeReceipts, unreadMsgCount,
+    addData, updateData: updateDataWrapped, updateHousePoints,
+  } = useSchool();
+
+  // ── UI-only state (belongs in App, not in context) ──
+  const [err, setErr] = useState("");
+  const [lLoading, setLL] = useState(false);
+  const [page, setPageState] = useState(()=>{const h=window.location.hash.slice(1);return h||"dashboard";});
+  const setPage = (p)=>{window.location.hash=p; setPageState(p);};
   const [openGroup, setOpenGroup] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileGroup, setMobileGroup] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [lang, setLang] = useState("en");
-  const [students,setStudents]=useState([]); const [teachers,setTeachers]=useState([]);
-  const [houses,setHouses]=useState([]); const [hvs,setHvs]=useState([]);
-  const [fees,setFees]=useState([]); const [results,setResults]=useState([]); const [hifzLogs,setHifzLogs]=useState([]);
-  const [attendance,setAttendance]=useState([]);
-  const [dbClasses,setDbClasses]=useState([]); const [dbSections,setDbSections]=useState([]);
+  const [localUnread, setLocalUnread] = useState(unreadMsgCount);
 
-  useEffect(()=>{ return onAuthStateChanged(async u=>{ setUser(u); setLoading(false); if(u){ await seedDB(); } }); },[]);
+  // Keep local unread in sync with context (for badge clearing on nav)
+  useEffect(()=>{ setLocalUnread(unreadMsgCount); }, [unreadMsgCount]);
+
   useEffect(()=>{const onHash=()=>{const p=window.location.hash.slice(1)||"dashboard";setPageState(p);};window.addEventListener("hashchange",onHash);return()=>window.removeEventListener("hashchange",onHash);},[]);
-  useEffect(()=>{
-    if(!user)return;
-    const demoRole=DEMO.find(d=>d.email===user?.email)?.role;
-    const inferredRole = user?.email?.toLowerCase().includes("housemaster") ? "housemaster"
-                       : user?.email?.toLowerCase().includes("madrasa")     ? "madrasa"
-                       : undefined;
-    const role = demoRole || inferredRole || "teacher";
-    const allowed=ROLE_PAGES[role]??ROLE_PAGES.teacher;
-    if(allowed!==null&&!allowed.includes(page)){ setPage(allowed[0]||"dashboard"); }
-  },[user]);
-  useEffect(()=>{ if(!user)return;
-    const s1=subscribeToTable("students",setStudents);
-    const s2=subscribeToTable("teachers",setTeachers);
-    const s3=subscribeToTable("houses",setHouses);
-    const s4=subscribeToTable("hvs_logs",setHvs);
-    const s5=subscribeToTable("fees",setFees);
-    const s6=subscribeToTable("results",setResults); const s7=subscribeToTable("hifz_logs",setHifzLogs);
-    const s8=subscribeToTable("classes",setDbClasses); const s9=subscribeToTable("sections",setDbSections);
-    const s10=subscribeToTable("attendance",setAttendance);
-    return()=>{s1();s2();s3();s4();s5();s6();s7();s8();s9();};
-  },[user]);
 
-  const login=async(email,pass)=>{ setLL(true); setErr(""); const demoUser=DEMO.find(d=>d.email===email&&d.password===pass); try{ try{ await signInWithEmailAndPassword(email,pass); }catch{ await createUserWithEmailAndPassword(email,pass); } }catch(e){ if(demoUser){ setUser({email,id:email}); setLoading(false); }else{ setErr("Invalid email or password"); } } setLL(false); };
-  const logout=()=>signOut();
-  const addData=async(col,data)=>{ try{ await sbAddData(col,data); }catch(e){ console.error("addData:",e.message); } };
-  const updateHousePoints=async(houseId,pts)=>{ try{ const hd=houses.find(h=>h.id===houseId); if(!hd) return; await updateData("houses",houseId,{points:(hd.points||0)+pts,hvs_total:(hd.hvs_total||0)+pts,hvs_weeks:(hd.hvs_weeks||0)+1}); }catch(e){} };
+  // Redirect to allowed page on role change
+  useEffect(()=>{
+    if(!user||!uRole)return;
+    const allowed=ROLE_PAGES[uRole]??ROLE_PAGES.teacher;
+    if(allowed!==null&&!allowed.includes(page)){ setPage(allowed[0]||"dashboard"); }
+  },[user, uRole, page]);
+
+  const login = async(email,pass)=>{
+    setLL(true); setErr("");
+    try { await ctxLogin(email,pass); }
+    catch { setErr("Invalid email or password"); }
+    setLL(false);
+  };
+
   const t=TRANS[lang];
 const NAV_GROUPS = [
   // using t.nav and t.pages for labels
@@ -333,6 +330,7 @@ const NAV_GROUPS = [
       {id:"housetemplates",label:t.pages.housetemplates},
       {id:"housebazaar",label:t.pages.housebazaar},
       {id:"sitaraameen",label:t.pages.sitaraameen},
+      {id:"awardshub",label:t.pages.awardshub},
       {id:"tarbiyah",label:t.pages.tarbiyah},
       {id:"ethics",label:t.pages.ethics},
       {id:"pride",label:t.pages.pride},
@@ -362,6 +360,9 @@ const NAV_GROUPS = [
       {id:"analytics",label:t.pages.analytics},
       {id:"library",label:t.pages.library},
       {id:"madrasa",label:t.pages.madrasa},
+      {id:"hifzdashboard",label:t.pages.hifzdashboard},
+      {id:"madrasaustad",label:t.pages.madrasaustad},
+      {id:"hifz",label:t.pages.hifz},
       {id:"fees",label:t.pages.fees},
       {id:"reports",label:t.pages.reports},
       {id:"aiassistant",label:t.pages.aiassistant},
@@ -429,16 +430,41 @@ const NAV_GROUPS = [
     {id:"chat",label:t.pages.chat},
     {id:"etube",label:t.pages.etube},
     {id:"aicommand",label:t.pages.aicommand},
+    {id:"hifzdashboard",label:t.pages.hifzdashboard},
+    {id:"madrasaustad",label:t.pages.madrasaustad},
+    {id:"awardshub",label:t.pages.awardshub},
   ];
 
+  // (uName, uRole, isDemoUser, allowedPages etc. are derived above near the loading check)
+
   const uName=DEMO.find(d=>d.email===user?.email)?.name||user?.email||"";
-  const uRole=DEMO.find(d=>d.email===user?.email)?.role||"teacher";
+  const isDemoUser=DEMO.some(d=>d.email===user?.email);
   const allowedPages=ROLE_PAGES[uRole]??ROLE_PAGES.teacher;
   const canAccess=(pid)=>allowedPages===null||allowedPages.includes(pid);
   const visibleNavGroups=NAV_GROUPS.map(g=>({...g,pages:g.pages.filter(p=>canAccess(p.id))})).filter(g=>g.pages.length>0);
   const pendingFeesCount=fees.filter(f=>f.status==="pending").length;
+  const _today=new Date().toISOString().slice(0,10);
+  const overdueFeesCount=fees.filter(f=>f.status==="pending"&&f.due_date&&f.due_date<_today).length;
 
-  if(loading)return <div style={{...S.lp,color:C.white,fontSize:"1rem",flexDirection:"column",gap:"16px"}}><div style={{fontSize:"2rem"}}>☪</div>{TRANS[lang].loading}</div>;
+  if(loading)return (
+    <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#0f172a 0%,#0d1f3c 60%,#0a1628 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"24px",fontFamily:"'Public Sans',sans-serif"}}>
+      {/* Logo pulse */}
+      <div style={{position:"relative"}}>
+        <div style={{width:"72px",height:"72px",borderRadius:"50%",background:"linear-gradient(135deg,#d4af37,#b8960a)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"2rem",boxShadow:"0 0 0 0 rgba(212,175,55,0.4)",animation:"aii-pulse 1.8s infinite"}}>☪</div>
+      </div>
+      {/* Skeleton bars */}
+      <div style={{width:"280px",display:"flex",flexDirection:"column",gap:"10px"}}>
+        {[100,75,90,60].map((w,i)=>(
+          <div key={i} style={{height:"12px",borderRadius:"6px",background:"rgba(255,255,255,0.08)",width:`${w}%`,animation:`aii-shimmer 1.5s ${i*0.15}s infinite`}}/>
+        ))}
+      </div>
+      <div style={{color:"rgba(212,175,55,0.7)",fontSize:"0.8rem",fontWeight:"600",letterSpacing:"0.1em"}}>AMEEN SCHOOL HUB</div>
+      <style>{`
+        @keyframes aii-pulse{0%,100%{box-shadow:0 0 0 0 rgba(212,175,55,0.4)}50%{box-shadow:0 0 0 16px rgba(212,175,55,0)}}
+        @keyframes aii-shimmer{0%,100%{opacity:0.4}50%{opacity:0.9}}
+      `}</style>
+    </div>
+  );
   if(!user)return <Login onLogin={login} err={err} loading={lLoading}/>;
 
   return <div style={S.app}>
@@ -463,6 +489,12 @@ const NAV_GROUPS = [
         .hamburger-btn{display:flex!important;}
         .sb-toggle{display:none!important;}
         .hdr-fees{display:none!important;}
+        .hdr-username{display:none!important;}
+        .hdr-topbar{padding:0 10px!important;}
+        html,body,#root{height:100svh!important;height:100dvh!important;}
+      }
+      @media(max-width:480px){
+        .hdr-breadcrumb .hdr-bc-group{display:none!important;}
       }
     `}</style>
 
@@ -486,7 +518,8 @@ const NAV_GROUPS = [
           <div style={{color:"#F0C040",fontSize:"0.76rem",fontWeight:"700",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{uName||user?.email?.split("@")[0]}</div>
           <div style={{color:"rgba(255,255,255,0.38)",fontSize:"0.58rem",textTransform:"capitalize"}}>{uRole}</div>
         </div>
-        {pendingFeesCount>0&&<div style={{background:"rgba(217,119,6,0.2)",border:"1px solid rgba(217,119,6,0.4)",borderRadius:"10px",padding:"2px 7px",fontSize:"0.58rem",color:"#f0a040",fontWeight:"700",flexShrink:0}}>💰{pendingFeesCount}</div>}
+        {overdueFeesCount>0&&<div style={{background:"rgba(220,38,38,0.2)",border:"1px solid rgba(220,38,38,0.5)",borderRadius:"10px",padding:"2px 7px",fontSize:"0.58rem",color:"#f87171",fontWeight:"700",flexShrink:0}} title="Overdue fees">🚨{overdueFeesCount}</div>}
+        {overdueFeesCount===0&&pendingFeesCount>0&&<div style={{background:"rgba(217,119,6,0.2)",border:"1px solid rgba(217,119,6,0.4)",borderRadius:"10px",padding:"2px 7px",fontSize:"0.58rem",color:"#f0a040",fontWeight:"700",flexShrink:0}}>💰{pendingFeesCount}</div>}
       </div>
 
       {/* Nav groups */}
@@ -517,8 +550,9 @@ const NAV_GROUPS = [
                   fontWeight:page===p.id?"700":"400",fontSize:"0.74rem",
                   cursor:"pointer",borderRadius:"6px",fontFamily:"inherit",textAlign:"left",
                   borderLeft:page===p.id?"2px solid #B8860B":"2px solid transparent",
-                  transition:"all 0.12s",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
-                {p.label}
+                  transition:"all 0.12s",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <span style={{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.label}</span>
+                {p.id==="messaging"&&unreadMsgCount>0&&<span style={{background:"#ef4444",color:"#fff",borderRadius:"10px",padding:"1px 6px",fontSize:"0.55rem",fontWeight:"800",flexShrink:0,marginLeft:"4px"}}>{unreadMsgCount>99?"99+":unreadMsgCount}</span>}
               </button>)}
             </div>}
           </div>;
@@ -549,10 +583,10 @@ const NAV_GROUPS = [
     <div style={{flex:1,display:"flex",flexDirection:"column",minWidth:0,overflow:"hidden"}}>
 
       {/* TOP BAR */}
-      <div style={{background:"#FFFFFF",borderBottom:"1px solid #E2D9C5",padding:"0 18px",height:"52px",
+      <div className="hdr-topbar" style={{background:"#FFFFFF",borderBottom:"1px solid #E2D9C5",padding:"0 18px",height:"52px",
         display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,
         boxShadow:"0 1px 4px rgba(27,67,50,0.07)"}}>
-        <div style={{display:"flex",alignItems:"center",gap:"10px",minWidth:0}}>
+        <div style={{display:"flex",alignItems:"center",gap:"10px",minWidth:0,flex:1}}>
           <button className="sb-toggle" onClick={()=>setSidebarCollapsed(c=>!c)}
             style={{width:"30px",height:"30px",borderRadius:"7px",border:"1px solid #E2D9C5",
               background:"#F8F6F0",color:"#1B4332",fontSize:"0.95rem",cursor:"pointer",
@@ -569,17 +603,20 @@ const NAV_GROUPS = [
             const ag=NAV_GROUPS.find(g=>g.pages.some(p=>p.id===page));
             const ap=ag?.pages.find(p=>p.id===page);
             if(!ag||!ap)return <span style={{color:"#1B4332",fontWeight:"700",fontSize:"0.9rem",fontFamily:"'Playfair Display',Georgia,serif"}}>Dashboard</span>;
-            return <div style={{display:"flex",alignItems:"center",gap:"5px",fontSize:"0.76rem",minWidth:0}}>
-              <span style={{color:"#94a3b8",whiteSpace:"nowrap"}}>{ag.label.replace(/^\S+\s/,"")}</span>
-              <span style={{color:"#d1d5db"}}>›</span>
+            return <div className="hdr-breadcrumb" style={{display:"flex",alignItems:"center",gap:"5px",fontSize:"0.76rem",minWidth:0,overflow:"hidden"}}>
+              <span className="hdr-bc-group" style={{color:"#94a3b8",whiteSpace:"nowrap",flexShrink:0}}>{ag.label.replace(/^\S+\s/,"")}</span>
+              <span className="hdr-bc-group" style={{color:"#d1d5db",flexShrink:0}}>›</span>
               <span style={{color:"#1B4332",fontWeight:"700",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{ap.label.replace(/^\S+\s/,"")}</span>
             </div>;
           })()}
         </div>
         <div style={{display:"flex",alignItems:"center",gap:"10px",flexShrink:0}}>
-          <div className="hdr-fees">{pendingFeesCount>0&&<div style={{background:"rgba(183,121,31,0.1)",border:"1px solid rgba(183,121,31,0.3)",borderRadius:"14px",padding:"3px 10px",fontSize:"0.67rem",color:"#B7791F",fontWeight:"700",whiteSpace:"nowrap"}}>💰 {pendingFeesCount} {t.feesPending}</div>}</div>
-          <NotificationBell role={uRole} setPage={setPage}/>
-          <div style={{color:"#4A5568",fontSize:"0.73rem",fontWeight:"600",whiteSpace:"nowrap",borderLeft:"1px solid #E2D9C5",paddingLeft:"10px"}}>
+          <div className="hdr-fees" style={{display:"flex",gap:"6px"}}>
+            {overdueFeesCount>0&&<div onClick={()=>setPage("fees")} style={{background:"rgba(220,38,38,0.12)",border:"1px solid rgba(220,38,38,0.4)",borderRadius:"14px",padding:"3px 10px",fontSize:"0.67rem",color:"#f87171",fontWeight:"700",whiteSpace:"nowrap",cursor:"pointer"}} title="Overdue fees — click to view">🚨 {overdueFeesCount} Overdue</div>}
+            {pendingFeesCount>overdueFeesCount&&<div style={{background:"rgba(183,121,31,0.1)",border:"1px solid rgba(183,121,31,0.3)",borderRadius:"14px",padding:"3px 10px",fontSize:"0.67rem",color:"#B7791F",fontWeight:"700",whiteSpace:"nowrap"}}>💰 {pendingFeesCount} {t.feesPending}</div>}
+          </div>
+          <NotificationBell role={uRole} setPage={setPage} unreadMsgCount={unreadMsgCount} onMsgClick={()=>setPage("messaging")}/>
+          <div className="hdr-username" style={{color:"#4A5568",fontSize:"0.73rem",fontWeight:"600",whiteSpace:"nowrap",borderLeft:"1px solid #E2D9C5",paddingLeft:"10px"}}>
             {uName||user?.email?.split("@")[0]}
             <span style={{color:"#94a3b8",fontSize:"0.6rem",textTransform:"capitalize",marginLeft:"4px"}}>· {uRole}</span>
           </div>
@@ -600,7 +637,8 @@ const NAV_GROUPS = [
         <div style={{padding:"14px 18px",borderBottom:"1px solid rgba(255,255,255,0.07)",display:"flex",alignItems:"center",gap:"10px"}}>
           <div style={{width:"36px",height:"36px",borderRadius:"50%",background:"rgba(212,175,55,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1rem"}}>👤</div>
           <div><div style={{color:"#d4af37",fontSize:"0.8rem",fontWeight:"700"}}>{uName}</div><div style={{color:"rgba(255,255,255,0.4)",fontSize:"0.65rem"}}>{uRole}</div></div>
-          {pendingFeesCount>0&&<div style={{marginRight:"auto",background:C.amber+"20",border:`1px solid ${C.amber}`,borderRadius:"16px",padding:"3px 10px",fontSize:"0.62rem",color:C.amber,fontWeight:"700"}}>💰 {pendingFeesCount}</div>}
+          {overdueFeesCount>0&&<div style={{marginLeft:"auto",background:"rgba(220,38,38,0.2)",border:"1px solid rgba(220,38,38,0.5)",borderRadius:"16px",padding:"3px 10px",fontSize:"0.62rem",color:"#f87171",fontWeight:"700"}}>🚨 {overdueFeesCount} Overdue</div>}
+          {overdueFeesCount===0&&pendingFeesCount>0&&<div style={{marginLeft:"auto",background:C.amber+"20",border:`1px solid ${C.amber}`,borderRadius:"16px",padding:"3px 10px",fontSize:"0.62rem",color:C.amber,fontWeight:"700"}}>💰 {pendingFeesCount}</div>}
         </div>
         {/* Nav groups accordion */}
         <div style={{flex:1,padding:"10px 10px",overflowY:"auto"}}>
@@ -627,90 +665,105 @@ const NAV_GROUPS = [
         </div>
       </div>
     </div>}
-    <div style={{flex:1,overflowY:"auto",overflowX:"hidden",background:"#F8F6F0"}}>
+    <div className="aii-page-wrap" style={{flex:1,overflowY:"auto",overflowX:"hidden",background:"#F8F6F0"}}>
+      {isDemoUser&&["director","admin"].includes(uRole)&&<div style={{background:"#fefce8",borderBottom:"2px solid #fbbf24",padding:"7px 18px",display:"flex",alignItems:"center",gap:"10px",flexWrap:"wrap"}}>
+        <span style={{fontSize:"1rem"}}>⚠️</span>
+        <span style={{fontSize:"0.72rem",fontWeight:"700",color:"#92400e"}}>Demo Mode — You are logged in with a demo account.</span>
+        <span style={{fontSize:"0.68rem",color:"#a16207"}}>Before going live: remove demo accounts, create real staff logins, and assign roles.</span>
+        <a href="/PRODUCTION_SETUP.md" target="_blank" rel="noreferrer" style={{fontSize:"0.68rem",color:"#b45309",fontWeight:"700",textDecoration:"underline",marginLeft:"auto",whiteSpace:"nowrap"}}>View Setup Guide →</a>
+      </div>}
       {!canAccess(page)&&<div style={{padding:"60px",textAlign:"center",color:C.red,fontSize:"1.1rem",fontWeight:"700"}}>⛔ You do not have access to this page</div>}
-      {canAccess(page)&&<>
-      {page==="dashboard"&&<Dashboard students={students} teachers={teachers} houses={houses} hvsLogs={hvs} fees={fees} results={results} setPage={setPage}/>}
-      {page==="hvs"&&<HVSEntry students={students} houses={houses} addData={addData} updateHousePoints={updateHousePoints} hvsLogs={hvs} userRole={uRole} results={results} hifzLogsData={hifzLogs} attendanceLogs={attendance}/>}
-      {page==="evalcenter"&&<EvaluationCenter students={students} houses={houses} addData={addData} updateHousePoints={updateHousePoints} hvsLogs={hvs} userRole={uRole} results={results} hifzLogsData={hifzLogs} attendanceLogs={attendance}/>}
-      {page==="classrooms"&&<ClassesAndSections/>}
-      {page==="students"&&<Students students={students} addData={addData} results={results} fees={fees} hifzLogs={hifzLogs} classes={dbClasses} sections={dbSections}/>}
-      {page==="teachers"&&<Teachers teachers={teachers} addData={addData}/>}
-      {page==="hifz"&&(()=>{setPage("madrasa");return null;})()}
-      {page==="houses"&&<Houses houses={houses} hvsLogs={hvs} students={students} userRole={uRole}/>}
-      {page==="timetable"&&<Timetable/>}
-      {page==="fees"&&<FeeManagement students={students} addData={addData} fees={fees} updateData={updateData}/>}
-      {page==="results"&&<Results students={students} addData={addData} results={results}/>}
-      {page==="events"&&<Events addData={addData} houses={houses} updateHousePoints={updateHousePoints}/>}
-      {page==="attendance"&&<Attendance students={students} addData={addData} teachers={teachers}/>}
-      {page==="notifications"&&<Notifications students={students} addData={addData}/>}
-      {page==="library"&&<Library students={students} addData={addData}/>}
-      {page==="salary"&&<SalaryManagement teachers={teachers} addData={addData}/>}
-      {page==="exams"&&<ExamSchedule addData={addData}/>}
-      {page==="transport"&&<Transport students={students} addData={addData}/>}
-      {page==="tarbiyah"&&<TarbiyahDiary students={students} addData={addData} updateHousePoints={updateHousePoints}/>}
-      {page==="superhouse"&&<SuperHouseDashboard houses={houses} hvsLogs={hvs} students={students}/>}
-      {page==="duties"&&<WeeklyDutyChecklist students={students} addData={addData}/>}
-      {page==="grandtotal"&&<GrandTotalDashboard hvsLogs={hvs} houses={houses} students={students}/>}
-      {page==="superannual"&&<SuperHouseAnnual hvsLogs={hvs} houses={houses} students={students} addData={addData}/>}
-      {page==="investigationhub"&&<InvestigationHub/>}
-      {page==="invcase"&&<InvestigationCase addData={addData} user={user}/>}
-      {page==="incidentlog"&&<IncidentLog addData={addData} user={user}/>}
-      {page==="weaknessmatrix"&&<WeaknessMatrix addData={addData}/>}
-      {page==="monthlyplanner"&&<MonthlyPlanner addData={addData}/>}
-      {page==="societysystem"&&<SocietySystem addData={addData}/>}
-      {page==="leadershiproles"&&<LeadershipRoles addData={addData}/>}
-      {page==="housetemplates"&&<HouseTemplates addData={addData} students={students}/>}
-      {page==="housebazaar"&&<HouseBazaar addData={addData} students={students}/>}
-      {page==="sitaraameen"&&<SitaraAmeen addData={addData} students={students}/>}
-      {page==="hpri"&&<HPRISystem students={students} addData={addData}/>}
-      {page==="registrar"&&<RegistrarHub students={students} addData={addData}/>}
-      {page==="reportchain"&&<ReportingChain students={students} teachers={teachers}/>}
-      {page==="noticeboard"&&<NoticeBoard addData={addData} user={user}/>}
-      {page==="hostel"&&<HostelManagement students={students} addData={addData}/>}
-      {page==="health"&&<StudentHealth students={students} addData={addData}/>}
-      {page==="madrasa"&&<MadrasaModule students={students} hifzLogs={hifzLogs} userRole={uRole} addData={addData}/>}
-      {page==="donations"&&<DonationHub addData={addData}/>}
-      {page==="meetings"&&<MeetingMinutes addData={addData}/>}
-      {page==="assets"&&<LogisticsTracker addData={addData}/>}
-      {page==="staffperf"&&<StaffPerformance teachers={teachers} addData={addData}/>}
-      {page==="parents"&&<ParentPortal students={students} fees={fees} results={results}/>}
-      {page==="director"&&<DirectorPortal students={students} teachers={teachers} houses={houses} fees={fees} results={results} hvsLogs={hvs}/>}
-      {page==="alumni"&&<AlumniPortal addData={addData}/>}
-      {page==="visitors"&&<VisitorHub addData={addData}/>}
-      {page==="seating"&&<ExamSeating students={students} addData={addData}/>}
-      {page==="faculty_dev"&&<FacultyDevelopment teachers={teachers} addData={addData}/>}
-      {page==="curriculum"&&<CurriculumHub teachers={teachers} addData={addData}/>}
-      {page==="marks"&&<MarksEntry students={students} addData={addData}/>}
-      {page==="reportcard"&&<ReportCard students={students} results={results} fees={fees} addData={addData}/>}
-      {page==="dmc"&&<DMC students={students} results={results} fees={fees}/>}
-      {page==="evaluationscales"&&<EvaluationScales addData={addData} students={students}/>}
-
-      {page==="welfare"&&<WelfareFeedback students={students} addData={addData}/>}
-      {page==="pride"&&<PrideMessages students={students} teachers={teachers} addData={addData}/>}
-      {page==="ethics"&&<TarbiyahEthics students={students} addData={addData}/>}
-      {page==="lessons"&&<LessonPlans teachers={teachers} addData={addData}/>}
-      {page==="analytics"&&<ClassAnalytics students={students} results={results}/>}
-      {page==="transcript"&&<TranscriptRequest students={students} addData={addData}/>}
-      {page==="leave"&&<TeacherLeave teachers={teachers} addData={addData}/>}
-      {page==="slips"&&<SalarySlips teachers={teachers} addData={addData}/>}
-      {page==="lmaterials"&&<LearningMaterials teachers={teachers} addData={addData}/>}
-      {page==="reports"&&<Reports students={students} teachers={teachers} houses={houses} hvsLogs={hvs} fees={fees} results={results}/>}
-      {page==="phase2plan"&&<Phase2Plan/>}
-      {page==="watchlist"&&<WatchList students={students} addData={addData} userRole={uRole}/>}
-      {page==="housereportchain"&&<HouseReportingChain userRole={uRole}/>}
-      {page==="messaging"&&<ParentMessaging students={students} user={user} userRole={uRole}/>}
-      {page==="homeworkhub"&&<HomeworkHub students={students} user={user} userRole={uRole} teachers={teachers}/>}
-      {page==="aiassistant"&&<AIAssistant students={students} userRole={uRole}/>}
-      {page==="quizhub"&&<QuizHub user={user} role={uRole}/>}
-      {page==="schemeofstudies"&&<SchemeOfStudies addData={addData}/>}
-      {page==="academiccalendar"&&<AcademicCalendar addData={addData}/>}
-      {page==="termbreakup"&&<TermBreakup addData={addData}/>}
-      {page==="schooldecor"&&<SchoolDecorPlans addData={addData}/>}
-      {page==="chat"&&<ChatSystem user={user} userRole={uRole}/>}
-      {page==="etube"&&<ETube addData={addData} userRole={uRole}/>}
-      {page==="aicommand"&&<AICommandCenter students={students} teachers={teachers} houses={houses} userRole={uRole} addData={addData} updateData={updateData}/>}
-      </>}
+      {canAccess(page)&&<Suspense fallback={
+        <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"60vh",flexDirection:"column",gap:"14px"}}>
+          <div style={{width:"40px",height:"40px",borderRadius:"50%",border:"3px solid rgba(184,134,11,0.2)",borderTop:"3px solid #B8860B",animation:"spin 0.8s linear infinite"}}/>
+          <div style={{color:"#94a3b8",fontSize:"0.8rem",fontWeight:"600"}}>Loading...</div>
+          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        </div>
+      }>
+      <>
+      {page==="dashboard"&&<ModuleShell name="Dashboard"><Dashboard students={students} teachers={teachers} houses={houses} hvsLogs={hvs} fees={fees} results={results} setPage={setPage} userRole={uRole}/></ModuleShell>}
+      {page==="hvs"&&<ModuleShell name="HVS"><HVSEntry students={students} houses={houses} addData={addData} updateHousePoints={updateHousePoints} hvsLogs={hvs} userRole={uRole} results={results} hifzLogsData={hifzLogs} attendanceLogs={attendance}/></ModuleShell>}
+      {page==="evalcenter"&&<ModuleShell name="Evaluation Center"><EvaluationCenter students={students} houses={houses} addData={addData} updateHousePoints={updateHousePoints} hvsLogs={hvs} userRole={uRole} results={results} hifzLogsData={hifzLogs} attendanceLogs={attendance} evalScales={evalScales}/></ModuleShell>}
+      {page==="classrooms"&&<ModuleShell name="Classes & Sections"><ClassesAndSections/></ModuleShell>}
+      {page==="students"&&<ModuleShell name="Students"><Students students={students} addData={addData} results={results} fees={fees} hifzLogs={hifzLogs} classes={dbClasses} sections={dbSections}/></ModuleShell>}
+      {page==="teachers"&&<ModuleShell name="Teachers"><Teachers teachers={teachers} addData={addData}/></ModuleShell>}
+      {page==="hifz"&&<ModuleShell name="Hifz"><Hifz students={students} addData={addData} hifzLogs={hifzLogs}/></ModuleShell>}
+      {page==="houses"&&<ModuleShell name="Houses"><Houses houses={houses} hvsLogs={hvs} students={students} userRole={uRole}/></ModuleShell>}
+      {page==="timetable"&&<ModuleShell name="Timetable"><Timetable/></ModuleShell>}
+      {page==="fees"&&<ModuleShell name="Fee Management"><FeeManagement students={students} addData={addData} fees={fees} updateData={updateDataWrapped} teachers={teachers} feeReceipts={feeReceipts}/></ModuleShell>}
+      {page==="results"&&<ModuleShell name="Results"><Results students={students} addData={addData} results={results}/></ModuleShell>}
+      {page==="events"&&<ModuleShell name="Events"><Events addData={addData} houses={houses} updateHousePoints={updateHousePoints}/></ModuleShell>}
+      {page==="attendance"&&<ModuleShell name="Attendance"><Attendance students={students} addData={addData} teachers={teachers}/></ModuleShell>}
+      {page==="notifications"&&<ModuleShell name="Notifications"><Notifications students={students} addData={addData}/></ModuleShell>}
+      {page==="library"&&<ModuleShell name="Library"><Library students={students} addData={addData}/></ModuleShell>}
+      {page==="salary"&&<ModuleShell name="Salary"><SalaryManagement teachers={teachers} addData={addData}/></ModuleShell>}
+      {page==="exams"&&<ModuleShell name="Exam Schedule"><ExamSchedule addData={addData}/></ModuleShell>}
+      {page==="transport"&&<ModuleShell name="Transport"><Transport students={students} addData={addData}/></ModuleShell>}
+      {page==="tarbiyah"&&<ModuleShell name="Tarbiyah"><TarbiyahDiary students={students} addData={addData} updateHousePoints={updateHousePoints}/></ModuleShell>}
+      {page==="superhouse"&&<ModuleShell name="Super House"><SuperHouseDashboard houses={houses} hvsLogs={hvs} students={students}/></ModuleShell>}
+      {page==="duties"&&<ModuleShell name="Duty Checklist"><WeeklyDutyChecklist students={students} addData={addData} updateHousePoints={updateHousePoints}/></ModuleShell>}
+      {page==="grandtotal"&&<ModuleShell name="Grand Total"><GrandTotalDashboard hvsLogs={hvs} houses={houses} students={students}/></ModuleShell>}
+      {page==="superannual"&&<ModuleShell name="Annual Awards"><SuperHouseAnnual hvsLogs={hvs} houses={houses} students={students} addData={addData}/></ModuleShell>}
+      {page==="investigationhub"&&<ModuleShell name="Investigation Hub"><InvestigationHub students={students} hvsLogs={hvs} attendance={attendance}/></ModuleShell>}
+      {page==="invcase"&&<ModuleShell name="Investigation Case"><InvestigationCase addData={addData} user={user} students={students} houses={houses}/></ModuleShell>}
+      {page==="incidentlog"&&<ModuleShell name="Incident Log"><IncidentLog addData={addData} user={user} students={students} houses={houses}/></ModuleShell>}
+      {page==="weaknessmatrix"&&<ModuleShell name="Weakness Matrix"><WeaknessMatrix addData={addData} hvsLogs={hvs} houses={houses} students={students}/></ModuleShell>}
+      {page==="monthlyplanner"&&<ModuleShell name="Monthly Planner"><MonthlyPlanner addData={addData} houses={houses}/></ModuleShell>}
+      {page==="societysystem"&&<ModuleShell name="Society System"><SocietySystem addData={addData} students={students} updateHousePoints={updateHousePoints}/></ModuleShell>}
+      {page==="leadershiproles"&&<ModuleShell name="Leadership Roles"><LeadershipRoles addData={addData}/></ModuleShell>}
+      {page==="housetemplates"&&<ModuleShell name="House Templates"><HouseTemplates addData={addData} students={students}/></ModuleShell>}
+      {page==="housebazaar"&&<ModuleShell name="House Bazaar"><HouseBazaar addData={addData} students={students}/></ModuleShell>}
+      {page==="sitaraameen"&&<ModuleShell name="Sitara-e-Ameen"><SitaraAmeen addData={addData} students={students}/></ModuleShell>}
+      {page==="hpri"&&<ModuleShell name="HPRI"><HPRISystem students={students} addData={addData}/></ModuleShell>}
+      {page==="registrar"&&<ModuleShell name="Registrar"><RegistrarHub students={students} addData={addData}/></ModuleShell>}
+      {page==="reportchain"&&<ModuleShell name="Reporting Chain"><ReportingChain students={students} teachers={teachers}/></ModuleShell>}
+      {page==="noticeboard"&&<ModuleShell name="Notice Board"><NoticeBoard addData={addData} user={user}/></ModuleShell>}
+      {page==="hostel"&&<ModuleShell name="Hostel"><HostelManagement students={students} addData={addData}/></ModuleShell>}
+      {page==="health"&&<ModuleShell name="Health"><StudentHealth students={students} addData={addData}/></ModuleShell>}
+      {page==="madrasa"&&<ModuleShell name="Madrasa"><MadrasaModule students={students} hifzLogs={hifzLogs} userRole={uRole} addData={addData}/></ModuleShell>}
+      {page==="hifzdashboard"&&<ModuleShell name="Hifz Dashboard"><HifzDashboard students={students} userRole={uRole} addData={addData}/></ModuleShell>}
+      {page==="madrasaustad"&&<ModuleShell name="Madrasa Ustad"><MadrasaUstad students={students} hifzLogs={hifzLogs} userRole={uRole} addData={addData}/></ModuleShell>}
+      {page==="awardshub"&&<ModuleShell name="Awards Hub"><AwardsHub students={students} hvsLogs={hvs} hifzLogs={hifzLogs} role={uRole}/></ModuleShell>}
+      {page==="donations"&&<ModuleShell name="Donations"><DonationHub addData={addData}/></ModuleShell>}
+      {page==="meetings"&&<ModuleShell name="Meetings"><MeetingMinutes addData={addData}/></ModuleShell>}
+      {page==="assets"&&<ModuleShell name="Assets"><LogisticsTracker addData={addData}/></ModuleShell>}
+      {page==="staffperf"&&<ModuleShell name="Staff Performance"><StaffPerformance teachers={teachers} addData={addData}/></ModuleShell>}
+      {page==="parents"&&<ModuleShell name="Parent Portal"><ParentPortal students={students} fees={fees} results={results} evalScales={evalScales} hvsLogs={hvs} attendance={attendance}/></ModuleShell>}
+      {page==="director"&&<ModuleShell name="Director Portal"><DirectorPortal students={students} teachers={teachers} houses={houses} fees={fees} results={results} hvsLogs={hvs}/></ModuleShell>}
+      {page==="alumni"&&<ModuleShell name="Alumni"><AlumniPortal addData={addData}/></ModuleShell>}
+      {page==="visitors"&&<ModuleShell name="Visitors"><VisitorHub addData={addData}/></ModuleShell>}
+      {page==="seating"&&<ModuleShell name="Exam Seating"><ExamSeating students={students} addData={addData}/></ModuleShell>}
+      {page==="faculty_dev"&&<ModuleShell name="Faculty Development"><FacultyDevelopment teachers={teachers} addData={addData}/></ModuleShell>}
+      {page==="curriculum"&&<ModuleShell name="Curriculum"><CurriculumHub teachers={teachers} addData={addData}/></ModuleShell>}
+      {page==="marks"&&<ModuleShell name="Marks Entry"><MarksEntry students={students} addData={addData}/></ModuleShell>}
+      {page==="reportcard"&&<ModuleShell name="Report Card"><ReportCard students={students} results={results} fees={fees} addData={addData} evalScales={evalScales}/></ModuleShell>}
+      {page==="dmc"&&<ModuleShell name="DMC"><DMC students={students} results={results} fees={fees}/></ModuleShell>}
+      {page==="evaluationscales"&&<ModuleShell name="Evaluation Scales"><EvaluationScales addData={addData} students={students}/></ModuleShell>}
+      {page==="welfare"&&<ModuleShell name="Welfare"><WelfareFeedback students={students} addData={addData}/></ModuleShell>}
+      {page==="pride"&&<ModuleShell name="Pride Messages"><PrideMessages students={students} teachers={teachers} addData={addData}/></ModuleShell>}
+      {page==="ethics"&&<ModuleShell name="Ethics"><TarbiyahEthics students={students} addData={addData}/></ModuleShell>}
+      {page==="lessons"&&<ModuleShell name="Lesson Plans"><LessonPlans teachers={teachers} addData={addData}/></ModuleShell>}
+      {page==="analytics"&&<ModuleShell name="Analytics"><ClassAnalytics students={students} results={results}/></ModuleShell>}
+      {page==="transcript"&&<ModuleShell name="Transcript"><TranscriptRequest students={students} addData={addData}/></ModuleShell>}
+      {page==="leave"&&<ModuleShell name="Teacher Leave"><TeacherLeave teachers={teachers} addData={addData}/></ModuleShell>}
+      {page==="slips"&&<ModuleShell name="Salary Slips"><SalarySlips teachers={teachers} addData={addData}/></ModuleShell>}
+      {page==="lmaterials"&&<ModuleShell name="Learning Materials"><LearningMaterials teachers={teachers} addData={addData}/></ModuleShell>}
+      {page==="reports"&&<ModuleShell name="Reports"><Reports students={students} teachers={teachers} houses={houses} hvsLogs={hvs} fees={fees} results={results}/></ModuleShell>}
+      {page==="phase2plan"&&<ModuleShell name="Phase 2 Plan"><Phase2Plan/></ModuleShell>}
+      {page==="watchlist"&&<ModuleShell name="Watch List"><WatchList students={students} addData={addData} userRole={uRole}/></ModuleShell>}
+      {page==="housereportchain"&&<ModuleShell name="House Reporting Chain"><HouseReportingChain userRole={uRole}/></ModuleShell>}
+      {page==="messaging"&&<ModuleShell name="Parent Messaging"><ParentMessaging students={students} user={user} userRole={uRole}/></ModuleShell>}
+      {page==="homeworkhub"&&<ModuleShell name="Homework Hub"><HomeworkHub students={students} user={user} userRole={uRole} teachers={teachers}/></ModuleShell>}
+      {page==="aiassistant"&&<ModuleShell name="AI Assistant"><AIAssistant students={students} userRole={uRole}/></ModuleShell>}
+      {page==="quizhub"&&<ModuleShell name="Quiz Hub"><QuizHub user={user} role={uRole}/></ModuleShell>}
+      {page==="schemeofstudies"&&<ModuleShell name="Scheme of Studies"><SchemeOfStudies addData={addData}/></ModuleShell>}
+      {page==="academiccalendar"&&<ModuleShell name="Academic Calendar"><AcademicCalendar addData={addData}/></ModuleShell>}
+      {page==="termbreakup"&&<ModuleShell name="Term Breakup"><TermBreakup addData={addData}/></ModuleShell>}
+      {page==="schooldecor"&&<ModuleShell name="School Decor"><SchoolDecorPlans addData={addData}/></ModuleShell>}
+      {page==="chat"&&<ModuleShell name="Chat"><ChatSystem user={user} userRole={uRole}/></ModuleShell>}
+      {page==="etube"&&<ModuleShell name="E-Tube"><ETube addData={addData} userRole={uRole}/></ModuleShell>}
+      {page==="aicommand"&&<ModuleShell name="AI Command"><AICommandCenter students={students} teachers={teachers} houses={houses} userRole={uRole} addData={addData} updateData={updateDataWrapped}/></ModuleShell>}
+      </></Suspense>}
     </div>
   </div>
 </div>;

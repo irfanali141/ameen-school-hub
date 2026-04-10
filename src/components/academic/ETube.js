@@ -1,5 +1,6 @@
 /* eslint-disable */
 import { useState, useEffect } from "react";
+import { confirm } from '../ui/ConfirmDialog';
 import { supabase, updateData, deleteData } from "../../supabase";
 
 const G = "#d4af37", N = "#0f172a";
@@ -85,7 +86,7 @@ export default function ETube({ addData, userRole }) {
   };
 
   const remove = async (id) => {
-    if (!window.confirm("کیا آپ یہ ویڈیو حذف کرنا چاہتے ہیں؟")) return;
+    if (!await confirm("کیا آپ یہ ویڈیو حذف کرنا چاہتے ہیں؟")) return;
     await deleteData("etube_videos", id);
     load();
   };

@@ -1,5 +1,6 @@
 /* eslint-disable */
 import { useState, useEffect } from "react";
+import { toast } from "../../components/ui/Toast";
 import { DEMO, HOUSES } from "../../constants";
 import { getData } from "../../supabase";
 import letterhead from "../../assets/letterhead.png";
@@ -61,7 +62,7 @@ const injectPrint = () => {
   window.print();
 };
 
-export default function IncidentLog({ addData, user }) {
+export default function IncidentLog({ addData, user, students=[], houses=[] }) {
   const [form,    setFormSt] = useState(EMPTY());
   const [logs,    setLogs]   = useState([]);
   const [saving,  setSaving] = useState(false);
@@ -76,6 +77,9 @@ export default function IncidentLog({ addData, user }) {
   const set = (f,v) => setFormSt(prev=>({...prev,[f]:v}));
   const setF = (f,v) => setFilter(prev=>({...prev,[f]:v}));
 
+  // Students filtered by selected house
+  const houseStudents = students.filter(s=>(s.houseId||s.house_id)===form.houseId);
+
   const loadLogs = async () => {
     try {
       const data = await getData("investigation_cases");
@@ -89,7 +93,7 @@ export default function IncidentLog({ addData, user }) {
   useEffect(()=>{ loadLogs(); },[form.houseId, isAdmin]);
 
   const save = async () => {
-    if(!form.description.trim()){ alert("واقعہ کی تفصیل درج کریں"); return; }
+    if(!form.description.trim()){ toast.warning("واقعہ کی تفصیل درج کریں"); return; }
     setSaving(true);
     const h = HOUSES.find(h=>h.id===form.houseId)||{};
     const year = new Date().getFullYear();
@@ -171,6 +175,30 @@ export default function IncidentLog({ addData, user }) {
               <label style={lbl}>تاریخ</label>
               <input style={{ ...inp, direction:"ltr" }} type="date" value={form.date} onChange={e=>set("date",e.target.value)}/>
             </div>
+          </div>
+
+          {/* Student select */}
+          <div style={{ marginBottom:"12px" }}>
+            <label style={lbl}>متعلقہ طالب علم (Students Involved)</label>
+            <select style={{ ...inp, direction:"ltr" }} onChange={e=>{
+              const name=e.target.value; if(!name) return;
+              const existing=form._students||[];
+              if(!existing.includes(name)){ const upd=[...existing,name]; set("_students",upd); set("persons",upd.join(", ")); }
+              e.target.value="";
+            }}>
+              <option value="" style={{background:N2}}>+ Add Student...</option>
+              {houseStudents.map(s=><option key={s.id} value={s.name} style={{background:N2}}>{s.name} — {s.grade||""}</option>)}
+            </select>
+            {(form._students||[]).length>0&&(
+              <div style={{display:"flex",flexWrap:"wrap",gap:"6px",marginTop:"6px"}}>
+                {(form._students||[]).map((n,i)=>(
+                  <span key={i} style={{background:"rgba(249,115,22,0.15)",border:"1px solid rgba(249,115,22,0.35)",borderRadius:"20px",padding:"3px 10px",fontSize:"0.68rem",color:"#fb923c",display:"flex",alignItems:"center",gap:"6px"}}>
+                    👤 {n}
+                    <button onClick={()=>{const s=(form._students||[]).filter((_,j)=>j!==i);set("_students",s);set("persons",s.join(", "));}} style={{background:"none",border:"none",color:"#f87171",cursor:"pointer",fontSize:"0.7rem",padding:0}}>✕</button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <div style={{ marginBottom:"12px" }}>

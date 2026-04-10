@@ -1,5 +1,6 @@
 /* eslint-disable */
 import { useState, useEffect } from "react";
+import { toast } from "../../components/ui/Toast";
 import { getData } from "../../supabase";
 import { HOUSES } from "../../constants";
 import letterhead from "../../assets/letterhead.png";
@@ -25,7 +26,7 @@ const MAX_PER_SOC = 12;
 const now = new Date();
 const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
 
-function SocietySystem({ addData, students=[] }){
+function SocietySystem({ addData, students=[], updateHousePoints }){
   const G="#d4af37"; const N="#0f172a"; const N2="#1e293b";
   const glass={background:"rgba(255,255,255,0.07)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"16px"};
   const inp={padding:"8px 11px",borderRadius:"9px",border:"1px solid rgba(212,175,55,0.22)",background:"rgba(255,255,255,0.06)",color:"#f1f5f9",fontSize:"0.75rem",fontFamily:"'Public Sans',sans-serif",outline:"none",width:"100%",boxSizing:"border-box",colorScheme:"dark"};
@@ -37,6 +38,11 @@ function SocietySystem({ addData, students=[] }){
   const [members, setMembers]         = useState({language:"",science:"",art:"",sports:"",moral:""});
   const [showForm, setShowForm]       = useState(false);
   const [form, setForm]               = useState({date:new Date().toISOString().slice(0,10),activity:"",outcome:"",points:2,houseId:"abuBakr"});
+  const [participants, setParticipants] = useState([]); // student ids
+
+  // Students of selected house for participant dropdown
+  const houseStudents = students.filter(s=>(s.houseId||s.house_id)===form.houseId);
+  const toggleParticipant = (id) => setParticipants(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev,id]);
 
   useEffect(()=>{
     getData("society_scores").then(rows=>{ if(rows?.length) setActivities(rows); }).catch(()=>{});
@@ -69,11 +75,19 @@ function SocietySystem({ addData, students=[] }){
   const addEntry = async()=>{
     if(!form.activity.trim())return;
     const maxAllowed = Math.min(form.points, remaining);
-    if(maxAllowed<=0){ alert(`اس ماہ زیادہ سے زیادہ ${MAX_PER_SOC} پوائنٹس جائز ہیں`); return; }
-    const entry={...form,points:Number(maxAllowed),societyId:selSoc};
+    if(maxAllowed<=0){ toast.warning(`اس ماہ زیادہ سے زیادہ ${MAX_PER_SOC} پوائنٹس جائز ہیں`); return; }
+    const participantNames = participants.map(id=>students.find(s=>s.id===id)?.name||id);
+    const entry={...form, points:Number(maxAllowed), societyId:selSoc,
+      participant_ids: participants, participant_names: participantNames,
+      participant_count: participants.length };
     await addData("society_scores", entry);
     setActivities(prev=>[...prev,{...entry,id:Date.now()}]);
+    // Link to house points
+    if(updateHousePoints && maxAllowed>0){
+      try{ await updateHousePoints(form.houseId, maxAllowed); } catch(e){}
+    }
     setShowForm(false);
+    setParticipants([]);
     setForm({date:new Date().toISOString().slice(0,10),activity:"",outcome:"",points:2,houseId:"abuBakr"});
   };
 
@@ -219,8 +233,23 @@ function SocietySystem({ addData, students=[] }){
                   </div>
                 </div>
               </div>
+              {/* Participants */}
+              {houseStudents.length>0&&(
+                <div style={{marginBottom:"12px"}}>
+                  <div style={{fontSize:"0.62rem",color:"rgba(212,175,55,0.7)",marginBottom:"6px",fontWeight:"700"}}>👥 شریک طلباء (Participants)</div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:"5px",maxHeight:"120px",overflowY:"auto"}}>
+                    {houseStudents.map(s=>(
+                      <button key={s.id} onClick={()=>toggleParticipant(s.id)}
+                        style={{padding:"4px 10px",borderRadius:"20px",border:`1px solid ${participants.includes(s.id)?soc.color:"rgba(255,255,255,0.15)"}`,background:participants.includes(s.id)?`${soc.color}20`:"transparent",color:participants.includes(s.id)?soc.color:"rgba(241,245,249,0.5)",fontSize:"0.65rem",cursor:"pointer",fontFamily:"inherit",fontWeight:participants.includes(s.id)?"700":"400"}}>
+                        {participants.includes(s.id)?"✓ ":""}{s.name}
+                      </button>
+                    ))}
+                  </div>
+                  {participants.length>0&&<div style={{marginTop:"5px",fontSize:"0.6rem",color:soc.color}}>{participants.length} طلباء منتخب</div>}
+                </div>
+              )}
               <div style={{display:"flex",gap:"8px",justifyContent:"flex-end"}}>
-                <button onClick={()=>setShowForm(false)} style={{padding:"8px 18px",borderRadius:"9px",border:"1px solid rgba(255,255,255,0.15)",background:"transparent",color:"rgba(241,245,249,0.5)",fontSize:"0.75rem",cursor:"pointer",fontFamily:"inherit"}}>منسوخ</button>
+                <button onClick={()=>{setShowForm(false);setParticipants([]);}} style={{padding:"8px 18px",borderRadius:"9px",border:"1px solid rgba(255,255,255,0.15)",background:"transparent",color:"rgba(241,245,249,0.5)",fontSize:"0.75rem",cursor:"pointer",fontFamily:"inherit"}}>منسوخ</button>
                 <button onClick={addEntry} style={{padding:"8px 22px",borderRadius:"9px",border:"none",background:`linear-gradient(135deg,${soc.color},${soc.color}cc)`,color:"#fff",fontWeight:"700",fontSize:"0.75rem",cursor:"pointer",fontFamily:"inherit"}}>محفوظ ✓</button>
               </div>
             </div>

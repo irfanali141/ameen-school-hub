@@ -1,9 +1,14 @@
 /* eslint-disable */
 import { useState, useEffect } from "react";
+import { toast } from "../../components/ui/Toast";
 import { HOUSES } from "../../constants";
 import { getData } from "../../supabase";
-
-const G = "#d4af37"; const N = "#0f172a"; const N2 = "#1e293b";
+import houseAbuBakr from "../../assets/1769748237732.png";
+import houseUmar    from "../../assets/1769748315462.png";
+import houseUthman  from "../../assets/1769748410371.png";
+import houseAli     from "../../assets/1769748548928.png";
+const HOUSE_LOGOS = { abuBakr:houseAbuBakr, umar:houseUmar, uthman:houseUthman, ali:houseAli };
+const G = "#d4af37";
 
 // 6 weekly duties
 const DUTIES = [
@@ -20,7 +25,7 @@ const RATING_PTS = { 1: 3, 2: 5, 3: 8, 4: 10 };
 const RATING_LABELS = { 1:"Weak", 2:"Adequate", 3:"Good", 4:"Excellent" };
 const RATING_COLORS = { 1:"#f87171", 2:"#fb923c", 3:"#60a5fa", 4:"#4ade80" };
 
-function WeeklyDutyChecklist({ students, addData }) {
+function WeeklyDutyChecklist({ addData, updateHousePoints }) {
   const [houseId, setHouseId] = useState("abuBakr");
   const [week, setWeek] = useState("");
   const [ratings, setRatings] = useState({});   // { dutyId: 1-4 }
@@ -44,15 +49,21 @@ function WeeklyDutyChecklist({ students, addData }) {
   })();
 
   const save = async () => {
-    if (!week) { alert("ہفتہ منتخب کریں"); return; }
-    if (!allRated) { alert("تمام ڈیوٹیوں کی درجہ بندی کریں"); return; }
+    if (!week) { toast.warning("ہفتہ منتخب کریں"); return; }
+    if (!allRated) { toast.warning("تمام ڈیوٹیوں کی درجہ بندی کریں"); return; }
     setSaving(true);
     const houseInfo = HOUSES.find(h => h.id === houseId) || {};
     const dutyScores = Object.fromEntries(DUTIES.map(d => [d.id, ratings[d.id] || 0]));
-    await addData("duty_logs", { house_id: houseId, week, ratings: dutyScores, total_score: total, house_name: houseInfo.nameEn });
-    const fresh = await getData("duty_logs");
-    setLogs(fresh || []);
-    setRatings({}); setDone(true); setTimeout(() => setDone(false), 3000); setSaving(false);
+    try {
+      await addData("duty_logs", { house_id: houseId, week, ratings: dutyScores, total_score: total, house_name: houseInfo.nameEn });
+      if (total > 0 && updateHousePoints) await updateHousePoints(houseId, total);
+      const fresh = await getData("duty_logs");
+      setLogs(fresh || []);
+      setRatings({}); setDone(true); setTimeout(() => setDone(false), 3000);
+    } catch(e) {
+      toast.warning("Save failed: " + (e.message || JSON.stringify(e)));
+    }
+    setSaving(false);
   };
 
   // Leaderboard: sum duty_logs per house
@@ -62,7 +73,6 @@ function WeeklyDutyChecklist({ students, addData }) {
     entries: logs.filter(l => (l.house_id||l.houseId) === h.id).length,
   })).sort((a, b) => b.pts - a.pts);
 
-  const G = "#d4af37"; const N = "#0f172a"; const N2 = "#1e293b";
   const glass = { background:"rgba(255,255,255,0.07)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:"16px" };
   const inp = { padding:"10px 14px", borderRadius:"10px", border:"1px solid rgba(212,175,55,0.25)", background:"rgba(255,255,255,0.06)", color:"#f1f5f9", fontSize:"0.8rem", fontFamily:"'Public Sans',sans-serif", outline:"none", boxSizing:"border-box", direction:"ltr", colorScheme:"dark", width:"100%" };
   const lbl = { fontSize:"0.7rem", color:"rgba(212,175,55,0.8)", marginBottom:"6px", display:"block", fontWeight:"600" };
@@ -102,7 +112,9 @@ function WeeklyDutyChecklist({ students, addData }) {
                   <div style={{ fontSize:isTop?"1.3rem":"0.85rem", fontWeight:"800", minWidth:"32px", textAlign:"center", color:isTop?"inherit":"rgba(255,255,255,0.35)" }}>
                     {i===0?"🥇":i===1?"🥈":i===2?"🥉":`#${i+1}`}
                   </div>
-                  <div style={{ width:"32px", height:"32px", borderRadius:"8px", background:h.gradient||h.color, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1rem", flexShrink:0 }}>{h.emoji}</div>
+                  <div style={{ width:"36px", height:"36px", borderRadius:"50%", overflow:"hidden", border:`2px solid ${h.color}50`, flexShrink:0 }}>
+                    <img src={HOUSE_LOGOS[h.id]} alt={h.nameEn} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+                  </div>
                   <div style={{ flex:1 }}>
                     <div style={{ fontWeight:"700", fontSize:"0.82rem", color:isTop?h.color:"#f1f5f9" }}>{h.nameEn}</div>
                     <div style={{ fontSize:"0.58rem", color:"rgba(255,255,255,0.35)" }}>{h.name} • {h.entries} Weeks</div>
@@ -151,7 +163,7 @@ function WeeklyDutyChecklist({ students, addData }) {
       <div style={{ ...glass, padding:"24px", marginBottom:"16px" }}>
         <div style={{ fontSize:"0.9rem", fontWeight:"700", color:G, marginBottom:"20px" }}>📋 Weekly Duty Rating (Every Duty max 10 pts)</div>
 
-        {DUTIES.map((duty, idx) => {
+        {DUTIES.map((duty) => {
           const rated = ratings[duty.id];
           const pts = dutyScore(duty.id);
           const pct = Math.round((pts / 10) * 100);

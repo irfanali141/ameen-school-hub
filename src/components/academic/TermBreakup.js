@@ -1,5 +1,6 @@
 /* eslint-disable */
 import { useState, useEffect } from "react";
+import { confirm } from '../ui/ConfirmDialog';
 import { supabase, updateData, deleteData } from "../../supabase";
 
 const G = "#d4af37", N = "#0f172a";
@@ -58,7 +59,7 @@ export default function TermBreakup({ addData }) {
   };
 
   const remove = async (id) => {
-    if (!window.confirm("کیا آپ یہ ٹرم حذف کرنا چاہتے ہیں؟")) return;
+    if (!await confirm("کیا آپ یہ ٹرم حذف کرنا چاہتے ہیں؟")) return;
     await deleteData("term_breakup", id);
     load();
   };

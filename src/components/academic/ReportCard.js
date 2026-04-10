@@ -3,7 +3,18 @@ import { useState, useEffect } from "react";
 import { C, S, hBadge, pBar, HOUSES, sLabel } from "../../constants";
 import logo from "../../logo.png";
 
-function ReportCard({students,results,fees,addData}){
+const SCALE_LABELS = [
+  {id:"performance",label:"کارکردگی",en:"Performance",icon:"📈"},
+  {id:"discipline", label:"ضبط و نظم",en:"Discipline", icon:"⚔️"},
+  {id:"academic",   label:"علمی",     en:"Academic",   icon:"📚"},
+  {id:"social",     label:"سماجی",    en:"Social",     icon:"🤝"},
+  {id:"quran",      label:"قرآنی",    en:"Quranic",    icon:"📖"},
+  {id:"motivation", label:"جذبہ",     en:"Motivation", icon:"🚀"},
+  {id:"emotional",  label:"جذباتی",   en:"Emotional",  icon:"💫"},
+  {id:"leadership", label:"قیادت",    en:"Leadership", icon:"👑"},
+];
+
+function ReportCard({students,results,fees,addData,evalScales=[]}){
   const [selStudent,setSelStudent]=useState(null); const [q,setQ]=useState(""); const [term,setTerm]=useState("Annual 2026");
   const filtered=students.filter(s=>s.name?.includes(q)||s.studentCode?.includes(q));
   if(selStudent){
@@ -16,6 +27,10 @@ function ReportCard({students,results,fees,addData}){
     const overallGrade=avgPct>=90?"A+":avgPct>=80?"A":avgPct>=70?"B":avgPct>=60?"C":avgPct>=50?"D":"F";
     const totalObtained=sResults.reduce((s,r)=>s+(r.obtained||0),0);
     const totalMarks=sResults.reduce((s,r)=>s+(r.total||100),0);
+    // Latest evaluation for this student
+    const stuEvals=evalScales.filter(e=>e.student_id===selStudent.id).sort((a,b)=>(b.month||"").localeCompare(a.month||""));
+    const latestEval=stuEvals[0]||null;
+    const evalRatings=latestEval?.ratings||{};
     return <div style={S.page}>
       <div style={{display:"flex",gap:"10px",marginBottom:"20px",flexWrap:"wrap"}}>
         <button style={{...S.addBtn,background:"#eee",color:C.navy,boxShadow:"none"}} onClick={()=>setSelStudent(null)}>← Back</button>
@@ -59,6 +74,51 @@ function ReportCard({students,results,fees,addData}){
             <div style={{background:"#fafaf8",borderRadius:"12px",padding:"14px",display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:"0.72rem",fontWeight:"700",color:C.navy,marginBottom:"4px",fontFamily:"'Noto Nastaliq Urdu',serif"}}>💰 فیس</div><div style={{fontSize:"0.62rem",color:"#888",fontFamily:"'Noto Nastaliq Urdu',serif"}}>ادا: Rs. {paidFees.toLocaleString()}</div></div><span style={{...hBadge(pendingFees>0?C.red:C.green,pendingFees>0?"#fee2e2":"#dcfce7"),fontSize:"0.62rem",fontFamily:"'Noto Nastaliq Urdu',serif"}}>{pendingFees>0?`⚠️ Rs.${pendingFees.toLocaleString()} باقی`:"✅ صاف"}</span></div>
             <div style={{background:"#fafaf8",borderRadius:"12px",padding:"14px",textAlign:"center"}}><div style={{fontSize:"0.62rem",color:"#888",marginBottom:"4px",fontFamily:"'Noto Nastaliq Urdu',serif"}}>مجموعی گریڈ</div><div style={{fontSize:"2rem",fontWeight:"900",color:C.gold}}>{overallGrade}</div></div>
           </div>
+          {/* Character Assessment from EvaluationScales */}
+          {latestEval && (
+            <div style={{marginBottom:"20px",background:"#f8f9ff",borderRadius:"14px",padding:"16px",border:"1px solid #e8ecf8"}}>
+              <div style={{fontSize:"0.78rem",fontWeight:"800",color:C.navy,marginBottom:"12px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span>🎯 کردار و شخصیت — Character Assessment</span>
+                <span style={{fontSize:"0.6rem",color:"#888",fontWeight:"500"}}>{latestEval.month}</span>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:"8px",marginBottom:"12px"}}>
+                {SCALE_LABELS.map(sc=>{
+                  const val=Number((latestEval.ratings||{})[sc.id]||0);
+                  const pct=Math.round((val/5)*100);
+                  const col=pct>=70?"#16a34a":pct>=50?"#d97706":"#dc2626";
+                  return (
+                    <div key={sc.id} style={{textAlign:"center",background:"#fff",borderRadius:"10px",padding:"8px 4px",border:"1px solid #eee"}}>
+                      <div style={{fontSize:"0.9rem",marginBottom:"3px"}}>{sc.icon}</div>
+                      <div style={{fontSize:"0.55rem",color:"#666",marginBottom:"4px"}}>{sc.en}</div>
+                      <div style={{display:"flex",gap:"2px",justifyContent:"center",marginBottom:"3px"}}>
+                        {[1,2,3,4,5].map(i=>(
+                          <div key={i} style={{width:"8px",height:"8px",borderRadius:"50%",
+                            background:i<=val?col:"#e5e7eb"}}/>
+                        ))}
+                      </div>
+                      <div style={{fontSize:"0.65rem",fontWeight:"800",color:col}}>{val}/5</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#fff",borderRadius:"8px",padding:"8px 12px",border:"1px solid #eee"}}>
+                <span style={{fontSize:"0.65rem",color:"#666"}}>Overall Character Score</span>
+                <span style={{fontSize:"1rem",fontWeight:"900",color:latestEval.overall>=70?"#16a34a":latestEval.overall>=50?"#d97706":"#dc2626"}}>
+                  {Math.round(latestEval.overall||0)}%
+                </span>
+                <span style={{fontSize:"0.65rem",fontWeight:"800",padding:"3px 10px",borderRadius:"20px",
+                  background:latestEval.overall>=70?"#dcfce7":latestEval.overall>=50?"#fef3c7":"#fee2e2",
+                  color:latestEval.overall>=70?"#16a34a":latestEval.overall>=50?"#d97706":"#dc2626"}}>
+                  {latestEval.overall>=70?"Excellent":latestEval.overall>=50?"Good":"Needs Improvement"}
+                </span>
+              </div>
+            </div>
+          )}
+          {!latestEval&&(
+            <div style={{marginBottom:"20px",background:"#f8f9ff",borderRadius:"14px",padding:"14px",border:"1px dashed #dde",textAlign:"center"}}>
+              <span style={{fontSize:"0.65rem",color:"#aaa"}}>🎯 کردار تشخیص — No evaluation on record yet</span>
+            </div>
+          )}
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"20px",marginTop:"30px"}}>{["کلاس ٹیچر","پرنسپل","والدین"].map(r=><div key={r} style={{textAlign:"center"}}><div style={{borderTop:`2px solid #ddd`,paddingTop:"8px",fontSize:"0.6rem",color:"#888",fontFamily:"'Noto Nastaliq Urdu',serif"}}>{r} دستخط</div></div>)}</div>
         </div>
       </div>
@@ -72,7 +132,7 @@ function ReportCard({students,results,fees,addData}){
       {filtered.map(s=>{ const h=HOUSES.find(x=>x.id===s.houseId)||{}; const sRes=results.filter(r=>r.studentId===s.id); const avg=sRes.length>0?Math.round(sRes.reduce((sum,r)=>sum+(r.percentage||0),0)/sRes.length):0; return <div key={s.id} onClick={()=>setSelStudent(s)} className="hv-card" style={{...S.card,cursor:"pointer",borderRight:`4px solid ${h.color||C.gold}`}}>
         <div style={{display:"flex",alignItems:"center",gap:"12px"}}><div style={{width:"48px",height:"48px",borderRadius:"50%",background:h.gradient||`linear-gradient(135deg,${C.gold},${C.goldDark})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.4rem"}}>{h.emoji||"🎓"}</div><div><div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy}}>{s.name}</div><div style={{fontSize:"0.62rem",color:"#888"}}>{s.grade} • {h.nameEn||"—"}</div>{sRes.length>0&&<div style={{fontSize:"0.65rem",fontWeight:"700",color:avg>=70?C.green:avg>=50?C.amber:C.red}}>Average: {avg}%</div>}</div></div>
       </div>; })}
-      {filtered.length===0&&<div className="hv-card" style={{...S.card,textAlign:"center",color:"#bbb",padding:"40px",gridColumn:"1/-1"}} className="ur">کوئی نتائج نہیں</div>}
+      {filtered.length===0&&<div className="hv-card ur" style={{...S.card,textAlign:"center",color:"#bbb",padding:"40px",gridColumn:"1/-1"}}>کوئی نتائج نہیں</div>}
     </div>}
     {!q&&<div className="hv-card" style={{...S.card,textAlign:"center",padding:"60px"}}><div style={{fontSize:"3rem",marginBottom:"12px"}}>📋</div><div style={{fontSize:"0.85rem",fontWeight:"700",color:C.navy,fontFamily:"'Noto Nastaliq Urdu',serif"}}>رپورٹ کارڈ</div><div style={{fontSize:"0.65rem",color:"#888",marginTop:"8px",fontFamily:"'Noto Nastaliq Urdu',serif"}}>اوپر طالب علم کا نام تلاش کریں</div></div>}
   </div>;

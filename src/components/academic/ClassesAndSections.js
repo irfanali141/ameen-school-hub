@@ -1,5 +1,6 @@
 /* eslint-disable */
 import { useState, useEffect } from "react";
+import { confirm } from '../ui/ConfirmDialog';
 import { supabase } from "../../supabase";
 
 const G = "#d4af37"; const W = "#f1f5f9";
@@ -59,7 +60,7 @@ export default function ClassesAndSections() {
     load();
   };
   const deleteClass = async (id) => {
-    if (!window.confirm("Delete this class? All its sections will also be deleted.")) return;
+    if (!await confirm("Delete this class? All its sections will also be deleted.")) return;
     await supabase.from("classes").delete().eq("id", id);
     load();
   };
@@ -86,7 +87,7 @@ export default function ClassesAndSections() {
     load();
   };
   const deleteSection = async (id) => {
-    if (!window.confirm("Delete this section?")) return;
+    if (!await confirm("Delete this section?")) return;
     await supabase.from("sections").delete().eq("id", id);
     load();
   };

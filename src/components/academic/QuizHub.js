@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { confirm } from '../ui/ConfirmDialog';
+import EmptyState from '../ui/EmptyState';
 import { supabase } from "../../supabase";
+import { toast } from "../../components/ui/Toast";
 import QuizBuilder from "./QuizBuilder";
 import QuizAttempt from "./QuizAttempt";
 import QuizResults from "./QuizResults";
@@ -67,7 +70,7 @@ export default function QuizHub({ user, role }) {
   const getMyAttempt = (quizId) => myAttempts.find(a => a.quiz_id === quizId);
 
   const deleteQuiz = async (id) => {
-    if (!window.confirm("کیا آپ یہ ٹیسٹ حذف کرنا چاہتے ہیں؟")) return;
+    if (!await confirm("کیا آپ یہ ٹیسٹ حذف کرنا چاہتے ہیں؟")) return;
     await supabase.from("quizzes").delete().eq("id", id);
     setQuizzes(prev => prev.filter(q => q.id !== id));
   };
@@ -140,7 +143,7 @@ export default function QuizHub({ user, role }) {
         applyAI(parsed);
       }
     } catch (e) {
-      alert("AI سوالات نہیں بنا سکا: " + e.message);
+      toast.warning("AI سوالات نہیں بنا سکا: " + e.message);
     } finally {
       setAiGenerating(false);
     }
@@ -250,18 +253,12 @@ export default function QuizHub({ user, role }) {
       {loading ? (
         <p style={{ color: "#94a3b8", textAlign: "center", padding: 40 }}>لوڈ ہو رہا ہے...</p>
       ) : currentList.length === 0 ? (
-        <div style={{ textAlign: "center", padding: 60 }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>📭</div>
-          <p style={{ color: "#64748b" }}>کوئی ٹیسٹ نہیں ملا</p>
-          {isTeacher && (
-            <button
-              onClick={() => setShowBuilder(true)}
-              style={{ background: G, color: N, border: "none", borderRadius: 8, padding: "10px 20px", fontWeight: 700, cursor: "pointer", marginTop: 8 }}
-            >
-              + پہلا ٹیسٹ بنائیں
-            </button>
-          )}
-        </div>
+        <EmptyState
+          icon="📝"
+          title="کوئی ٹیسٹ نہیں ملا"
+          subtitle="اس وقت کوئی ٹیسٹ دستیاب نہیں ہے"
+          action={isTeacher ? { label: "+ پہلا ٹیسٹ بنائیں", onClick: () => setShowBuilder(true) } : undefined}
+        />
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: 16 }}>
           {currentList.map(quiz => {

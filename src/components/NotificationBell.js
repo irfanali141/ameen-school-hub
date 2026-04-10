@@ -9,7 +9,7 @@ import { supabase } from "../supabase";
  *   role     — current user role string
  *   setPage  — navigate to page function
  */
-export default function NotificationBell({ role, setPage }) {
+export default function NotificationBell({ role, setPage, unreadMsgCount=0, onMsgClick }) {
   const [pending, setPending]   = useState([]);
   const [open, setOpen]         = useState(false);
   const [loading, setLoading]   = useState(true);
@@ -54,6 +54,7 @@ export default function NotificationBell({ role, setPage }) {
   };
 
   const count = pending.length;
+  const totalCount = count + unreadMsgCount;
 
   return (
     <div ref={dropRef} style={{ position: "relative", display: "inline-block" }}>
@@ -74,19 +75,19 @@ export default function NotificationBell({ role, setPage }) {
         }}
       >
         🔔
-        {count > 0 && (
+        {totalCount > 0 && (
           <span style={{
             position: "absolute", top: "-6px", right: "-6px",
             background: "#ef4444", color: "#fff",
             borderRadius: "50%",
-            width: count > 9 ? "20px" : "16px",
+            width: totalCount > 9 ? "20px" : "16px",
             height: "16px",
             fontSize: "0.55rem", fontWeight: "800",
             display: "flex", alignItems: "center", justifyContent: "center",
             fontFamily: "'Public Sans',sans-serif",
             boxShadow: "0 0 0 2px #0f172a",
           }}>
-            {count > 99 ? "99+" : count}
+            {totalCount > 99 ? "99+" : totalCount}
           </span>
         )}
       </button>
@@ -95,7 +96,7 @@ export default function NotificationBell({ role, setPage }) {
       {open && (
         <div style={{
           position: "absolute", top: "calc(100% + 8px)", right: 0,
-          width: "320px", maxHeight: "420px", overflowY: "auto",
+          width: "min(320px, calc(100vw - 16px))", maxHeight: "80vh", overflowY: "auto",
           background: "#1e293b",
           border: "1px solid rgba(212,175,55,0.25)",
           borderRadius: "14px",
@@ -112,11 +113,39 @@ export default function NotificationBell({ role, setPage }) {
             <div>
               <div style={{ color: "#d4af37", fontSize: "0.58rem", fontWeight: "700", letterSpacing: "0.1em", fontFamily: "'Public Sans',sans-serif" }}>NOTIFICATIONS</div>
               <div style={{ color: "white", fontSize: "0.85rem", fontWeight: "700" }}>
-                {count > 0 ? `${count} زیر التواء نامزدگیاں` : "کوئی نامزدگی نہیں"}
+                {totalCount > 0 ? `${totalCount} نئی اطلاعات` : "کوئی نئی اطلاع نہیں"}
               </div>
             </div>
             <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "1.1rem" }}>✕</button>
           </div>
+
+          {/* Unread parent messages section */}
+          {unreadMsgCount > 0 && (
+            <div
+              onClick={() => { if(onMsgClick) onMsgClick(); setOpen(false); }}
+              style={{
+                padding: "12px 16px",
+                borderBottom: "1px solid rgba(255,255,255,0.08)",
+                display: "flex", gap: "12px", alignItems: "center",
+                cursor: "pointer", background: "rgba(99,102,241,0.07)",
+              }}
+            >
+              <div style={{ fontSize: "1.3rem", flexShrink: 0 }}>💬</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ color: "white", fontSize: "0.78rem", fontWeight: "700" }}>
+                  {unreadMsgCount} نئ{unreadMsgCount === 1 ? "ا" : "ے"} پیغام{unreadMsgCount > 1 ? "ات" : ""}
+                </div>
+                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.62rem", marginTop: "2px" }}>
+                  والدین کے پیغامات — دیکھنے کے لیے کلک کریں
+                </div>
+              </div>
+              <span style={{
+                background: "#ef4444", color: "#fff",
+                borderRadius: "10px", padding: "2px 7px",
+                fontSize: "0.6rem", fontWeight: "800", flexShrink: 0,
+              }}>{unreadMsgCount > 99 ? "99+" : unreadMsgCount}</span>
+            </div>
+          )}
 
           {/* Loading */}
           {loading && (
@@ -124,14 +153,19 @@ export default function NotificationBell({ role, setPage }) {
           )}
 
           {/* Empty state */}
-          {!loading && count === 0 && (
+          {!loading && totalCount === 0 && (
             <div style={{ padding: "32px 20px", textAlign: "center" }}>
               <div style={{ fontSize: "1.8rem", marginBottom: "8px" }}>✅</div>
-              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>All nominations reviewed</div>
+              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>سب کچھ ٹھیک ہے</div>
             </div>
           )}
 
           {/* Nomination list */}
+          {!loading && count > 0 && (
+            <div style={{ padding: "10px 16px 4px", borderBottom: count > 0 ? "none" : undefined }}>
+              <div style={{ color: "#d4af37", fontSize: "0.58rem", fontWeight: "700", letterSpacing: "0.08em" }}>🏅 AWARD NOMINATIONS</div>
+            </div>
+          )}
           {!loading && pending.map((nom, i) => {
             const timeAgo = formatTimeAgo(nom.created_at);
             return (

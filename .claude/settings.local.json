@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(npm install:*)",
-      "Bash(npm start:*)"
+      "Bash(npm start:*)",
+      "Bash(node -e \":*)",
+      "Bash(powershell -Command \"Get-ChildItem -Path ''src'' -Recurse -Filter ''*.js'' | ForEach-Object { $content = Get-Content $_FullName -Raw; $new = $content -replace ''direction:\\\\s*\"\"rtl\"\"'', ''direction:\"\"ltr\"\"''; if \\($new -ne $content\\) { Set-Content $_FullName $new -NoNewline; Write-Host $_FullName } }\")",
+      "Bash(powershell -Command \"Get-ChildItem -Path ''''src'''' -Recurse -Filter ''''*.js'''' | ForEach-Object { $matches = Select-String -Path $_FullName -Pattern ''''[\\\\u0600-\\\\u06FF]'''' -AllMatches; if \\($matches\\) { Write-Host $_Name, '''':'''', $matches.Count, ''''lines'''' } }\")",
+      "Bash(python3 -c \":*)",
+      "Bash(python3 fix_urdu2.py)",
+      "Bash(python3 fix_urdu6.py)"
     ]
   }
 }

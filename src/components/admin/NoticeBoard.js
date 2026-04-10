@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { C, S, hBadge } from "../../constants";
 import { supabase } from "../../supabase";
+import EmptyState from '../ui/EmptyState';
 
 function NoticeBoard({addData,user}){
   const [notices,setNotices]=useState([]); const [show,setShow]=useState(false);
@@ -52,7 +53,7 @@ function NoticeBoard({addData,user}){
         </div>
         <div style={{fontSize:"0.68rem",color:"rgba(255,255,255,0.55)",lineHeight:"1.7"}}>{n.content}</div>
       </div>; })}
-      {notices.length===0&&<div style={{...glass,textAlign:"center",color:"rgba(255,255,255,0.3)",padding:"60px"}}><span className="material-symbols-rounded" style={{fontSize:"48px",display:"block",marginBottom:"12px",color:"rgba(212,175,55,0.3)"}}>campaign</span>No notices yet!</div>}
+      {notices.length===0&&<EmptyState icon="📌" title="کوئی نوٹس نہیں" subtitle="ابھی تک کوئی اعلان یا نوٹس شائع نہیں کیا گیا"/>}
     </div>
   </div>;
 }

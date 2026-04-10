@@ -334,12 +334,55 @@ function FormulaCard({ f, vals, onChange }) {
 }
 
 // ===================== MAIN COMPONENT =====================
-export default function InvestigationHub() {
+export default function InvestigationHub({ students=[], hvsLogs=[], attendance=[] }) {
   const [vals, setVals] = useState({});
   const [activeGroup, setActiveGroup] = useState(0); // 0=All
+  const [selHouse, setSelHouse] = useState("all");
 
   const setVar = (fId, vId, val) => {
     setVals(prev => ({ ...prev, [fId]: { ...(prev[fId]||{}), [vId]: val } }));
+  };
+
+  // ── Auto-compute real values from data ──
+  const autoData = (() => {
+    const hStudents = selHouse==="all" ? students : students.filter(s=>(s.houseId||s.house_id)===selHouse);
+    const todayStr = new Date().toISOString().slice(0,10);
+    const curMonth = new Date().toISOString().slice(0,7);
+
+    // Attendance rate today (0-100)
+    const todayAtt = attendance.filter(a=>(a.date||a.created_at||"").slice(0,10)===todayStr);
+    const presentCount = todayAtt.filter(a=>(a.status||"").toLowerCase()==="present"||a.present===true).length;
+    const attRate = hStudents.length ? Math.round((presentCount/hStudents.length)*100) : 0;
+
+    // HVS avg this month (0-100 scaled)
+    const monthLogs = hvsLogs.filter(l=>{
+      const d=(l.date||l.created_at||"").slice(0,7);
+      const hId=l.houseId||l.house_id;
+      return d===curMonth && (selHouse==="all"||hId===selHouse);
+    });
+    const hvsAvg = monthLogs.length
+      ? Math.round(monthLogs.reduce((s,l)=>s+(l.totalScore||l.total_score||0),0)/monthLogs.length)
+      : 0;
+
+    // Performance from HVS academic (ilm) avg
+    const ilmAvg = monthLogs.length
+      ? Math.round(monthLogs.reduce((s,l)=>{ const gs=l.group_scores||l.scores||{}; return s+(gs.ilm||0); },0)/monthLogs.length/25*100)
+      : 0;
+
+    // Discipline from zabt avg
+    const zabtAvg = monthLogs.length
+      ? Math.round(monthLogs.reduce((s,l)=>{ const gs=l.group_scores||l.scores||{}; return s+(gs.zabt||0); },0)/monthLogs.length/15*100)
+      : 0;
+
+    return { attRate, hvsAvg, ilmAvg, zabtAvg, studentCount: hStudents.length };
+  })();
+
+  // Auto-fill button: populate AI formula vars from real data
+  const autoFill = () => {
+    setVals(prev=>({...prev,
+      AI: { P: autoData.ilmAvg, B: autoData.zabtAvg, E: autoData.attRate, T: autoData.hvsAvg },
+      PSI: { C: autoData.hvsAvg, S: autoData.ilmAvg, F: autoData.attRate },
+    }));
   };
 
   // Compute all results for summary
@@ -369,6 +412,28 @@ export default function InvestigationHub() {
             <div style={{ color:"rgba(255,255,255,0.45)", fontSize:"0.68rem", direction:"ltr", textAlign:"left" }}>
               Investigation Hub — 12 Formula Calculators with Zone Alerts
             </div>
+          </div>
+        </div>
+
+        {/* Auto-fill bar */}
+        <div style={{ display:"flex", gap:"10px", alignItems:"center", marginBottom:"14px", background:"rgba(74,222,128,0.06)", border:"1px solid rgba(74,222,128,0.2)", borderRadius:"12px", padding:"10px 16px", flexWrap:"wrap" }}>
+          <div style={{ flex:1, minWidth:"200px" }}>
+            <div style={{ fontSize:"0.65rem", color:"#4ade80", fontWeight:"700", marginBottom:"2px" }}>⚡ Real Data — {autoData.studentCount} Students</div>
+            <div style={{ display:"flex", gap:"10px", flexWrap:"wrap" }}>
+              {[["📊 HVS Avg",autoData.hvsAvg+"%"],["✅ Attendance",autoData.attRate+"%"],["📚 Academic",autoData.ilmAvg+"%"],["⚔️ Discipline",autoData.zabtAvg+"%"]].map(([l,v])=>(
+                <span key={l} style={{ fontSize:"0.6rem", color:"rgba(255,255,255,0.6)" }}>{l}: <strong style={{color:"#f1f5f9"}}>{v}</strong></span>
+              ))}
+            </div>
+          </div>
+          <div style={{ display:"flex", gap:"8px", alignItems:"center" }}>
+            <select value={selHouse} onChange={e=>setSelHouse(e.target.value)}
+              style={{ padding:"6px 10px", borderRadius:"8px", border:"1px solid rgba(74,222,128,0.3)", background:"rgba(0,0,0,0.3)", color:"#f1f5f9", fontSize:"0.7rem", fontFamily:"inherit", outline:"none", colorScheme:"dark" }}>
+              <option value="all">🏠 All Houses</option>
+              {["abuBakr","umar","uthman","ali"].map(h=><option key={h} value={h}>{h}</option>)}
+            </select>
+            <button onClick={autoFill} style={{ padding:"7px 16px", borderRadius:"9px", border:"none", background:"linear-gradient(135deg,#22c55e,#16a34a)", color:"#fff", fontWeight:"700", fontSize:"0.7rem", cursor:"pointer", fontFamily:"inherit", whiteSpace:"nowrap" }}>
+              ⚡ Auto Fill AI & PSI
+            </button>
           </div>
         </div>
 

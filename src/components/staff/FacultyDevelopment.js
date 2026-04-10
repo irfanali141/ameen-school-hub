@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { C, S, hBadge } from "../../constants";
 import { supabase } from "../../supabase";
+import EmptyState from '../ui/EmptyState';
 
 function FacultyDevelopment({teachers,addData}){
   const [programs,setPrograms]=useState([]); const [enrollments,setEnrollments]=useState([]); const [show,setShow]=useState(false); const [tab,setTab]=useState("programs");
@@ -39,7 +40,7 @@ function FacultyDevelopment({teachers,addData}){
         <div style={{fontSize:"0.6rem",color:"#aaa",marginBottom:"8px",fontFamily:"monospace",direction:"ltr"}}>{p.startDate} → {p.endDate}</div>
         <div style={{display:"flex",gap:"8px",flexWrap:"wrap"}}><span style={{fontSize:"0.62rem",color:C.abuBakr}}>⏱️ {p.hours} hours</span><span style={hBadge(C.green,"#dcfce7")}>{enrolled} participants</span>{p.certificate&&<span style={hBadge(C.gold,C.goldLight)}>🏆 Certificate</span>}</div>
       </div>; })}
-      {programs.length===0&&<div className="hv-card" style={{...S.card,textAlign:"center",color:"#bbb",padding:"40px",gridColumn:"1/-1"}}>Any Program No</div>}
+      {programs.length===0&&<div style={{gridColumn:"1/-1"}}><EmptyState icon="👩‍🏫" title="کوئی پروگرام نہیں" subtitle="ابھی تک کوئی ترقیاتی پروگرام شامل نہیں کیا گیا"/></div>}
     </div>}
     {tab==="enroll"&&<div className="hv-card" style={{...S.card,background:`linear-gradient(135deg,${C.goldLight},#fdf8ee)`}}>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px",marginBottom:"12px"}}>

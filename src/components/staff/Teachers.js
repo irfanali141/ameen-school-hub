@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { C, S, hBadge, HOUSES } from "../../constants";
 import useClasses from "../../hooks/useClasses";
+import EmptyState from "../ui/EmptyState";
 
 
 function Teachers({teachers,addData}){
@@ -182,6 +183,7 @@ function Teachers({teachers,addData}){
         </div>
       ):(
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:"16px"}}>
+          {filtered.length===0&&<div style={{gridColumn:"1/-1"}}><EmptyState icon="👨‍🏫" title="کوئی استاد نہیں ملا" subtitle={teachers.length===0?"ابھی کوئی استاد شامل نہیں — اوپر Add Teacher سے شامل کریں":"فلٹر سے کوئی نتیجہ نہیں ملا"}/></div>}
           {filtered.map(t=>{
             const h=HOUSES.find(x=>x.id===t.houseId)||{};
             const initials=(t.name||"?").split(" ").map(w=>w[0]).slice(0,2).join("");

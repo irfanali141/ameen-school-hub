@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { C, S, hBadge } from "../../constants";
 import { supabase } from "../../supabase";
+import EmptyState from '../ui/EmptyState';
 
 function LessonPlans({teachers,addData}){
   const [plans,setPlans]=useState([]); const [show,setShow]=useState(false);
@@ -47,7 +48,7 @@ function LessonPlans({teachers,addData}){
         {p.objectives&&<div style={{background:"#f0fdf4",borderRadius:"8px",padding:"8px 12px",fontSize:"0.62rem",color:C.green,marginBottom:"6px"}}>🎯 {p.objectives.slice(0,80)}</div>}
         {p.homework&&<div style={{fontSize:"0.6rem",color:C.amber,fontWeight:"600"}}>📝 {p.homework}</div>}
       </div>; })}
-      {plans.length===0&&<div className="hv-card" style={{...S.card,textAlign:"center",color:"#bbb",padding:"40px",gridColumn:"1/-1"}}><div style={{fontSize:"3rem",marginBottom:"12px"}}>📅</div>Any Plan No</div>}
+      {plans.length===0&&<div style={{gridColumn:"1/-1"}}><EmptyState icon="📅" title="کوئی سبق منصوبہ نہیں" subtitle="ابھی تک کوئی سبق کا منصوبہ نہیں بنایا گیا"/></div>}
     </div>
   </div>;
 }

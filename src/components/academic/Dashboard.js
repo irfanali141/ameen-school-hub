@@ -3,7 +3,17 @@ import { useState, useEffect } from "react";
 import { C, S, hBadge, pBar, HOUSES, HVS_TOTAL } from "../../constants";
 import { supabase } from "../../supabase";
 
-function Dashboard({students,teachers,houses,hvsLogs,fees,results,setPage}){
+const QUICK_ACTIONS = {
+  admin:      [{icon:"👨‍🎓",label:"Students",     page:"students"},{icon:"💰",label:"Fees",        page:"fees"},{icon:"📊",label:"Results",     page:"results"},{icon:"📋",label:"Attendance", page:"attendance"},{icon:"🏠",label:"Houses",      page:"houses"},{icon:"👨‍🏫",label:"Teachers",    page:"teachers"}],
+  director:   [{icon:"📊",label:"Reports",      page:"results"},{icon:"🏆",label:"HVS",         page:"hvs"},{icon:"👨‍🎓",label:"Students",     page:"students"},{icon:"💰",label:"Fees",        page:"fees"},{icon:"🏠",label:"Houses",      page:"superhouse"},{icon:"📅",label:"Attendance", page:"attendance"}],
+  teacher:    [{icon:"📋",label:"Attendance",   page:"attendance"},{icon:"📊",label:"Results",     page:"results"},{icon:"🏠",label:"HVS",         page:"hvs"},{icon:"📝",label:"Homework",    page:"homework"},{icon:"👨‍🎓",label:"Students",     page:"students"},{icon:"📖",label:"Marks",       page:"marks"}],
+  housemaster:[{icon:"🏠",label:"HVS Entry",    page:"hvs"},{icon:"📋",label:"Duty Check",   page:"duties"},{icon:"👁️",label:"Watch List",   page:"watchlist"},{icon:"⚠️",label:"Incidents",    page:"incidentlog"},{icon:"🏆",label:"Super House",  page:"superhouse"},{icon:"📊",label:"Weakness",     page:"weaknessmatrix"}],
+  madrasa:    [{icon:"🏠",label:"HVS Entry",    page:"hvs"},{icon:"📖",label:"Hifz Log",     page:"hifz"},{icon:"📋",label:"Tarbiyah",     page:"tarbiyah"},{icon:"👨‍🎓",label:"Students",     page:"students"},{icon:"📅",label:"Attendance", page:"attendance"},{icon:"🏅",label:"Ethics",       page:"ethics"}],
+  registrar:  [{icon:"👨‍🎓",label:"Students",     page:"students"},{icon:"💰",label:"Fees",        page:"fees"},{icon:"🧾",label:"Receipt",      page:"fees"},{icon:"📋",label:"Attendance", page:"attendance"},{icon:"📊",label:"Results",     page:"results"},{icon:"📝",label:"Marks",       page:"marks"}],
+  parent:     [{icon:"👨‍🎓",label:"My Child",     page:"students"},{icon:"💰",label:"Fees",        page:"fees"},{icon:"📊",label:"Results",     page:"results"},{icon:"📋",label:"Attendance", page:"attendance"},{icon:"💬",label:"Messages",    page:"messaging"},{icon:"📝",label:"Report Card",page:"reportcard"}],
+};
+
+function Dashboard({students,teachers,houses,hvsLogs,fees,results,setPage,userRole="admin"}){
   /* ── Data computations (all Firebase props kept) ── */
   const totalStudents    = students.length;
   const totalTeachers    = teachers.length;
@@ -125,6 +135,26 @@ function Dashboard({students,teachers,houses,hvsLogs,fees,results,setPage}){
             )}
           </div>
         </div>
+
+        {/* ══ QUICK ACTIONS ══ */}
+        {QUICK_ACTIONS[userRole] && (
+          <div style={{...glass,padding:"20px 24px",marginBottom:"24px"}}>
+            <div style={{color:G,fontWeight:"700",fontSize:"0.75rem",letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:"14px",fontFamily:"'Public Sans',sans-serif",direction:"ltr"}}>
+              ⚡ Quick Actions
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:"10px"}}>
+              {(QUICK_ACTIONS[userRole]||QUICK_ACTIONS.teacher).map(a=>(
+                <button key={a.page} onClick={()=>setPage&&setPage(a.page)}
+                  style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(212,175,55,0.15)",borderRadius:"14px",
+                    padding:"14px 8px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:"8px",
+                    transition:"all 0.18s",color:"white",fontFamily:"'Public Sans',sans-serif"}}>
+                  <span style={{fontSize:"1.6rem",lineHeight:1}}>{a.icon}</span>
+                  <span style={{fontSize:"0.72rem",fontWeight:"600",color:"rgba(255,255,255,0.75)",letterSpacing:"0.02em"}}>{a.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ══ STATS ROW ══ */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:"16px",marginBottom:"28px"}}>

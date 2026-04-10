@@ -1,9 +1,13 @@
 /* eslint-disable */
 import { useState, useEffect } from "react";
+import { confirm } from '../ui/ConfirmDialog';
+import { toast } from "../../components/ui/Toast";
+import EmptyState from "../ui/EmptyState";
 import useClasses from "../../hooks/useClasses";
 import { getData, deleteData } from "../../supabase";
 import letterhead from "../../assets/letterhead.png";
 import { SUBJECTS, sLabel } from "../../constants";
+import { usePagination, PaginationBar } from "../ui/usePagination";
 
 
 function Results({students,addData,results:resultsProp=[]}){
@@ -86,13 +90,13 @@ function Results({students,addData,results:resultsProp=[]}){
 
   const add=async()=>{
     if(!f.studentId||!f.exam)return;
-    if(Number(f.obtainedMarks)>Number(f.totalMarks)){alert(`حاصل نمبر (${f.obtainedMarks}) کل نمبر (${f.totalMarks}) سے زیادہ نہیں ہو سکتے`);return;}
+    if(Number(f.obtainedMarks)>Number(f.totalMarks)){toast.warning(`حاصل نمبر (${f.obtainedMarks}) کل نمبر (${f.totalMarks}) سے زیادہ نہیں ہو سکتے`);return;}
     const pct=Math.round((Number(f.obtainedMarks)/Number(f.totalMarks))*100);
     await addData("results",{...f,totalMarks:Number(f.totalMarks),obtainedMarks:Number(f.obtainedMarks),percentage:pct});
     setShow(false);
     setF({studentId:"",exam:"",subject:"",totalMarks:100,obtainedMarks:0,grade:"",date:new Date().toISOString().split("T")[0]});
   };
-  const delResult=async(id)=>{ if(!window.confirm("کیا آپ یہ نتیجہ حذف کرنا چاہتے ہیں؟"))return; await deleteData("results",id); };
+  const delResult=async(id)=>{ if(!await confirm("کیا آپ یہ نتیجہ حذف کرنا چاہتے ہیں؟"))return; await deleteData("results",id); };
 
   const getGrade=(pct)=>pct>=90?"A+":pct>=80?"A":pct>=70?"B":pct>=60?"C":pct>=50?"D":"F";
   const gc=(pct)=>pct>=80?"#4ade80":pct>=60?"#fb923c":"#f87171";
@@ -138,6 +142,8 @@ function Results({students,addData,results:resultsProp=[]}){
     });
     return order.map(k=>({key:k,grade:k.split("|")[0],exam:k.split("|")[1],rows:groups[k]}));
   })();
+
+  const { paged: pagedGroups, page: resPage, totalPages: resTotalPages, setPage: setResPage } = usePagination(groupedFiltered, 15);
 
   const [printModal,setPrintModal]=useState(null); // holds group to print
 
@@ -397,12 +403,11 @@ function Results({students,addData,results:resultsProp=[]}){
 
       {/* ── Grouped Results Tables ── */}
       {groupedFiltered.length===0&&(
-        <div style={{...glass,padding:"60px",textAlign:"center",color:"rgba(241,245,249,0.3)"}}>
-          <span className="material-symbols-rounded" style={{fontSize:"40px",display:"block",marginBottom:"10px",color:"rgba(212,175,55,0.2)"}}>bar_chart</span>
-          <span className="ur">کوئی اندراج نہیں</span>
+        <div style={{...glass}}>
+          <EmptyState icon="📊" title="کوئی نتیجہ نہیں" subtitle={results.length===0?"ابھی کوئی نتائج شامل نہیں — اوپر Add Result یا Import سے شامل کریں":"فلٹر سے کوئی نتیجہ نہیں ملا"}/>
         </div>
       )}
-      {groupedFiltered.map(group=>{
+      {pagedGroups.map(group=>{
         const sortedRows=[...group.rows].sort((a,b)=>(resultMeta[a.id]?.pos||99)-(resultMeta[b.id]?.pos||99));
         const groupAvg=resultMeta[sortedRows[0]?.id]?.avg||0;
         return (
@@ -485,6 +490,7 @@ function Results({students,addData,results:resultsProp=[]}){
         );
       })}
 
+      <PaginationBar page={resPage} totalPages={resTotalPages} setPage={setResPage} total={groupedFiltered.length} pageSize={15}/>
 
       {/* ── Print Design Picker Modal ── */}
       {printModal&&(

@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { C, S, hBadge, HOUSES, sLabel } from "../../constants";
 import { supabase } from "../../supabase";
+import EmptyState from '../ui/EmptyState';
 
 function StudentHealth({students,addData}){
   const [records,setRecords]=useState([]); const [show,setShow]=useState(false);
@@ -49,7 +50,7 @@ function StudentHealth({students,addData}){
           <div style={{flex:1}}><div style={{fontSize:"0.7rem",fontWeight:"700",color:"#f1f5f9"}}>{st?.name||"—"}</div><div style={{fontSize:"0.6rem",color:"rgba(255,255,255,0.5)"}}>{r.condition||types[r.type]||r.type}</div><div style={{fontSize:"0.55rem",color:"rgba(255,255,255,0.35)",fontFamily:"monospace",direction:"ltr"}}>{r.date}</div></div>
           <span style={{...hBadge(sev.c,sev.bg),fontSize:"0.5rem",alignSelf:"flex-start"}}>{sev.l}</span>
         </div>; })}
-        {records.length===0&&<div style={{textAlign:"center",color:"rgba(255,255,255,0.3)",fontSize:"0.65rem",padding:"20px"}} className="ur">کوئی اندراج نہیں</div>}
+        {records.length===0&&<EmptyState icon="🏥" title="کوئی ریکارڈ نہیں" subtitle="حالیہ صحت کا کوئی اندراج نہیں" compact/>}
       </div>
       <div style={{...glass,padding:"20px"}}>
         <div style={{fontSize:"0.85rem",fontWeight:"700",color:"#d4af37",marginBottom:"16px"}}>👥 Students Health Summary</div>
@@ -57,7 +58,7 @@ function StudentHealth({students,addData}){
           <div><div style={{fontSize:"0.7rem",fontWeight:"700",color:"#f1f5f9"}}>{s.name}</div><div style={{fontSize:"0.58rem",color:"rgba(255,255,255,0.5)"}}>Last Visit: {s.lastVisit}</div></div>
           <span style={{padding:"3px 8px",borderRadius:"20px",fontSize:"0.55rem",fontWeight:"700",background:"rgba(212,175,55,0.15)",color:"#d4af37"}}>{s.visits} visits</span>
         </div>; })}
-        {studentHealth.length===0&&<div style={{textAlign:"center",color:"rgba(255,255,255,0.3)",fontSize:"0.65rem",padding:"20px"}} className="ur">کوئی ڈیٹا نہیں</div>}
+        {studentHealth.length===0&&<EmptyState icon="👥" title="کوئی ڈیٹا نہیں" subtitle="طلبہ کا کوئی صحت خلاصہ نہیں ملا" compact/>}
       </div>
     </div>
   </div>;

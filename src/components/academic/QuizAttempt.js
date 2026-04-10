@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { confirm } from '../ui/ConfirmDialog';
 import { supabase } from "../../supabase";
 
 const N = "#0f172a", G = "#d4af37";
@@ -306,8 +307,8 @@ export default function QuizAttempt({ quiz, student, onClose, onDone }) {
                 </button>
               ) : (
                 <button
-                  onClick={() => {
-                    if (window.confirm("کیا آپ واقعی جمع کرنا چاہتے ہیں؟ بعد میں تبدیل نہیں ہو سکتا۔"))
+                  onClick={async () => {
+                    if (await confirm("کیا آپ واقعی جمع کرنا چاہتے ہیں؟ بعد میں تبدیل نہیں ہو سکتا۔"))
                       handleSubmit(false);
                   }}
                   disabled={saving}

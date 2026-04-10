@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { C, S, hBadge, sLabel } from "../../constants";
 import { supabase } from "../../supabase";
+import EmptyState from '../ui/EmptyState';
 
 function TranscriptRequest({students,addData}){
   const glass={background:"rgba(255,255,255,0.07)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"16px"};
@@ -38,7 +39,7 @@ function TranscriptRequest({students,addData}){
         </div>
         {r.status==="pending"&&<button onClick={()=>approve(r.id)} style={{...S.saveBtn,padding:"6px 14px",fontSize:"0.62rem",marginTop:"6px"}}>✅ Approve</button>}
       </div>; })}
-      {requests.length===0&&<div style={{...glass,textAlign:"center",color:"rgba(255,255,255,0.3)",padding:"60px"}}>Any Application No</div>}
+      {requests.length===0&&<EmptyState icon="📜" title="کوئی درخواست نہیں" subtitle="ابھی تک کوئی ٹرانسکرپٹ درخواست نہیں ہے"/>}
     </div>
   </div>;
 }

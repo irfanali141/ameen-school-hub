@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { C, S, hBadge } from "../../constants";
 import { supabase } from "../../supabase";
 import useClasses from "../../hooks/useClasses";
+import EmptyState from '../ui/EmptyState';
 
 function Notifications({students,addData}){
   const { gradeOptions } = useClasses();
@@ -45,7 +46,7 @@ function Notifications({students,addData}){
         <div style={{fontSize:"0.68rem",color:"rgba(255,255,255,0.65)",lineHeight:"1.6",marginBottom:"8px"}}>{n.message}</div>
         <div style={{fontSize:"0.58rem",color:"rgba(255,255,255,0.4)"}}>Grade: {n.targetGrade} • Priority: {n.priority==="urgent"?"🔴 Urgent":n.priority==="high"?"🟡 High":"🟢 General"}</div>
       </div>; })}
-      {notifs.length===0&&<div style={{background:"rgba(255,255,255,0.07)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"16px",textAlign:"center",padding:"60px"}}><span className="material-symbols-rounded" style={{fontSize:"48px",color:"rgba(212,175,55,0.3)",display:"block",marginBottom:"12px"}}>notifications_off</span><div style={{color:"rgba(241,245,249,0.4)"}}>Any Notification No</div></div>}
+      {notifs.length===0&&<EmptyState icon="🔔" title="کوئی اطلاع نہیں" subtitle="ابھی تک کوئی اطلاع یا پیغام نہیں ہے"/>}
     </div>
   </div>;
 }

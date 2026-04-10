@@ -56,11 +56,13 @@ function blankWeeks(mo){
   }));
 }
 
-function MonthlyPlanner({addData}){
+function MonthlyPlanner({addData, houses=[]}){
   const G="#d4af37";const N="#0f172a";const N2="#1e293b";
   const glass={background:"rgba(255,255,255,0.07)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:"16px"};
   const inp={padding:"7px 10px",borderRadius:"8px",border:"1px solid rgba(212,175,55,0.2)",background:"rgba(255,255,255,0.05)",color:"#f1f5f9",fontSize:"0.72rem",fontFamily:"'Public Sans',sans-serif",outline:"none",width:"100%",boxSizing:"border-box",colorScheme:"dark"};
 
+  const HOUSE_OPTS=[{id:"all",nameEn:"All Houses",emoji:"🏠"},...(houses.length?houses:[{id:"abuBakr",nameEn:"Abu Bakr",emoji:"🔵"},{id:"umar",nameEn:"Umar",emoji:"🟢"},{id:"uthman",nameEn:"Uthman",emoji:"🟡"},{id:"ali",nameEn:"Ali",emoji:"🔴"}])];
+  const [selHouse,setSelHouse]=useState("all");
   const [selMo,setSelMo]=useState(1);
   const [planData,setPlanData]=useState({}); // {mo: weeks[]}
   const [saving,setSaving]=useState(false);
@@ -134,6 +136,13 @@ function MonthlyPlanner({addData}){
 
         {/* ── Month Sidebar ── */}
         <div style={{...glass,padding:"10px",position:"sticky",top:"80px"}}>
+          {/* House filter */}
+          <div style={{marginBottom:"10px",padding:"6px 8px"}}>
+            <div style={{fontSize:"0.6rem",color:"rgba(212,175,55,0.7)",fontWeight:"700",marginBottom:"5px",letterSpacing:"0.08em"}}>🏠 HOUSE</div>
+            <select value={selHouse} onChange={e=>setSelHouse(e.target.value)} style={{...inp,fontSize:"0.68rem"}}>
+              {HOUSE_OPTS.map(h=><option key={h.id} value={h.id} style={{background:N2}}>{h.emoji} {h.nameEn}</option>)}
+            </select>
+          </div>
           <div style={{fontSize:"0.62rem",color:"rgba(212,175,55,0.7)",fontWeight:"700",padding:"6px 8px",letterSpacing:"0.1em",textTransform:"uppercase"}}>MONTHS</div>
           {MONTHS.map(m=>{
             const dc=doneCount(m.no);

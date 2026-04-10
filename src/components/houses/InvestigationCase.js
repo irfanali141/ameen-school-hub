@@ -88,8 +88,31 @@ function Step1({ form, set }) {
       <Field label="Location">
         <input style={inp} placeholder="e.g. Class 7A, Ground" value={form.location} onChange={e=>set("location",e.target.value)}/>
       </Field>
-      <Field label="Persons Involved">
-        <input style={inp} placeholder="Enter name and role" value={form.persons} onChange={e=>set("persons",e.target.value)}/>
+      <Field label="Persons Involved (Students)">
+        <select style={inp} onChange={e=>{
+          const s=form._students||[];
+          const st=e.target.value;
+          if(st&&!s.includes(st)){
+            const updated=[...s,st];
+            set("_students",updated);
+            set("persons",updated.join(", "));
+          }
+          e.target.value="";
+        }}>
+          <option value="" style={{background:N2}}>+ Add Student...</option>
+          {(form._houseStudents||[]).map(s=><option key={s.id} value={s.name} style={{background:N2}}>{s.name} — {s.grade||""}</option>)}
+        </select>
+        {(form._students||[]).length>0&&(
+          <div style={{display:"flex",flexWrap:"wrap",gap:"6px",marginTop:"8px"}}>
+            {(form._students||[]).map((n,i)=>(
+              <span key={i} style={{background:"rgba(212,175,55,0.15)",border:"1px solid rgba(212,175,55,0.3)",borderRadius:"20px",padding:"3px 10px",fontSize:"0.68rem",color:G,display:"flex",alignItems:"center",gap:"6px"}}>
+                {n}
+                <button onClick={()=>{const s=(form._students||[]).filter((_,j)=>j!==i);set("_students",s);set("persons",s.join(", "));}} style={{background:"none",border:"none",color:"#f87171",cursor:"pointer",fontSize:"0.7rem",padding:0}}>✕</button>
+              </span>
+            ))}
+          </div>
+        )}
+        <input style={{...inp,marginTop:"8px"}} placeholder="Ya manually likhein (optional)" value={form.persons} onChange={e=>set("persons",e.target.value)}/>
       </Field>
       <Field label="Short Details (Description)">
         <textarea style={{...inp,minHeight:"80px",resize:"vertical"}} placeholder="Complete incident details..." value={form.description} onChange={e=>set("description",e.target.value)}/>
@@ -255,7 +278,7 @@ function Step6({ form, set, caseId }) {
 }
 
 // ── MAIN COMPONENT ──
-export default function InvestigationCase({ addData, user }) {
+export default function InvestigationCase({ addData, user, students=[], houses=[] }) {
   const [step,   setStep]   = useState(1);
   const [form,   setFormSt] = useState(EMPTY_FORM());
   const [cases,  setCases]  = useState([]);
@@ -268,6 +291,13 @@ export default function InvestigationCase({ addData, user }) {
   const isDirector = uRole==="director"||uRole==="admin";
 
   const set = (field, val) => setFormSt(prev=>({...prev,[field]:val}));
+
+  // Keep _houseStudents in sync when houseId changes
+  useEffect(()=>{
+    const houseStudents = students.filter(s=>(s.houseId||s.house_id)===form.houseId);
+    setFormSt(prev=>({...prev, _houseStudents: houseStudents, _students:[], persons:""}));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[form.houseId, students.length]);
 
   const loadCases = async () => {
     try {

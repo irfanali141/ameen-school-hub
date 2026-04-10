@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { C, S, hBadge, HOUSES } from "../../constants";
 import { supabase } from "../../supabase";
+import EmptyState from '../ui/EmptyState';
 
 function Events({addData,houses,updateHousePoints}){
   const G="#d4af37";const N="#0f172a";const N2="#1e293b";
@@ -86,9 +87,8 @@ function Events({addData,houses,updateHousePoints}){
           </div>
         ); })}
         {events.length===0&&(
-          <div style={{...glass,padding:"60px 20px",textAlign:"center",gridColumn:"1/-1"}}>
-            <span className="material-symbols-rounded" style={{fontSize:"48px",color:"rgba(212,175,55,0.3)",display:"block",marginBottom:"12px"}}>theater_comedy</span>
-            <div style={{color:"rgba(241,245,249,0.4)",fontSize:"0.9rem"}}>No events yet</div>
+          <div style={{gridColumn:"1/-1"}}>
+            <EmptyState icon="🎭" title="کوئی ایونٹ نہیں" subtitle="ابھی تک کوئی ایونٹ یا مقابلہ شامل نہیں کیا گیا"/>
           </div>
         )}
       </div>

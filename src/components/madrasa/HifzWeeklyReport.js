@@ -1,5 +1,6 @@
 /* eslint-disable */
 import { useState, useEffect } from "react";
+import { toast } from "../../components/ui/Toast";
 import { supabase } from "../../supabase";
 
 const C = {
@@ -320,7 +321,7 @@ export default function HifzWeeklyReport({ student, role, onClose }) {
       setTimeout(() => setSaved(false), 2500);
     } catch (e) {
       console.error(e);
-      alert("محفوظ کرنے میں خرابی: " + e.message);
+      toast.warning("محفوظ کرنے میں خرابی: " + e.message);
     }
     setSaving(false);
   }

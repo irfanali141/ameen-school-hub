@@ -1,7 +1,9 @@
 /* eslint-disable */
 import { useState, useEffect, useMemo } from "react";
+import { toast } from "../../components/ui/Toast";
 import { getData, updateData } from "../../supabase";
 import { C, HOUSES, HVS_TOTAL, sLabel } from "../../constants";
+import EmptyState from "../ui/EmptyState";
 import houseAbuBakr from "../../assets/1769748237732.png";
 import houseUmar    from "../../assets/1769748315462.png";
 import houseUthman  from "../../assets/1769748410371.png";
@@ -294,7 +296,7 @@ function SubAccordion({ catId, subs, values, onChange, catTotal, catMax, roleCol
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function HVSEntry({ students=[], addData, updateHousePoints, hvsLogs=[], userRole="",
-  results=[], hifzLogsData=[], attendanceLogs=[] }) {
+  results=[], hifzLogsData=[], attendanceLogs=[], evalScales=[] }) {
 
   // If the logged-in user has a specific entry role, lock the tab to it
   // housemaster → "housemaster", madrasa → "madrasa", teacher → "teacher", others → null (all tabs)
@@ -406,15 +408,32 @@ export default function HVSEntry({ students=[], addData, updateHousePoints, hvsL
 
   // ── Auto: Ilm (Academic Results) → 0-25 from results table ──
   const ilmAuto = useMemo(() => {
-    if (!selectedClass || !results.length) return null; // null = no data, keep manual
+    if (!selectedClass) return null;
     const classStudents = students.filter(s => s.grade === selectedClass);
     if (!classStudents.length) return null;
     const ids = new Set(classStudents.map(s => s.id));
-    const classResults = results.filter(r => ids.has(r.studentId || r.student_id));
-    if (!classResults.length) return null;
-    const avgPct = classResults.reduce((s,r) => s + (r.percentage || 0), 0) / classResults.length;
-    return Math.min(25, Math.round((avgPct / 100) * 25));
-  }, [results, selectedClass, students]);
+    // Primary: use results percentage
+    if (results.length) {
+      const classResults = results.filter(r => ids.has(r.studentId || r.student_id));
+      if (classResults.length) {
+        const avgPct = classResults.reduce((s,r) => s + (r.percentage || 0), 0) / classResults.length;
+        return Math.min(25, Math.round((avgPct / 100) * 25));
+      }
+    }
+    // Fallback: use EvaluationScales academic+performance ratings (1-5 → 0-25)
+    if (evalScales.length) {
+      const classEvals = evalScales.filter(e => ids.has(e.student_id || e.studentId));
+      if (classEvals.length) {
+        const avgRating = classEvals.reduce((s,e) => {
+          const r = e.ratings || {};
+          const acad = Number(r.academic || r.performance || 3);
+          return s + acad;
+        }, 0) / classEvals.length;
+        return Math.min(25, Math.round((avgRating / 5) * 25));
+      }
+    }
+    return null; // no data → keep manual
+  }, [results, evalScales, selectedClass, students]);
 
   // ── Effective scores (sub-fields override slider when any sub > 0) ──
   const effectiveHmScores = useMemo(() => {
@@ -511,6 +530,20 @@ export default function HVSEntry({ students=[], addData, updateHousePoints, hvsL
     setEditMode(true);
   };
 
+  // ── Auto-load existing entry when todayEntry is detected ──
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (todayEntry) {
+      loadExistingEntry(todayEntry);
+    } else {
+      setEditMode(false);
+      setHmScores({ zabt:0, safai:0, josh:0, qiyadat:0 });
+      setTeacherScores({ ilm:0 });
+      setMadrasaScores({ akhlaq:0, qiyadat:0, josh:0 });
+      setSubScores({});
+    }
+  }, [todayEntry?.id, role, selectedHouse, selectedClass]);
+
   // ── Active Watch List for current house (HM only) ──
   const activeWLForHouse = useMemo(() => {
     if (role !== "housemaster") return [];
@@ -528,9 +561,9 @@ export default function HVSEntry({ students=[], addData, updateHousePoints, hvsL
   }, [excSearch, students]);
 
   const addException = () => {
-    if (!excStudent) { alert("طالب علم منتخب کریں"); return; }
-    if (!excAdj)     { alert("ایڈجسٹمنٹ درج کریں"); return; }
-    if (!excReason.trim()) { alert("وجہ درج کریں"); return; }
+    if (!excStudent) { toast.warning("طالب علم منتخب کریں"); return; }
+    if (!excAdj)     { toast.warning("ایڈجسٹمنٹ درج کریں"); return; }
+    if (!excReason.trim()) { toast.warning("وجہ درج کریں"); return; }
     setExceptions(prev => [...prev, {
       student_id: excStudent.id,
       student_name: excStudent.name,
@@ -552,7 +585,6 @@ export default function HVSEntry({ students=[], addData, updateHousePoints, hvsL
     let group_scores = {};
     let sub_scores = {};
     if (role === "housemaster") {
-      console.log('Saving scores:', {zabt: effectiveHmScores.zabt, safai: effectiveHmScores.safai, josh: effectiveHmScores.josh, qiyadat: effectiveHmScores.qiyadat});
       group_scores.zabt     = effectiveHmScores.zabt     || 0;
       group_scores.safai    = effectiveHmScores.safai    || 0;
       group_scores.josh     = effectiveHmScores.josh     || 0;
@@ -591,13 +623,13 @@ export default function HVSEntry({ students=[], addData, updateHousePoints, hvsL
       await addData("hvs_logs", logEntry);
     } catch(e) {
       setSaving(false);
-      alert("Save failed: " + (e.message || e));
+      toast.warning("Save failed: " + (e.message || e));
       return;
     }
 
-    // Save each exception
+    // Save each exception (non-critical — don't block on failure)
     for (const exc of exceptions) {
-      await addData("hvs_exceptions", { ...exc, date: entryDate, week });
+      try { await addData("hvs_exceptions", { ...exc, date: entryDate, week }); } catch(e) { console.warn("exc save:", e.message); }
     }
 
     // Save Watch List individual scores (HM only)
@@ -605,16 +637,18 @@ export default function HVSEntry({ students=[], addData, updateHousePoints, hvsL
       for (const wl of activeWLForHouse) {
         const score = wlScores[wl.id];
         if (score !== undefined) {
-          await addData("hvs_exceptions", {
-            student_id: wl.student_id || wl.studentId,
-            house_id: selectedHouse,
-            category: wl.category,
-            adjustment: score,
-            date: entryDate,
-            week,
-            reason: "Watch List Individual Entry",
-            is_watchlist: true,
-          });
+          try {
+            await addData("hvs_exceptions", {
+              student_id: wl.student_id || wl.studentId,
+              house_id: selectedHouse,
+              category: wl.category,
+              adjustment: score,
+              date: entryDate,
+              week,
+              reason: "Watch List Individual Entry",
+              is_watchlist: true,
+            });
+          } catch(e) { console.warn("wl exc save:", e.message); }
         }
       }
       // Auto-detect new weak students → add to watch_list
@@ -638,14 +672,16 @@ export default function HVSEntry({ students=[], addData, updateHousePoints, hvsL
           if (allBelow) {
             for (const s of houseStudents) {
               if (!existingWLIds.has(s.id)) {
-                await addData("watch_list", {
-                  student_id: s.id,
-                  house_id: selectedHouse,
-                  category: cat.id,
-                  reason: `${cat.labelEn} — 3 consecutive days below threshold`,
-                  added_date: entryDate,
-                  status: "active",
-                });
+                try {
+                  await addData("watch_list", {
+                    student_id: s.id,
+                    house_id: selectedHouse,
+                    category: cat.id,
+                    reason: `${cat.labelEn} — 3 consecutive days below threshold`,
+                    added_date: entryDate,
+                    status: "active",
+                  });
+                } catch(e) { console.warn("watch_list save:", e.message); }
               }
             }
           }
@@ -683,19 +719,26 @@ export default function HVSEntry({ students=[], addData, updateHousePoints, hvsL
     DUTY_ITEMS.forEach(item => {
       scores[item.id] = { rating: dutyRatings[item.id]||0, score: (dutyRatings[item.id]||0) * 2.5 };
     });
-    await addData("weekly_duties", {
-      house_id:     selectedHouse,
-      week_number:  weekNum,
-      year:         dutyYear,
-      date:         new Date().toISOString().split('T')[0],
-      scores,
-      total_score:  dutyTotal,
-      strengths:    dutyStrengths.trim(),
-      improvements: dutyImprovements.trim(),
-    });
-    setDutySaving(false); setDutyDone(true);
-    setDutyRatings({}); setDutyStrengths(""); setDutyImprovements("");
-    setTimeout(() => setDutyDone(false), 3000);
+    try {
+      await addData("weekly_duties", {
+        house_id:     dutyHouse.id,
+        week_number:  weekNum,
+        year:         dutyYear,
+        date:         new Date().toISOString().split('T')[0],
+        scores,
+        total_score:  dutyTotal,
+        strengths:    dutyStrengths.trim(),
+        improvements: dutyImprovements.trim(),
+      });
+      // Add duty score to house points
+      if (dutyTotal > 0) await updateHousePoints(dutyHouse.id, dutyTotal);
+      setDutyDone(true);
+      setDutyRatings({}); setDutyStrengths(""); setDutyImprovements("");
+      setTimeout(() => setDutyDone(false), 3000);
+    } catch(e) {
+      toast.warning("Duty save failed: " + (e.message || JSON.stringify(e)));
+    }
+    setDutySaving(false);
   };
 
   // ── Helper: compute total from group_scores when total_score is missing/0 ──
@@ -765,27 +808,228 @@ export default function HVSEntry({ students=[], addData, updateHousePoints, hvsL
             </p>
           </div>
         </div>
-        {/* Month label */}
-        <div style={{ background:"rgba(212,175,55,0.1)", border:"1px solid rgba(212,175,55,0.25)",
-          borderRadius:"10px", padding:"7px 14px", fontSize:"0.7rem", color:"rgba(212,175,55,0.8)", fontWeight:"700" }}>
-          📅 {new Date().toLocaleString("en",{month:"long",year:"numeric"})}
+        <div style={{ display:"flex", gap:"10px", alignItems:"center" }}>
+          {/* Month label */}
+          <div style={{ background:"rgba(212,175,55,0.1)", border:"1px solid rgba(212,175,55,0.25)",
+            borderRadius:"10px", padding:"7px 14px", fontSize:"0.7rem", color:"rgba(212,175,55,0.8)", fontWeight:"700" }}>
+            📅 {new Date().toLocaleString("en",{month:"long",year:"numeric"})}
+          </div>
+          {/* Monthly Report Button */}
+          <button onClick={()=>{
+            const now2 = new Date();
+            const curMonth = now2.toLocaleString("en",{month:"long",year:"numeric"});
+            const monthLogs = hvsLogs.filter(l=>{
+              const d=l.created_at?new Date(l.created_at):null;
+              return d&&d.getFullYear()===now2.getFullYear()&&d.getMonth()===now2.getMonth();
+            });
+            const curMonthLabel = now2.toLocaleString("en",{month:"long"})+" "+now2.getFullYear();
+            const monthEvals = evalScales.filter(e=>(e.month||"")===curMonthLabel);
+            const houseData = HOUSES.map(h=>{
+              const hLogs = monthLogs.filter(l=>(l.houseId||l.house_id)===h.id);
+              const hmLogs = hLogs.filter(l=>l.type==="housemaster"||!l.type);
+              const tLogs  = hLogs.filter(l=>l.type==="teacher");
+              const mLogs  = hLogs.filter(l=>l.type==="madrasa");
+              const sumGs  = logs => logs.reduce((s,l)=>{ const gs=l.group_scores||l.scores||{}; return s+Object.values(gs).filter(v=>typeof v==="number").reduce((a,b)=>a+b,0); },0);
+              const hmPts=sumGs(hmLogs), tPts=sumGs(tLogs), mPts=sumGs(mLogs);
+              const hEvals=monthEvals.filter(e=>(e.house_id||e.houseId)===h.id);
+              const evalAvg=hEvals.length?Math.round(hEvals.reduce((s,e)=>s+(Number(e.overall)||0),0)/hEvals.length):null;
+              return { ...h, hmPts, tPts, mPts, total:hmPts+tPts+mPts, evalAvg, evalCount:hEvals.length, entries:hLogs.length };
+            }).sort((a,b)=>b.total-a.total);
+            const maxPts = Math.max(...houseData.map(h=>h.total),1);
+            const rows = houseData.map((h,i)=>`
+              <tr style="background:${i%2===0?"#f8fafc":"#fff"}">
+                <td style="padding:10px 14px;font-weight:800;font-size:14px">${i===0?"🥇":i===1?"🥈":i===2?"🥉":"#"+(i+1)} ${h.nameEn}</td>
+                <td style="padding:10px 14px;text-align:center;font-weight:700">${h.hmPts}</td>
+                <td style="padding:10px 14px;text-align:center;font-weight:700">${h.tPts}</td>
+                <td style="padding:10px 14px;text-align:center;font-weight:700">${h.mPts}</td>
+                <td style="padding:10px 14px;text-align:center;font-weight:900;font-size:15px;color:${h.total===Math.max(...houseData.map(x=>x.total))?"#b8960a":"#1e293b"}">${h.total}</td>
+                <td style="padding:10px 14px;text-align:center">
+                  <div style="background:#e2e8f0;border-radius:4px;height:10px;width:100%;overflow:hidden">
+                    <div style="width:${Math.round((h.total/maxPts)*100)}%;height:100%;background:${h.color};border-radius:4px"></div>
+                  </div>
+                </td>
+                <td style="padding:10px 14px;text-align:center;font-weight:700;color:${h.evalAvg>=70?"#16a34a":h.evalAvg>=50?"#d97706":"#dc2626"}">${h.evalAvg!==null?h.evalAvg+"%":"—"}</td>
+                <td style="padding:10px 14px;text-align:center;color:#64748b">${h.entries}</td>
+              </tr>`).join("");
+            const w=window.open("","_blank");
+            w.document.write(`<!DOCTYPE html><html><head><title>Monthly HVS Report — ${curMonth}</title>
+              <style>body{font-family:'Segoe UI',sans-serif;margin:0;padding:30px;color:#1e293b}
+              h1{color:#0a1628;margin-bottom:4px} table{width:100%;border-collapse:collapse;margin-top:20px}
+              th{background:#0a1628;color:#d4af37;padding:10px 14px;text-align:left;font-size:13px}
+              td{border-bottom:1px solid #e2e8f0;font-size:13px}
+              .meta{color:#64748b;font-size:13px;margin-bottom:24px}
+              .footer{margin-top:40px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:40px;text-align:center}
+              .sig{border-top:2px solid #ddd;padding-top:8px;font-size:12px;color:#888}
+              @media print{button{display:none}}</style></head><body>
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #d4af37;padding-bottom:16px;margin-bottom:6px">
+                <div><h1>🏆 House Valor System — Monthly Report</h1>
+                  <div class="meta">📅 Month: <b>${curMonth}</b> &nbsp;|&nbsp; Generated: ${new Date().toLocaleDateString("en-PK",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}</div>
+                </div>
+                <div style="text-align:right;font-size:12px;color:#888">AMEEN ISLAMIC INSTITUTE<br/>Swat, KPK</div>
+              </div>
+              <table><thead><tr>
+                <th>House</th><th>House Master</th><th>Teacher</th><th>Madrasa</th>
+                <th>Total</th><th style="min-width:100px">Progress</th><th>Avg Eval</th><th>Entries</th>
+              </tr></thead><tbody>${rows}</tbody></table>
+              <div class="footer">
+                <div><div class="sig">Principal دستخط</div></div>
+                <div><div class="sig">In-charge HVS دستخط</div></div>
+                <div><div class="sig">Date: ___________</div></div>
+              </div>
+              <script>window.print();<\/script></body></html>`);
+          }} style={{ padding:"7px 16px", borderRadius:"10px", border:"1px solid rgba(212,175,55,0.4)",
+            background:"rgba(212,175,55,0.15)", color:"#d4af37", fontWeight:"700", fontSize:"0.7rem",
+            cursor:"pointer", fontFamily:"inherit" }}>
+            🖨️ Monthly Report
+          </button>
+
+          {/* ── Notice Board Print ── */}
+          <button onClick={()=>{
+            const now2 = new Date();
+            const curMonth = now2.toLocaleString("en",{month:"long",year:"numeric"});
+            const curMonthLabel = now2.toLocaleString("en",{month:"long"})+" "+now2.getFullYear();
+            const monthLogs = hvsLogs.filter(l=>{ const d=l.created_at?new Date(l.created_at):null; return d&&d.getFullYear()===now2.getFullYear()&&d.getMonth()===now2.getMonth(); });
+            const monthEvals = evalScales.filter(e=>(e.month||"")===curMonthLabel);
+
+            const avgCat = (logs, catId) => { if(!logs.length) return 0; const s=logs.reduce((a,l)=>{ const gs=l.group_scores||l.scores||{}; return a+(typeof gs[catId]==="number"?gs[catId]:0); },0); return Math.round(s/logs.length); };
+            const houseData = HOUSES.map(h=>{
+              const hLogs = monthLogs.filter(l=>(l.houseId||l.house_id)===h.id);
+              const hmLogs = hLogs.filter(l=>l.type==="housemaster"||!l.type);
+              const tLogs  = hLogs.filter(l=>l.type==="teacher");
+              const mLogs  = hLogs.filter(l=>l.type==="madrasa");
+              // average per entry for each role total
+              const avgGs = logs => { if(!logs.length) return 0; const s=logs.reduce((a,l)=>{ const gs=l.group_scores||l.scores||{}; return a+Object.values(gs).filter(v=>typeof v==="number").reduce((x,y)=>x+y,0); },0); return Math.round(s/logs.length); };
+              const hmPts=avgGs(hmLogs); const tPts=avgGs(tLogs); const mPts=avgGs(mLogs);
+              const total=hmPts+tPts+mPts;
+              // per-category averages
+              const hmCats={ zabt:avgCat(hmLogs,"zabt"), safai:avgCat(hmLogs,"safai"), josh:avgCat(hmLogs,"josh"), qiyadat:avgCat(hmLogs,"qiyadat") };
+              const tCats={ ilm:avgCat(tLogs,"ilm"), haziri:avgCat(tLogs,"haziri") };
+              const mCats={ akhlaq:avgCat(mLogs,"akhlaq"), dini_ilm:avgCat(mLogs,"dini_ilm"), qiyadat:avgCat(mLogs,"qiyadat"), josh:avgCat(mLogs,"josh") };
+              const hStudents=students.filter(s=>(s.houseId||s.house_id)===h.id);
+              const hEvals=monthEvals.filter(e=>hStudents.some(s=>s.id===e.student_id));
+              const evalAvg=hEvals.length?Math.round(hEvals.reduce((s,e)=>s+(Number(e.overall)||0),0)/hEvals.length):null;
+              const top3=hEvals.map(e=>({...e,stu:hStudents.find(s=>s.id===e.student_id)})).filter(e=>e.stu).sort((a,b)=>Number(b.overall||0)-Number(a.overall||0)).slice(0,3);
+              return {...h,hmPts,tPts,mPts,total,hmCats,tCats,mCats,evalAvg,top3,entries:hLogs.length,hmEntries:hmLogs.length,tEntries:tLogs.length,mEntries:mLogs.length,studentCount:hStudents.length};
+            }).sort((a,b)=>b.total-a.total);
+            const maxPts=Math.max(...houseData.map(h=>h.total),1);
+
+            const rankMedal=i=>i===0?"🥇 1st":i===1?"🥈 2nd":i===2?"🥉 3rd":"#"+(i+1);
+
+            const cards = houseData.map((h,i)=>`
+              <div class="house-card" style="border:4px solid ${h.color};background:linear-gradient(160deg,#fff 0%,${h.color}08 100%)">
+                <div class="card-header" style="background:${h.color};color:#fff">
+                  <div class="rank">${rankMedal(i)}</div>
+                  <div class="house-name">${h.nameEn} House</div>
+                  <div class="house-name-ur">${h.name}</div>
+                </div>
+                <div class="card-body">
+                  <div class="big-score" style="color:${h.color}">${h.total}</div>
+                  <div class="score-label">Points This Month</div>
+                  <div class="progress-wrap">
+                    <div class="progress-bar" style="width:${Math.round((h.total/maxPts)*100)}%;background:${h.color}"></div>
+                  </div>
+                  <div class="breakdown">
+                    <div class="role-header" style="background:${h.color}18;border-left:4px solid ${h.color}">
+                      <span>🏠 House Master <small style="font-weight:400;font-size:10px;opacity:0.6">${h.hmEntries>0?"(avg of "+h.hmEntries+" entries)":""}</small></span><b style="color:${h.color}">${h.hmPts}/50</b>
+                    </div>
+                    <div class="sub-item"><span>⚔️ Discipline &amp; Order</span><b>${h.hmCats.zabt}/15</b></div>
+                    <div class="sub-item"><span>🧹 Cleanliness</span><b>${h.hmCats.safai}/15</b></div>
+                    <div class="sub-item"><span>🔥 House Spirit</span><b>${h.hmCats.josh}/10</b></div>
+                    <div class="sub-item"><span>👑 Leadership</span><b>${h.hmCats.qiyadat}/10</b></div>
+
+                    <div class="role-header" style="background:${h.color}18;border-left:4px solid ${h.color}">
+                      <span>👨‍🏫 Class Teacher <small style="font-weight:400;font-size:10px;opacity:0.6">${h.tEntries>0?"(avg of "+h.tEntries+" entries)":""}</small></span><b style="color:${h.color}">${h.tPts}/35</b>
+                    </div>
+                    <div class="sub-item"><span>📚 Knowledge &amp; Academic</span><b>${h.tCats.ilm}/25</b></div>
+                    <div class="sub-item"><span>✅ Attendance</span><b>${h.tCats.haziri}/10</b></div>
+
+                    <div class="role-header" style="background:${h.color}18;border-left:4px solid ${h.color}">
+                      <span>📖 Madrasa Ustad <small style="font-weight:400;font-size:10px;opacity:0.6">${h.mEntries>0?"(avg of "+h.mEntries+" entries)":""}</small></span><b style="color:${h.color}">${h.mPts}/35</b>
+                    </div>
+                    <div class="sub-item"><span>💎 Morality (Akhlaq)</span><b>${h.mCats.akhlaq}/15</b></div>
+                    <div class="sub-item"><span>📖 Islamic Studies</span><b>${h.mCats.dini_ilm}/10</b></div>
+                    <div class="sub-item"><span>🕌 Spiritual Leadership</span><b>${h.mCats.qiyadat}/5</b></div>
+                    <div class="sub-item"><span>🌟 Dini Spirit</span><b>${h.mCats.josh}/5</b></div>
+                    ${h.evalAvg!==null?`<div class="role-header" style="background:#f0fdf4;border-left:4px solid #16a34a"><span>🎯 Avg Character Score</span><b style="color:${h.evalAvg>=70?"#16a34a":h.evalAvg>=50?"#d97706":"#dc2626"}">${h.evalAvg}%</b></div>`:""}
+                  </div>
+                  ${h.top3.length?`
+                  <div class="top-students">
+                    <div class="ts-title" style="color:${h.color}">⭐ Top Students</div>
+                    ${h.top3.map((e,j)=>`<div class="ts-item"><span>${j===0?"🥇":j===1?"🥈":"🥉"} ${e.stu.name}</span><b>${Math.round(Number(e.overall||0))}%</b></div>`).join("")}
+                  </div>`:""}
+                  <div class="footer-stat">${h.studentCount} Students · ${h.entries} Entries</div>
+                </div>
+              </div>`).join("");
+
+            const w=window.open("","_blank");
+            w.document.write(`<!DOCTYPE html><html><head><title>House Notice Board — ${curMonth}</title>
+            <style>
+              *{box-sizing:border-box;margin:0;padding:0}
+              body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;padding:20px}
+              h1{text-align:center;color:#0f172a;font-size:22px;margin-bottom:4px}
+              .subtitle{text-align:center;color:#64748b;font-size:13px;margin-bottom:20px}
+              .grid{display:block}
+              .house-card{border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.12);min-height:80vh;margin-bottom:30px;page-break-after:always;break-after:page}
+              @media print{@page{size:A4 portrait;margin:15mm}.house-card{min-height:calc(100vh - 30mm);margin-bottom:0;box-shadow:none}}
+              .card-header{padding:16px 14px;text-align:center}
+              .rank{font-size:20px;font-weight:900;margin-bottom:4px}
+              .house-name{font-size:18px;font-weight:900;letter-spacing:0.03em}
+              .house-name-ur{font-size:12px;opacity:0.85;margin-top:2px}
+              .card-body{padding:16px 14px}
+              .big-score{font-size:48px;font-weight:900;text-align:center;line-height:1}
+              .score-label{text-align:center;font-size:11px;color:#64748b;margin-bottom:10px;margin-top:2px}
+              .progress-wrap{background:#e2e8f0;border-radius:6px;height:8px;margin-bottom:14px;overflow:hidden}
+              .progress-bar{height:8px;border-radius:6px;transition:width 0.5s}
+              .breakdown{border-top:1px solid #e2e8f0;padding-top:10px;margin-bottom:10px}
+              .role-header{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;padding:6px 10px;border-radius:6px;margin-top:10px;margin-bottom:4px}
+              .role-header b{font-size:14px}
+              .sub-item{display:flex;justify-content:space-between;font-size:11px;padding:3px 10px 3px 22px;color:#475569;border-bottom:1px solid #f1f5f9}
+              .sub-item b{font-weight:700;color:#0f172a}
+              .top-students{background:#f8fafc;border-radius:8px;padding:10px;margin-bottom:10px}
+              .ts-title{font-size:11px;font-weight:800;margin-bottom:6px}
+              .ts-item{display:flex;justify-content:space-between;font-size:11px;padding:3px 0}
+              .ts-item b{font-weight:800}
+              .footer-stat{text-align:center;font-size:10px;color:#94a3b8;margin-top:8px}
+              @media print{body{padding:10px}button{display:none}}
+            </style></head><body>
+            <h1>🏆 House Competition — Notice Board</h1>
+            <div class="subtitle">📅 ${curMonth} &nbsp;|&nbsp; Ameen Islamic Institute &nbsp;|&nbsp; Generated: ${new Date().toLocaleDateString("en-PK")}</div>
+            <div class="grid">${cards}</div>
+            <div style="text-align:center;margin-top:16px">
+              <button onclick="window.print()" style="padding:10px 30px;background:#0f172a;color:#d4af37;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">🖨️ Print Notice Board</button>
+            </div>
+            <script>setTimeout(()=>window.print(),600);<\/script>
+            </body></html>`);
+          }} style={{ padding:"7px 16px", borderRadius:"10px", border:"1px solid rgba(99,179,99,0.4)",
+            background:"rgba(74,222,128,0.1)", color:"#4ade80", fontWeight:"700", fontSize:"0.7rem",
+            cursor:"pointer", fontFamily:"inherit" }}>
+            📋 Notice Board
+          </button>
         </div>
       </div>
 
       {/* ── All Houses at a Glance ── */}
       {(()=>{
         const now2 = new Date();
+        const curMonth = now2.toLocaleString("en",{month:"long"})+" "+now2.getFullYear();
         const monthLogs = hvsLogs.filter(l => {
           const d = l.created_at ? new Date(l.created_at) : null;
           return d && d.getFullYear()===now2.getFullYear() && d.getMonth()===now2.getMonth();
         });
+        // Per-house evaluation average (current month)
+        const monthEvals = evalScales.filter(e => (e.month||"")===curMonth);
         const houseScores = HOUSES.map(h => {
           const hLogs = monthLogs.filter(l => (l.houseId||l.house_id)===h.id);
           const total  = hLogs.reduce((s,l) => {
             const gs = l.group_scores||l.scores||{};
             return s + Object.values(gs).filter(v=>typeof v==="number").reduce((a,b)=>a+b,0);
           }, 0);
-          return { ...h, monthTotal:total };
+          // Evaluation avg for this house
+          const hEvals = monthEvals.filter(e => (e.house_id||e.houseId)===h.id);
+          const evalAvg = hEvals.length
+            ? Math.round(hEvals.reduce((s,e) => s+(Number(e.overall)||0),0) / hEvals.length)
+            : null;
+          return { ...h, monthTotal:total, evalAvg, evalCount:hEvals.length };
         }).sort((a,b) => b.monthTotal - a.monthTotal);
         const maxScore = Math.max(...houseScores.map(h=>h.monthTotal), 1);
         return (
@@ -813,21 +1057,95 @@ export default function HVSEntry({ students=[], addData, updateHousePoints, hvsL
                 <div style={{ fontSize:"0.72rem", fontWeight:"800", color:h.color, marginBottom:"4px" }}>
                   {h.nameEn}
                 </div>
-                {/* score */}
+                {/* HVS score */}
                 <div style={{ fontSize:"1.3rem", fontWeight:"900", color:"#f1f5f9", lineHeight:1 }}>
                   {h.monthTotal}
                 </div>
-                <div style={{ fontSize:"0.55rem", color:"rgba(255,255,255,0.3)", marginBottom:"8px" }}>
+                <div style={{ fontSize:"0.55rem", color:"rgba(255,255,255,0.3)", marginBottom:"6px" }}>
                   pts this month
                 </div>
                 {/* mini bar */}
-                <div style={{ height:"4px", background:"rgba(255,255,255,0.06)", borderRadius:"2px", overflow:"hidden" }}>
+                <div style={{ height:"4px", background:"rgba(255,255,255,0.06)", borderRadius:"2px", overflow:"hidden", marginBottom:"8px" }}>
                   <div style={{ width:`${(h.monthTotal/maxScore)*100}%`, height:"100%",
                     background:`linear-gradient(90deg,${h.color},${h.color}88)`,
                     borderRadius:"2px", transition:"width 0.5s" }}/>
                 </div>
+                {/* Evaluation avg badge */}
+                {h.evalAvg !== null ? (
+                  <div style={{ background:`${h.color}18`, border:`1px solid ${h.color}40`,
+                    borderRadius:"8px", padding:"4px 6px" }}>
+                    <div style={{ fontSize:"0.52rem", color:`${h.color}99`, marginBottom:"1px" }}>📊 Avg Eval</div>
+                    <div style={{ fontSize:"0.85rem", fontWeight:"800", color: h.evalAvg>=70?"#4ade80":h.evalAvg>=50?"#fbbf24":"#f87171" }}>
+                      {h.evalAvg}%
+                    </div>
+                    <div style={{ fontSize:"0.48rem", color:"rgba(255,255,255,0.25)" }}>{h.evalCount} students</div>
+                  </div>
+                ) : (
+                  <div style={{ fontSize:"0.5rem", color:"rgba(255,255,255,0.15)" }}>no eval data</div>
+                )}
               </div>
             ))}
+          </div>
+        );
+      })()}
+
+      {/* ── Student Leaderboard per House (from EvaluationScales) ── */}
+      {evalScales.length>0&&(()=>{
+        const now2=new Date();
+        const curMonth=now2.toLocaleString("en",{month:"long"})+" "+now2.getFullYear();
+        const monthEvals=evalScales.filter(e=>(e.month||"")===curMonth);
+        if(!monthEvals.length) return null;
+        // Top 3 per house
+        const houseLeaders=HOUSES.map(h=>{
+          const hStudents=students.filter(s=>(s.houseId||s.house_id)===h.id);
+          const hEvals=monthEvals
+            .filter(e=>hStudents.some(s=>s.id===e.student_id))
+            .map(e=>({ ...e, stu:hStudents.find(s=>s.id===e.student_id) }))
+            .filter(e=>e.stu)
+            .sort((a,b)=>Number(b.overall||0)-Number(a.overall||0))
+            .slice(0,3);
+          return { ...h, leaders:hEvals };
+        }).filter(h=>h.leaders.length>0);
+        if(!houseLeaders.length) return null;
+        return (
+          <div style={{marginBottom:"20px"}}>
+            <div style={{fontSize:"0.7rem",fontWeight:"800",color:"rgba(212,175,55,0.6)",
+              letterSpacing:"0.1em",marginBottom:"10px"}}>
+              🏅 STUDENT LEADERBOARD — {curMonth.toUpperCase()}
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:"10px"}}>
+              {houseLeaders.map(h=>(
+                <div key={h.id} style={{background:"rgba(255,255,255,0.03)",
+                  border:`1px solid ${h.color}25`,borderRadius:"14px",padding:"12px 10px"}}>
+                  <div style={{fontSize:"0.65rem",fontWeight:"800",color:h.color,
+                    marginBottom:"8px",textAlign:"center"}}>{h.nameEn}</div>
+                  {h.leaders.map((e,i)=>{
+                    const medal=i===0?"🥇":i===1?"🥈":"🥉";
+                    const pct=Math.round(Number(e.overall||0));
+                    return (
+                      <div key={e.stu.id} style={{display:"flex",alignItems:"center",gap:"6px",
+                        marginBottom:"6px",padding:"5px 6px",borderRadius:"8px",
+                        background:i===0?`${h.color}12`:"transparent"}}>
+                        <span style={{fontSize:"0.75rem",flexShrink:0}}>{medal}</span>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontSize:"0.65rem",fontWeight:"700",color:"#f1f5f9",
+                            overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                            {e.stu.name}
+                          </div>
+                          <div style={{fontSize:"0.55rem",color:"rgba(255,255,255,0.35)"}}>
+                            {e.stu.grade}
+                          </div>
+                        </div>
+                        <span style={{fontSize:"0.7rem",fontWeight:"800",flexShrink:0,
+                          color:pct>=70?"#4ade80":pct>=50?"#fbbf24":"#f87171"}}>
+                          {pct}%
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
           </div>
         );
       })()}
@@ -1530,7 +1848,12 @@ export default function HVSEntry({ students=[], addData, updateHousePoints, hvsL
             border:`2px solid ${dutyHouse?.color||"#16a34a"}45`,
             borderRadius:"14px", padding:"16px 20px", marginBottom:"20px",
             display:"flex", alignItems:"center", gap:"16px" }}>
-            <span style={{ fontSize:"2.8rem", flexShrink:0 }}>{dutyHouse?.emoji}</span>
+            <div style={{ width:"64px", height:"64px", borderRadius:"50%", overflow:"hidden", flexShrink:0,
+              border:`2px solid ${dutyHouse?.color||"#16a34a"}60`,
+              boxShadow:`0 0 16px ${dutyHouse?.color||"#16a34a"}30` }}>
+              <img src={HOUSE_LOGOS[dutyHouse?.id]} alt={dutyHouse?.nameEn}
+                style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+            </div>
             <div style={{ flex:1 }}>
               <div style={{ fontSize:"0.6rem", color:"rgba(255,255,255,0.38)", fontWeight:"700",
                 letterSpacing:"0.08em", marginBottom:"4px" }}>THIS WEEK'S DUTY HOUSE</div>
@@ -1801,11 +2124,7 @@ export default function HVSEntry({ students=[], addData, updateHousePoints, hvsL
                 );
               })}
               {lbData.length===0 && (
-                <tr><td colSpan={6} style={{ padding:"30px", textAlign:"center",
-                  color:"rgba(255,255,255,0.2)", fontSize:"0.75rem" }}>
-                  <div style={{ fontSize:"2rem", marginBottom:"8px", opacity:0.3 }}>🏆</div>
-                  {lbTab==="month" ? "اس ماہ کوئی سکور نہیں" : "ابھی کوئی سکور نہیں"}
-                </td></tr>
+                <tr><td colSpan={6}><EmptyState icon="🏆" title={lbTab==="month"?"اس ماہ کوئی سکور نہیں":"ابھی کوئی سکور نہیں"} subtitle="HVS اندراج کے بعد یہاں لیڈر بورڈ ظاہر ہوگا" compact/></td></tr>
               )}
             </tbody>
           </table>

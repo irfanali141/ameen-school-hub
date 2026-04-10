@@ -1,5 +1,7 @@
 /* eslint-disable */
 import { useState, useEffect, useMemo } from "react";
+import { confirm } from '../ui/ConfirmDialog';
+import { toast } from "../../components/ui/Toast";
 import { getData, updateData } from "../../supabase";
 import { C, HOUSES, sLabel } from "../../constants";
 
@@ -91,7 +93,7 @@ export default function WatchList({ students=[], addData, userRole="" }) {
   }, [addSearch, students]);
 
   const handleRemove = async (wl) => {
-    if (!window.confirm(`${wl.student_name} Remove from Watch List?`)) return;
+    if (!await confirm(`${wl.student_name} Remove from Watch List?`)) return;
     const key = `${wl.student_id}-${wl.category}`;
     setSavingKey(key);
     if (wl.id) {
@@ -105,13 +107,13 @@ export default function WatchList({ students=[], addData, userRole="" }) {
   };
 
   const handleAdd = async () => {
-    if (!addStudent) { alert("طالب علم منتخب کریں"); return; }
-    if (!addReason.trim()) { alert("وجہ درج کریں"); return; }
+    if (!addStudent) { toast.warning("طالب علم منتخب کریں"); return; }
+    if (!addReason.trim()) { toast.warning("وجہ درج کریں"); return; }
 
     const alreadyActive = wlData.find(w =>
       w.student_id === addStudent.id && w.category === addCat && w.status === "active"
     );
-    if (alreadyActive) { alert("یہ طالب علم اس زمرے میں پہلے سے نگرانی کی فہرست میں ہے"); return; }
+    if (alreadyActive) { toast.warning("یہ طالب علم اس زمرے میں پہلے سے نگرانی کی فہرست میں ہے"); return; }
 
     setAddSaving(true);
     const entry = {
@@ -134,7 +136,7 @@ export default function WatchList({ students=[], addData, userRole="" }) {
   const saveDailyScore = async (wl) => {
     const key = `${wl.student_id}-${wl.category}`;
     const raw = dailyScores[key];
-    if (raw === undefined || raw === "") { alert("اسکور درج کریں"); return; }
+    if (raw === undefined || raw === "") { toast.warning("اسکور درج کریں"); return; }
     setSavingKey(key);
     await addData("hvs_exceptions", {
       student_id:   wl.student_id,

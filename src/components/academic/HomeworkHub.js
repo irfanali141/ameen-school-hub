@@ -1,5 +1,8 @@
 /* eslint-disable */
 import { useState, useEffect } from "react";
+import { confirm } from '../ui/ConfirmDialog';
+import EmptyState from '../ui/EmptyState';
+import { toast } from "../../components/ui/Toast";
 import { supabase } from "../../supabase";
 import AddHomework  from "./AddHomework";
 import HomeworkCard, { getHWStatus } from "./HomeworkCard";
@@ -120,7 +123,7 @@ export default function HomeworkHub({ students, user, userRole, teachers }){
       created_at:  new Date().toISOString(),
     });
     if(error){
-      alert("ہوم ورک محفوظ نہیں ہوا:\n" + error.message);
+      toast.warning("ہوم ورک محفوظ نہیں ہوا:\n" + error.message);
       throw error;
     }
     await load();
@@ -128,7 +131,7 @@ export default function HomeworkHub({ students, user, userRole, teachers }){
 
   // ── Delete homework ──────────────────────────────────────────────────────────
   const deleteHW = async (id) => {
-    if(!window.confirm("یہ ہوم ورک حذف کریں؟")) return;
+    if(!await confirm("یہ ہوم ورک حذف کریں؟")) return;
     await supabase.from("homework_submissions").delete().eq("homework_id",id);
     await supabase.from("homework").delete().eq("id",id);
     await load();
@@ -392,27 +395,17 @@ export default function HomeworkHub({ students, user, userRole, teachers }){
       )}
 
       {!loading&&tabHW.length===0&&(
-        <div style={{textAlign:"center",padding:"60px 20px",
-          background:"rgba(255,255,255,0.03)",borderRadius:"16px",
-          border:"1px solid rgba(255,255,255,0.05)"}}>
-          <div style={{fontSize:"3rem",marginBottom:"12px",opacity:0.3}}>
-            {TABS.find(t=>t.id===tab)?.icon}
-          </div>
-          <div style={{color:"rgba(255,255,255,0.3)",fontSize:"0.82rem",direction:"rtl"}}>
-            {tab==="active"   ?"کوئی فعال ہوم ورک نہیں":
-             tab==="submitted"?"کوئی جمع شدہ ہوم ورک نہیں":
-             tab==="overdue"  ?"کوئی میعاد گزرا ہوم ورک نہیں":
-                               "کوئی مکمل شدہ ہوم ورک نہیں"}
-          </div>
-          {isStaff&&tab==="active"&&(
-            <button onClick={()=>setShowAdd(true)}
-              style={{marginTop:"16px",padding:"10px 22px",borderRadius:"10px",border:"none",
-                background:G,color:N,fontWeight:"700",fontSize:"0.78rem",
-                cursor:"pointer",fontFamily:"inherit"}}>
-              + پہلا ہوم ورک شامل کریں
-            </button>
-          )}
-        </div>
+        <EmptyState
+          icon={TABS.find(t=>t.id===tab)?.icon||"📝"}
+          title={
+            tab==="active"   ?"کوئی فعال ہوم ورک نہیں":
+            tab==="submitted"?"کوئی جمع شدہ ہوم ورک نہیں":
+            tab==="overdue"  ?"کوئی میعاد گزرا ہوم ورک نہیں":
+                              "کوئی مکمل شدہ ہوم ورک نہیں"
+          }
+          subtitle="ابھی تک کوئی ریکارڈ نہیں ہے"
+          action={isStaff&&tab==="active"?{label:"+ پہلا ہوم ورک شامل کریں",onClick:()=>setShowAdd(true)}:undefined}
+        />
       )}
 
       {!loading&&tabHW.length>0&&(

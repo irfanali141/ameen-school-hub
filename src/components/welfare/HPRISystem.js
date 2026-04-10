@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { C, S, hBadge, HOUSES, sLabel } from "../../constants";
 import { supabase } from "../../supabase";
+import EmptyState from '../ui/EmptyState';
 
 function HPRISystem({students,addData}){
   const [risks,setRisks]=useState([]); const [show,setShow]=useState(false);
@@ -49,7 +50,11 @@ function HPRISystem({students,addData}){
           {r.status==="open"&&<button onClick={()=>resolveRisk(r.id)} style={{...S.saveBtn,padding:"5px 14px",fontSize:"0.6rem"}}>✅ Resolve</button>}
         </div>
       </div>; })}
-      {filtered.length===0&&<div className="hv-card ur" style={{...S.card,textAlign:"center",color:"#bbb",padding:"60px"}}>{filterStatus==="open"?"✅ کوئی کھلا خطرہ نہیں!":"کوئی اندراج نہیں"}</div>}
+      {filtered.length===0&&<EmptyState
+        icon={filterStatus==="open"?"✅":"⚠️"}
+        title={filterStatus==="open"?"کوئی کھلا خطرہ نہیں":"کوئی اندراج نہیں"}
+        subtitle={filterStatus==="open"?"تمام خطرات حل ہو گئے ہیں":"ابھی تک کوئی HPRI اندراج نہیں ہے"}
+      />}
     </div>
   </div>;
 }

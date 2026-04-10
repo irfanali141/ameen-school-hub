@@ -1,5 +1,6 @@
 /* eslint-disable */
 import { useState, useEffect } from "react";
+import { confirm } from '../ui/ConfirmDialog';
 import { supabase, deleteData } from "../../supabase";
 
 const G = "#d4af37", N = "#0f172a";
@@ -58,7 +59,7 @@ export default function AcademicCalendar({ addData }) {
   };
 
   const remove = async (id) => {
-    if (!window.confirm("کیا آپ یہ حذف کرنا چاہتے ہیں؟")) return;
+    if (!await confirm("کیا آپ یہ حذف کرنا چاہتے ہیں؟")) return;
     await deleteData("academic_calendar", id);
     load();
   };

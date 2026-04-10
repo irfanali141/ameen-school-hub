@@ -666,7 +666,7 @@ export default function AIAssistant({ students, userRole }){
     await supabase.from("parent_messages").insert({
       student_id:   student?.id || null,
       student_name: lastCtx.studentName,
-      message:      output,
+      text:         output,
       msg_type:     "academic",
       subject:      `📖 AI ${taskLabel} — ${lastCtx.studentName}`,
       sender:       "ustad",

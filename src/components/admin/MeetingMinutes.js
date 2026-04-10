@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { C, S, hBadge } from "../../constants";
 import { supabase } from "../../supabase";
+import EmptyState from '../ui/EmptyState';
 
 function MeetingMinutes({addData}){
   const [meetings,setMeetings]=useState([]); const [show,setShow]=useState(false);
@@ -44,7 +45,7 @@ function MeetingMinutes({addData}){
         {m.decisions&&<div style={{background:"rgba(251,191,36,0.1)",borderRadius:"10px",padding:"10px 14px",marginBottom:"8px",border:"1px solid rgba(251,191,36,0.2)"}}><div style={{fontSize:"0.62rem",fontWeight:"700",color:"#fbbf24",marginBottom:"4px"}}>⚡ Decisions</div><div style={{fontSize:"0.65rem",color:"rgba(255,255,255,0.65)",lineHeight:"1.6"}}>{m.decisions}</div></div>}
         {m.minutes&&<div style={{fontSize:"0.65rem",color:"rgba(255,255,255,0.5)",lineHeight:"1.6"}}>{m.minutes.slice(0,200)}{m.minutes.length>200?"...":""}</div>}
       </div>; })}
-      {meetings.length===0&&<div style={{...glass,textAlign:"center",color:"rgba(255,255,255,0.3)",padding:"60px"}}>Any Meeting Record No</div>}
+      {meetings.length===0&&<EmptyState icon="📝" title="کوئی میٹنگ ریکارڈ نہیں" subtitle="ابھی تک کوئی میٹنگ کا ریکارڈ محفوظ نہیں کیا گیا"/>}
     </div>
   </div>;
 }

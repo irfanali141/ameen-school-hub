@@ -1,5 +1,8 @@
 /* eslint-disable */
 import { useState, useEffect } from "react";
+import { toast } from "../../components/ui/Toast";
+import EmptyState from "../ui/EmptyState";
+import { usePagination, PaginationBar } from "../ui/usePagination";
 import { HOUSES } from "../../constants";
 import { supabase, getData, addData as sbAdd } from "../../supabase";
 import letterhead from "../../assets/letterhead.png";
@@ -78,7 +81,7 @@ function Students({students,addData,results=[],fees=[],hifzLogs=[],classes=[],se
   const removePhoto=()=>{setF(prev=>({...prev,photoUrl:""}));setPhotoPreview(null);};
 
   const add=async()=>{
-    if(!f.name){alert("طالب علم کا نام درج کریں");return;}
+    if(!f.name){toast.warning("طالب علم کا نام درج کریں");return;}
     const payload = {
       name: f.name,
       fatherName: f.fatherName,
@@ -116,6 +119,8 @@ function Students({students,addData,results=[],fees=[],hifzLogs=[],classes=[],se
     }
     return 0;
   });
+
+  const { paged: pagedStudents, page: stuPage, totalPages: stuTotalPages, setPage: setStuPage } = usePagination(filtered, 24);
 
   // House-wise counts
   const houseCounts=(HOUSES||[]).map(h=>({
@@ -224,8 +229,8 @@ function Students({students,addData,results=[],fees=[],hifzLogs=[],classes=[],se
       </div>
 
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:"14px"}}>
-        {filtered.length===0&&<div style={{color:"rgba(255,255,255,0.4)",padding:"40px",textAlign:"center",gridColumn:"1/-1"}} className="ur">کوئی طالب علم نہیں ملا</div>}
-        {filtered.map(s=>{
+        {filtered.length===0&&<div style={{gridColumn:"1/-1"}}><EmptyState icon="👨‍🎓" title="کوئی طالب علم نہیں ملا" subtitle={students.length===0?"ابھی کوئی طالب علم شامل نہیں — اوپر 'Add Student' سے شامل کریں":"فلٹر سے کوئی نتیجہ نہیں ملا"}/></div>}
+        {pagedStudents.map(s=>{
           const house=HOUSES?.find(h=>h.id===s.houseId);
           const pendingFees=fees.filter(f=>f.student_id===s.id&&f.status==="pending");
           const hasPending=pendingFees.length>0;
@@ -267,6 +272,7 @@ function Students({students,addData,results=[],fees=[],hifzLogs=[],classes=[],se
           );
         })}
       </div>
+      <PaginationBar page={stuPage} totalPages={stuTotalPages} setPage={setStuPage} total={filtered.length} pageSize={24}/>
 
       {profileStudent&&<StudentProfile student={profileStudent} results={results} fees={fees} hifzLogs={hifzLogs} onClose={()=>setProfileStudent(null)}/>}
       {portfolioStudent&&<StudentPortfolio student={portfolioStudent} results={results} onClose={()=>setPortfolioStudent(null)}/>}

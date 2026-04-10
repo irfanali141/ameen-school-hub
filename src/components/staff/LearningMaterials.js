@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { C, S, hBadge } from "../../constants";
 import { supabase } from "../../supabase";
+import EmptyState from '../ui/EmptyState';
 
 function LearningMaterials({teachers,addData}){
   const [materials,setMaterials]=useState([]); const [show,setShow]=useState(false); const [filter,setFilter]=useState("all");
@@ -46,7 +47,7 @@ function LearningMaterials({teachers,addData}){
         {m.description&&<div style={{fontSize:"0.62rem",color:"rgba(255,255,255,0.45)",lineHeight:"1.5",marginBottom:"8px"}}>{m.description.slice(0,80)}</div>}
         {m.link&&<a href={m.link} target="_blank" rel="noreferrer" style={{display:"inline-block",background:`linear-gradient(135deg,${tc.c},${tc.c}cc)`,color:"#fff",padding:"6px 14px",borderRadius:"8px",fontSize:"0.62rem",fontWeight:"700",textDecoration:"none",direction:"ltr"}}>⬇️ Open</a>}
       </div>; })}
-      {filtered.length===0&&<div style={{...glass,textAlign:"center",color:"rgba(255,255,255,0.3)",padding:"40px",gridColumn:"1/-1"}}>No materials found</div>}
+      {filtered.length===0&&<div style={{gridColumn:"1/-1"}}><EmptyState icon="📚" title="کوئی مواد نہیں ملا" subtitle="اس فلٹر کے مطابق کوئی تعلیمی مواد نہیں ہے"/></div>}
     </div>
   </div>;
 }

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { RATING, HOUSES, sLabel } from "../../constants";
 import { getData } from "../../supabase";
 import letterhead from "../../assets/letterhead.png";
+import { usePagination, PaginationBar } from "../ui/usePagination";
 
 // ── Quran Data ────────────────────────────────────────────────────────────────
 const SURAHS=["الفاتحة","البقرة","آل عمران","النساء","المائدة","الأنعام","الأعراف","الأنفال","التوبة","يونس","هود","يوسف","الرعد","إبراهيم","الحجر","النحل","الإسراء","الكهف","مريم","طه","الأنبياء","الحج","المؤمنون","النور","الفرقان","الشعراء","النمل","القصص","العنكبوت","الروم","لقمان","السجدة","الأحزاب","سبأ","فاطر","يس","الصافات","ص","الزمر","غافر","فصلت","الشورى","الزخرف","الدخان","الجاثية","الأحقاف","محمد","الفتح","الحجرات","ق","الذاريات","الطور","النجم","القمر","الرحمن","الواقعة","الحديد","المجادلة","الحشر","الممتحنة","الصف","الجمعة","المنافقون","التغابن","الطلاق","التحريم","الملك","القلم","الحاقة","المعارج","نوح","الجن","المزمل","المدثر","القيامة","الإنسان","المرسلات","النبأ","النازعات","عبس","التكوير","الانفطار","المطففين","الانشقاق","البروج","الطارق","الأعلى","الغاشية","الفجر","البلد","الشمس","الليل","الضحى","الشرح","التين","العلق","القدر","البينة","الزلزلة","العاديات","القارعة","التكاثر","العصر","الهمزة","الفيل","قريش","الماعون","الكوثر","الكافرون","النصر","المسد","الإخلاص","الفلق","الناس"];
@@ -232,6 +233,7 @@ function Hifz({students,addData,hifzLogs:logsProp=[]}){
   const grades=["all",...[...new Set(students.map(s=>s.grade).filter(Boolean))].sort()];
   const filteredStudents=students.filter(s=>(!q||s.name?.toLowerCase().includes(q.toLowerCase()))&&(gradeFilter==="all"||s.grade===gradeFilter));
   const pendingStudents=filteredStudents.filter(s=>!doneToday(s.id));
+  const { paged: pagedStudents, page: hifzPage, totalPages: hifzTotalPages, setPage: setHifzPage } = usePagination(filteredStudents, 24);
 
   const inp={width:"100%",padding:"10px 14px",borderRadius:"10px",border:"1px solid rgba(212,175,55,0.25)",background:"rgba(255,255,255,0.06)",color:"#f1f5f9",fontSize:"0.8rem",fontFamily:"'Public Sans',sans-serif",outline:"none",boxSizing:"border-box",direction:"ltr",colorScheme:"dark"};
   const lbl={fontSize:"0.7rem",color:"rgba(212,175,55,0.8)",marginBottom:"6px",display:"block",fontWeight:"600"};
@@ -798,7 +800,7 @@ function Hifz({students,addData,hifzLogs:logsProp=[]}){
       {/* ── VIEW: CARDS ── */}
       {viewMode==="cards"&&(
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:"14px",marginBottom:"28px"}}>
-          {filteredStudents.map(s=>{
+          {pagedStudents.map(s=>{
             const cnt=studentLogs(s.id).length;
             const sabaqCnt=studentLogs(s.id).filter(l=>!l.type||l.type==="sabaq").length;
             const sabqiCnt=studentLogs(s.id).filter(l=>l.type==="sabqi"||l.type==="dor").length;
@@ -900,6 +902,7 @@ function Hifz({students,addData,hifzLogs:logsProp=[]}){
           })}
         </div>
       )}
+      {viewMode==="cards"&&<PaginationBar page={hifzPage} totalPages={hifzTotalPages} setPage={setHifzPage} total={filteredStudents.length} pageSize={24}/>}
 
       {/* ── VIEW: LEADERBOARD ── */}
       {viewMode==="leaderboard"&&(

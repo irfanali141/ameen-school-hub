@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { C, S, hBadge, HOUSES, sLabel } from "../../constants";
 import { supabase, getData } from "../../supabase";
 import { PrintBtn, printStudentAttendance, printTeacherAttendance } from "../../utils/print";
+import EmptyState from "../ui/EmptyState";
 
 function Attendance({students,addData,teachers}){
   /* ── All original state & Firebase logic unchanged ── */
@@ -238,7 +239,7 @@ function Attendance({students,addData,teachers}){
                       <TD><StatusBadge status={r.status}/></TD>
                     </tr>
                   ))}
-                  {sRecords.length===0&&<tr><td colSpan={4} style={{padding:"40px",textAlign:"center",color:"rgba(255,255,255,0.2)",fontSize:"0.75rem"}}><span className="ur">کوئی اندراج نہیں</span></td></tr>}
+                  {sRecords.length===0&&<tr><td colSpan={4}><EmptyState icon="📋" title="کوئی حاضری اندراج نہیں" subtitle="آج کی حاضری ابھی نہیں لگائی گئی" compact/></td></tr>}
                 </tbody>
               </table>
             </div>
@@ -336,7 +337,7 @@ function Attendance({students,addData,teachers}){
                       <TD><StatusBadge status={r.status}/></TD>
                     </tr>
                   ))}
-                  {tRecords.length===0&&<tr><td colSpan={4} style={{padding:"40px",textAlign:"center",color:"rgba(255,255,255,0.2)",fontSize:"0.75rem"}}><span className="ur">کوئی اندراج نہیں</span></td></tr>}
+                  {tRecords.length===0&&<tr><td colSpan={4}><EmptyState icon="👨‍🏫" title="کوئی اندراج نہیں" subtitle="اساتذہ کی حاضری ابھی درج نہیں" compact/></td></tr>}
                 </tbody>
               </table>
             </div>

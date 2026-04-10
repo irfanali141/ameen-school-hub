@@ -1,5 +1,7 @@
 /* eslint-disable */
 import { useState, useEffect } from "react";
+import { toast } from "../../components/ui/Toast";
+import EmptyState from "../ui/EmptyState";
 import { C, S, hBadge, SUBJECTS, EXAM_NAMES, sLabel } from "../../constants";
 import { supabase, getData } from "../../supabase";
 import useClasses from "../../hooks/useClasses";
@@ -18,7 +20,7 @@ function MarksEntry({students,addData}){
   const saveBulkMarks=async()=>{
     if(!selExam)return;
     const invalid=Object.entries(bulk).filter(([,v])=>v!==""&&Number(v)>selExam.totalMarks);
-    if(invalid.length>0){ alert(`کچھ طلباء کے نمبر کل نمبر (${selExam.totalMarks}) سے زیادہ ہیں۔ براہ کرم درست کریں۔`); return; }
+    if(invalid.length>0){ toast.warning(`کچھ طلباء کے نمبر کل نمبر (${selExam.totalMarks}) سے زیادہ ہیں۔ براہ کرم درست کریں۔`); return; }
     setSaving(true);
     const saves=Object.entries(bulk).filter(([,v])=>v!=="").map(([sid,ob])=>{ const pct=Math.round((Number(ob)/selExam.totalMarks)*100); const gr=pct>=90?"A+":pct>=80?"A":pct>=70?"B":pct>=60?"C":pct>=50?"D":"F"; return addData("assessment_marks",{examId:selExam.id,studentId:sid,obtained:Number(ob),total:selExam.totalMarks,percentage:pct,grade:gr}); });
     await Promise.all(saves); setBulk({}); setSaving(false);
@@ -154,9 +156,8 @@ function MarksEntry({students,addData}){
             );
           })}
           {exams.length===0&&(
-            <div style={{...glass,padding:"60px 20px",textAlign:"center",gridColumn:"1/-1"}}>
-              <span className="material-symbols-rounded" style={{fontSize:"48px",color:"rgba(212,175,55,0.3)",display:"block",marginBottom:"12px"}}>library_books</span>
-              <div style={{color:"rgba(241,245,249,0.4)",fontSize:"0.9rem"}}>No exams yet — click "+ New Exam" above</div>
+            <div style={{gridColumn:"1/-1"}}>
+              <EmptyState icon="📝" title="کوئی امتحان نہیں" subtitle='ابھی کوئی امتحان نہیں — اوپر "+ New Exam" سے شامل کریں'/>
             </div>
           )}
         </div>

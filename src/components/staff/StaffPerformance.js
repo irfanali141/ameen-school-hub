@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { C, S, hBadge, pBar, HOUSES } from "../../constants";
 import { supabase, getData } from "../../supabase";
+import EmptyState from '../ui/EmptyState';
 
 function StaffPerformance({teachers,addData}){
   const [reviews,setReviews]=useState([]); const [show,setShow]=useState(false);
@@ -56,7 +57,7 @@ function StaffPerformance({teachers,addData}){
         <td style={{padding:"11px 14px",borderBottom:"1px solid rgba(255,255,255,0.05)"}}><span style={{color:"#d4af37"}}>{"★".repeat(r.punctuality||0)}</span></td>
         <td style={{padding:"11px 14px",borderBottom:"1px solid rgba(255,255,255,0.05)"}}><span style={{color:"#d4af37"}}>{"★".repeat(r.teaching||0)}</span></td>
         <td style={{padding:"11px 14px",borderBottom:"1px solid rgba(255,255,255,0.05)"}}><span style={{padding:"4px 10px",borderRadius:"20px",fontSize:"0.62rem",fontWeight:"800",background:sc>=80?"rgba(74,222,128,0.15)":sc>=60?"rgba(251,191,36,0.15)":"rgba(248,113,113,0.15)",color:sc>=80?"#4ade80":sc>=60?"#fbbf24":"#f87171"}}>{sc}%</span></td>
-      </tr>; })}{reviews.length===0&&<tr><td colSpan={5} style={{padding:"40px",textAlign:"center",color:"rgba(255,255,255,0.3)"}}>کوئی جائزہ نہیں</td></tr>}</tbody>
+      </tr>; })}{reviews.length===0&&<tr><td colSpan={5} style={{padding:"0"}}><EmptyState icon="📊" title="کوئی جائزہ نہیں" subtitle="ابھی تک کوئی اسٹاف کارکردگی جائزہ نہیں ہے" compact/></td></tr>}</tbody>
     </table></div></div>
   </div>;
 }

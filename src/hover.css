@@ -157,3 +157,104 @@ option {
   background: #1e293b;
   color: #f1f5f9;
 }
+
+/* ================================================================
+   PRINT STYLES — White background, hide navigation chrome
+   ================================================================ */
+@media print {
+  /* Hide UI chrome — sidebar, toggle buttons */
+  .aii-sidebar,
+  .sb-toggle,
+  .hamburger-btn { display: none !important; }
+
+  /* Force white page */
+  html, body { background: white !important; }
+
+  /* Strip dark backgrounds and make all text print-readable */
+  * {
+    background-color: transparent !important;
+    color: #111 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Restore white for dedicated print areas (visibility-trick print pages) */
+  [id$="-print-area"] {
+    background: white !important;
+    color: #000 !important;
+  }
+
+  /* Keep table borders visible */
+  table { border-collapse: collapse !important; }
+  td, th { border: 1px solid #ccc !important; }
+
+  /* Page breaks */
+  h1, h2, h3 { page-break-after: avoid; }
+  table, img { page-break-inside: avoid; }
+}
+
+/* ================================================================
+   MOBILE RESPONSIVE (≤ 767px)
+   NOTE: React serialises inline styles to DOM as hyphenated CSS with
+   spaces, e.g. style={{fontSize:"1rem"}} → style="font-size: 1rem"
+   Attribute selectors must match that serialised form.
+   ================================================================ */
+@media (max-width: 767px) {
+  /* ── Disable hover lift on touch (prevents sticky raised state) ── */
+  button:hover,
+  button:has(.material-symbols-rounded):hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  button:active {
+    transform: scale(0.97) !important;
+  }
+
+  /* ── Tables: force horizontal scroll within their container ────── */
+  .aii-page-wrap div:has(> table) {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* Fallback: give every table a min-width so it doesn't collapse */
+  .aii-page-wrap table {
+    min-width: 480px;
+  }
+
+  /* ── 4-column stat grids → 2 columns ──────────────────────────── */
+  /* Matches: gridTemplateColumns:"repeat(4,..." → DOM: "repeat(4," */
+  .aii-page-wrap [style*="repeat(4,"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* ── Reduce page-level heading sizes ──────────────────────────── */
+  .aii-page-wrap h1 { font-size: 1.2rem !important; }
+  .aii-page-wrap h2 { font-size: 1rem   !important; }
+  .aii-page-wrap h3 { font-size: 0.9rem !important; }
+}
+
+/* ── Extra-small screens (≤ 480px) ──────────────────────────────── */
+@media (max-width: 480px) {
+  /* Large card grids → single column
+     Matches minmax(280px,...) and minmax(300px,...) */
+  .aii-page-wrap [style*="minmax(280"] {
+    grid-template-columns: 1fr !important;
+  }
+  .aii-page-wrap [style*="minmax(300"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Medium card grids → 2 columns */
+  .aii-page-wrap [style*="minmax(220"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* 5 and 6-column dense grids → 3 columns */
+  .aii-page-wrap [style*="repeat(5,"] {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  .aii-page-wrap [style*="repeat(6,"] {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}

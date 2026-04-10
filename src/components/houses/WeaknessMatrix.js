@@ -54,7 +54,7 @@ const injectPrint = () => {
   window.print();
 };
 
-export default function WeaknessMatrix({ addData }) {
+export default function WeaknessMatrix({ addData, hvsLogs=[], houses=[], students=[] }) {
   const [houseId,  setHouseId]  = useState("abuBakr");
   const [month,    setMonth]    = useState(new Date().toISOString().slice(0,7));
   const [rows,     setRows]     = useState(makeDefaultRows());
@@ -80,6 +80,37 @@ export default function WeaknessMatrix({ addData }) {
     if(rec?.rows){ setRows(rec.rows); }
     else { setRows(makeDefaultRows()); }
   },[houseId, month, allData]);
+
+  // ── AUTO: detect weak areas from hvsLogs for this house+month ──
+  const autoWeakAreas = (() => {
+    const [y,m] = month.split("-");
+    const monthLogs = hvsLogs.filter(l=>{
+      const lDate=(l.date||l.created_at||"").slice(0,7);
+      return (l.houseId||l.house_id)===houseId && lDate===month;
+    });
+    if(!monthLogs.length) return {};
+    // Map HVS categories to weakness areas
+    const cats = { zabt:"Discipline", safai:"Cleanliness", josh:"Participation", qiyadat:"Leadership", ilm:"Academic", akhlaq:"Moral" };
+    const sums = {}; const counts = {};
+    monthLogs.forEach(l=>{
+      const gs = l.group_scores||l.scores||{};
+      Object.entries(cats).forEach(([cat,area])=>{
+        if(gs[cat]!==undefined){ sums[area]=(sums[area]||0)+Number(gs[cat]); counts[area]=(counts[area]||0)+1; }
+      });
+    });
+    // Convert avg to 1-5 score
+    const maxes = { Discipline:15, Cleanliness:15, Participation:10, Leadership:10, Academic:25, Moral:15 };
+    const result = {};
+    Object.entries(sums).forEach(([area,sum])=>{
+      const avg = sum/counts[area];
+      const pct = avg/(maxes[area]||10);
+      result[area] = Math.max(1, Math.min(5, Math.round(pct*5)));
+    });
+    return result;
+  })();
+
+  // House students count
+  const houseStudentCount = students.filter(s=>(s.houseId||s.house_id)===houseId).length;
 
   // ── Computed values ──
   const currentAvg = rows.length ? (rows.reduce((s,r)=>s+(r.score||3),0)/rows.length) : 0;
@@ -161,6 +192,21 @@ export default function WeaknessMatrix({ addData }) {
           <div style={{ color:G, fontSize:"1.2rem", fontWeight:"800" }}>{currentAvg.toFixed(1)}</div>
           <div style={{ color:"rgba(255,255,255,0.35)", fontSize:"0.58rem" }}>اوسط اسکور / 5</div>
         </div>
+        <div style={{ textAlign:"center", background:"rgba(99,102,241,0.1)", borderRadius:"10px", padding:"6px 14px", border:"1px solid rgba(99,102,241,0.25)" }}>
+          <div style={{ color:"#818cf8", fontSize:"1rem", fontWeight:"800" }}>{houseStudentCount}</div>
+          <div style={{ color:"rgba(255,255,255,0.35)", fontSize:"0.55rem" }}>طلباء</div>
+        </div>
+        {Object.keys(autoWeakAreas).length>0&&(
+          <div style={{ background:"rgba(212,175,55,0.08)", border:"1px solid rgba(212,175,55,0.25)", borderRadius:"10px", padding:"6px 12px" }}>
+            <div style={{ fontSize:"0.58rem", color:"rgba(212,175,55,0.7)", fontWeight:"700", marginBottom:"4px" }}>⚡ HVS AUTO</div>
+            <div style={{ display:"flex", gap:"4px", flexWrap:"wrap" }}>
+              {Object.entries(autoWeakAreas).filter(([,s])=>s<=2).map(([area,score])=>(
+                <span key={area} style={{ fontSize:"0.55rem", background:"rgba(220,38,38,0.15)", color:"#f87171", borderRadius:"4px", padding:"1px 6px", fontWeight:"700" }}>⚠️ {area}</span>
+              ))}
+              {Object.entries(autoWeakAreas).filter(([,s])=>s<=2).length===0&&<span style={{fontSize:"0.58rem",color:"#4ade80"}}>✅ No weak areas</span>}
+            </div>
+          </div>
+        )}
         {improvePct!==null&&(
           <div style={{ textAlign:"center", background:improvePct>=0?"rgba(34,197,94,0.12)":"rgba(220,38,38,0.12)", borderRadius:"10px", padding:"6px 14px", border:`1px solid ${improvePct>=0?"#22c55e":"#dc2626"}30` }}>
             <div style={{ color:improvePct>=0?"#4ade80":"#f87171", fontSize:"1rem", fontWeight:"800" }}>
