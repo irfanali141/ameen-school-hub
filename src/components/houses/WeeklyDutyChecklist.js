@@ -9,6 +9,7 @@ import houseUthman  from "../../assets/1769748410371.png";
 import houseAli     from "../../assets/1769748548928.png";
 const HOUSE_LOGOS = { abuBakr:houseAbuBakr, umar:houseUmar, uthman:houseUthman, ali:houseAli };
 const G = "#d4af37";
+const N2 = "#1e293b";
 
 // 6 weekly duties
 const DUTIES = [
