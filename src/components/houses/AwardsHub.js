@@ -4,6 +4,7 @@ import { HOUSES } from "../../constants";
 import { supabase } from "../../supabase";
 import AwardCard from "./AwardCard";
 import NominationForm from "./NominationForm";
+import CertificateTemplate from "./CertificateTemplate";
 
 const G = "#d4af37";
 const N = "#0f172a";
@@ -58,19 +59,20 @@ const CAN_SEE_HIST  = ["director", "admin", "housemaster", "teacher", "madrasa"]
 
 export default function AwardsHub({ role, students = [], hvsLogs = [], hifzLogs = [] }) {
   const [activeTab, setActiveTab] = useState("weekly");
-  const [winners, setWinners]     = useState([]);
+  const [winners, setWinners]         = useState([]);
   const [nominations, setNominations] = useState([]);
-  const [loading, setLoading]     = useState(false);
+  const [sabaqStreaks, setSabaqStreaks]= useState([]);
+  const [loading, setLoading]         = useState(false);
   const [showNomForm, setShowNomForm] = useState(false);
   const [selectedAward, setSelectedAward] = useState(null);
   const [certStudent, setCertStudent] = useState(null);
-  const [weekOffset, setWeekOffset] = useState(0);
-  const [monthOffset, setMonthOffset] = useState(0);
+  const weekOffset = 0; // fixed — no week navigation UI yet
 
   // ── Fetch DB data ──────────────────────────────────────────────────────────
   useEffect(() => {
     loadWinners();
     loadNominations();
+    getSabaqStreak().then(setSabaqStreaks);
   }, []);
 
   const loadWinners = async () => {
@@ -217,6 +219,7 @@ export default function AwardsHub({ role, students = [], hvsLogs = [], hifzLogs 
       case "safai_champion":  { const w = getSafaiChampion(); return w ? { winnerName: w.nameEn, winnerNameUr: w.name, houseId: w.id, houseColor: w.color, extra: `Average: ${w.avg}` } : null; }
       case "best_discipline": { const w = getBestDiscipline();return w ? { winnerName: w.nameEn, winnerNameUr: w.name, houseId: w.id, houseColor: w.color, extra: `Average: ${w.avg}` } : null; }
       case "most_improved":   { const w = getMostImproved();  return w ? { winnerName: w.nameEn, winnerNameUr: w.name, houseId: w.id, houseColor: w.color, extra: `Add: +${w.jump.toFixed(1)}` } : null; }
+      case "sabaq_streak":   { const top = sabaqStreaks[0]; return top ? { winnerName: top.student_name || "—", houseId: top.house_id, extra: `${top.streak_days} days streak` } : null; }
       case "top_house_term":  { const w = getStarOfWeek();    return w ? { winnerName: w.nameEn, winnerNameUr: w.name, houseId: w.id, houseColor: w.color } : null; }
       case "superhouse_year": {
         const ranked = [...HOUSES].map(h => {
@@ -235,18 +238,6 @@ export default function AwardsHub({ role, students = [], hvsLogs = [], hifzLogs 
   const getDBWinner = (key) => {
     return winners.find(w => w.award_key === key && w.period === activeTab) || null;
   };
-
-  // ── 100% Haziri list ──────────────────────────────────────────────────────
-  const haziri100 = (() => {
-    const now = new Date();
-    const m = now.getMonth();
-    const y = now.getFullYear();
-    const monthStudents = students.map(s => {
-      // absent_count stored in attendance or derived
-      return s; // placeholder — real query done via DB
-    });
-    return []; // auto-populated below via DB query
-  })();
 
   // ── Pending nominations count (for director badge) ────────────────────────
   const pendingCount = nominations.filter(n => n.status === "pending").length;
@@ -448,8 +439,6 @@ function HistoryTab({ winners, nominations, role, onApprove, onReject, loading }
 }
 
 // ── Inline cert overlay (opens CertificateTemplate in a modal) ────────────────
-import CertificateTemplate from "./CertificateTemplate";
-
 function CertOverlay({ cert, onClose }) {
   return (
     <div style={{ background: "#fff", borderRadius: "16px", overflow: "hidden", maxWidth: "650px", width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
