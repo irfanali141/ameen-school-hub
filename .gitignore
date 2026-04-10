@@ -10,3 +10,34 @@ node_modules
 
 # Build output
 build/
+
+# Screenshots and audit files
+*.png
+*.jpg
+*.jpeg
+audit_*/
+fresh_audit/
+audit_screenshots/
+
+# Temp scripts and SQL files
+*.sql
+*.py
+*.xlsx
+*.xls
+audit*.js
+check_*.js
+run_*.js
+verify_*.js
+observe_*.js
+access_*.js
+fresh_*.js
+hvs_*.js
+write_*.py
+fix_*.py
+
+# Local config and temp files
+AUDIT_REPORT.md
+_tmp_*
+.vscode/settings.json
+.vscode/mcp.json
+.claude/settings.json
